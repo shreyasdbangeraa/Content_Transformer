@@ -58,33 +58,36 @@ class GeminiProvider(AIProvider):
             return candidates[0]["content"]["parts"][0]["text"]
 
     async def analyze_document(self, text: str, filename: str = "document.pdf") -> Dict[str, Any]:
-        system_instruction = """You are an expert intelligence analyst and canonical knowledge synthesizer.
+        system_instruction = """You are an elite intelligence analyst and canonical knowledge synthesizer.
 Extract strictly factual, source-grounded information from the provided document into a structured JSON schema.
-Never fabricate statistics, dates, names, or financial loss numbers. If unmentioned, do not invent them.
-Detect any potentially sensitive data (emails, internal IPs, credentials, phone numbers)."""
+IMPORTANT RULE: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
+Never fabricate statistics, dates, names, or numbers.
+Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
 
         prompt = f"""Analyze the following source document ({filename}) and return ONLY valid JSON matching this schema:
 {{
   "title": "Document title tailored to input",
-  "document_type": "Report/Advisory/Whitepaper/Article/Briefing",
+  "document_type": "Incident Report / Briefing / Advisory / Whitepaper",
   "detected_language": "English",
   "topic": "Main topic of the document",
-  "executive_summary": "Thorough 2-3 paragraph summary strictly based on the provided text",
+  "executive_summary": "**Topic: [Exact Topic Name]**\\n\\nThorough 2-3 paragraph strategic summary strictly based on the provided text, outlining core findings, telemetry, and directives",
   "key_facts": [
-    {{"fact_id": "f1", "text": "Specific factual claim directly from the text", "source": {{"file": "{filename}", "page": 1, "section": "Section"}}, "confidence": 0.98, "verified": true}}
+    {{"fact_id": "f1", "text": "Specific factual claim directly from the text", "source": {{"file": "{filename}", "page": 1, "section": "Section"}}, "confidence": 0.98, "provenance": "PRIMARY_SOURCE_FACT", "verified": true}}
   ],
-  "entities": [{{"name": "Name", "type": "ORGANIZATION/PERSON/SYSTEM/LOCATION", "context": "Role"}}],
+  "entities": [{{"name": "Name", "type": "ORGANIZATION/PERSON/SYSTEM/MALWARE_GROUP", "context": "Role"}}],
   "dates": [{{"date": "Date string", "event": "Description"}}],
+  "events": [{{"timestamp": "Timestamp", "event": "Event description", "severity": "CRITICAL/HIGH/INFO"}}],
   "locations": ["Location"],
   "statistics": [{{"metric": "Name", "value": "Value", "context": "Context", "source_citation": "Page 1"}}],
   "risks": [{{"risk": "Description", "severity": "CRITICAL/HIGH/MEDIUM", "impact": "Impact"}}],
   "recommendations": [{{"recommendation": "Action", "priority": "CRITICAL/HIGH", "details": "Steps"}}],
   "key_messages": ["Key takeaway 1", "Key takeaway 2"],
-  "claims": [{{"claim_id": "c1", "text": "Claim text", "source_page": 1, "verified": true}}],
+  "uncertainties": [{{"topic": "Item", "status": "UNDER_INVESTIGATION", "details": "Details"}}],
+  "claims": [{{"claim_id": "c1", "text": "Claim text", "source_page": 1, "verified": true, "provenance": "PRIMARY_SOURCE_FACT"}}],
   "sensitivity": {{
     "level": "low/medium/high",
     "detected_count": 0,
-    "items": [{{"type": "EMAIL/PHONE/IP", "value": "Value", "masked_value": "Masked", "recommendation": "Redact"}}]
+    "items": [{{"type": "EMAIL/PHONE/INTERNAL_IP", "value": "Value", "masked_value": "Masked", "recommendation": "Redact"}}]
   }},
   "source_references": [{{"title": "Section", "page": 1, "excerpt": "Quote"}}]
 }}
@@ -96,27 +99,26 @@ SOURCE CONTENT:
             raw_json = await self._call_gemini(prompt, system_instruction)
             return clean_json_response(raw_json)
         except Exception:
-            # Automatic graceful fallback to dynamic text analyzer
             return await self._fallback.analyze_document(text, filename)
 
     async def generate_artefact(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
-        audience = config.get("target_audience", "General Public")
-        tone = config.get("tone", "Professional")
+        audience = config.get("target_audience", "Executive Board & Regulators")
+        tone = config.get("tone", "Professional & Authoritative")
         lang = config.get("language", "English")
 
         prompt = f"""You are an elite communication transformer.
 Transform the following canonical facts into format: '{format_type}'.
 Target Audience: {audience} | Tone: {tone} | Language: {lang}
-Anti-hallucination rule: ONLY use facts and information from the provided canonical data. Do NOT generate unrelated placeholder topics.
+Anti-hallucination rule: ONLY use facts and information from the provided canonical data.
 
 Return valid JSON with:
 {{
-  "title": "Title of the artefact tailored to the topic",
-  "raw_content": "Full formatted markdown text of the output tailored to the topic",
+  "title": "Title of the output",
+  "raw_content": "Full formatted markdown text of the output tailored to the format",
   "structured_data": {{ "format": "{format_type}" }}
 }}
 
-If format_type is 'executive_summary', raw_content MUST be an extensive, highly detailed, multi-page (minimum 3 pages / sections) comprehensive Executive Dossier containing:
+If format_type is 'executive_summary', raw_content MUST be an extensive, multi-page (minimum 3 pages / sections) comprehensive Executive Dossier containing:
 - "## 📄 PAGE 1 OF 3: STRATEGIC CONTEXT & QUANTIFIED SCORECARD" (Overview, Core Mission, Quantified Scorecard Table, Strategic Messages)
 - "## 📄 PAGE 2 OF 3: IN-DEPTH OPERATIONAL ANALYSIS & RISK MATRIX" (Milestones, Detailed Evidence Base with Page Citations, Entity Impact Mapping Table, Enterprise Risk Matrix)
 - "## 📄 PAGE 3 OF 3: PHASED ACTION ROADMAP & GOVERNANCE DIRECTIVES" (3-Phased Implementation Roadmap: Immediate/Medium/Long-term, Governance Directives, Executive Sign-off Ledger)
@@ -131,7 +133,7 @@ If format_type is 'presentation', structured_data MUST contain:
       "title": "Slide Title",
       "subtitle": "Subtitle",
       "bullets": ["Point 1", "Point 2", "Point 3"],
-      "speaker_notes": "Notes for the presenter"
+      "speaker_notes": "Notes for presenter"
     }}
   ]
 }}
@@ -145,6 +147,32 @@ If format_type is 'linkedin', structured_data SHOULD contain:
   "hashtags": ["#Tag1", "#Tag2"]
 }}
 
+If format_type is 'twitter', structured_data SHOULD contain:
+{{
+  "format": "twitter",
+  "mode": "thread",
+  "tweet_count": 4,
+  "tweets": [{{"index": 1, "text": "Tweet text"}}]
+}}
+
+If format_type is 'video_package', structured_data SHOULD contain:
+{{
+  "format": "video_package",
+  "title": "Video title",
+  "target_duration_seconds": 60,
+  "aspect_ratio": "16:9",
+  "scenes": [
+    {{
+      "scene_number": 1,
+      "duration_seconds": 10,
+      "visual_description": "Visual details",
+      "on_screen_text": "Text on screen",
+      "narration": "Voiceover audio script",
+      "subtitle": "Caption"
+    }}
+  ]
+}}
+
 CANONICAL DATA:
 {json.dumps(canonical_data, indent=2)[:20000]}"""
 
@@ -155,39 +183,44 @@ CANONICAL DATA:
             return await self._fallback.generate_artefact(canonical_data, format_type, config)
 
     async def fact_check(self, canonical_data: Dict[str, Any], generated_text: str, format_type: str) -> Dict[str, Any]:
-        prompt = f"""You are a strict fact checker and source grounding verifier.
-Break down the generated text into individual factual claims. Compare each claim against the provided canonical source facts.
-Assign status: VERIFIED, PARTIALLY_SUPPORTED, UNSUPPORTED, CONTRADICTED, or OPINION_CREATIVE.
+        prompt = f"""Extract factual claims from the generated text and verify each claim strictly against the canonical facts.
+Classify each claim status as one of:
+- VERIFIED (exact match in canonical facts)
+- PARTIALLY_SUPPORTED (partially matched)
+- UNSUPPORTED (claim not found in canonical facts)
+- CONTRADICTED (contradicts canonical facts)
+- OPINION_CREATIVE (opinion/tone/framing)
 
-Return valid JSON:
+Return JSON:
 {{
   "total_claims": 5,
-  "verified_claims": 4,
-  "partially_supported": 1,
+  "verified_claims": 5,
+  "partially_supported": 0,
   "unsupported_claims": 0,
   "contradicted_claims": 0,
   "opinion_creative": 0,
-  "grounding_score": 90.0,
+  "grounding_score": 100.0,
   "claims": [
     {{
       "claim_id": "c1",
-      "text": "Claim text",
+      "text": "Extracted claim",
       "status": "VERIFIED",
-      "source_file": "source.txt",
+      "source_file": "document.pdf",
       "source_page": 1,
-      "source_section": "Overview",
-      "source_match": "Exact matching excerpt from source",
+      "source_section": "Section",
+      "source_match": "Matching text",
       "confidence": 0.98,
-      "reasoning": "Reason"
+      "reasoning": "Reasoning",
+      "provenance": "PRIMARY_SOURCE_FACT"
     }}
   ]
 }}
 
-CANONICAL FACTS:
-{json.dumps(canonical_data.get('key_facts', []), indent=2)}
+GENERATED TEXT:
+{generated_text[:10000]}
 
-GENERATED TEXT TO CHECK:
-{generated_text}"""
+CANONICAL FACTS:
+{json.dumps(canonical_data.get("key_facts", []), indent=2)[:10000]}"""
 
         try:
             raw_json = await self._call_gemini(prompt)
@@ -196,22 +229,21 @@ GENERATED TEXT TO CHECK:
             return await self._fallback.fact_check(canonical_data, generated_text, format_type)
 
     async def conversational_edit(self, canonical_data: Dict[str, Any], current_text: str, edit_prompt: str, format_type: str) -> Dict[str, Any]:
-        prompt = f"""You are an expert AI editor. Revise the provided text according to the user's instruction while strictly maintaining factual grounding in the canonical data.
+        prompt = f"""Modify the current content according to this instruction: '{edit_prompt}'.
+Maintain strict factual grounding against the canonical facts. Do NOT hallucinate new unmentioned facts.
 
-User Instruction: "{edit_prompt}"
-
-Return valid JSON:
+Return JSON:
 {{
-  "revised_content": "Updated full markdown text",
+  "revised_content": "Full revised markdown text",
   "change_reason": "Summary of adjustments made",
-  "structured_data": {{ "edit_prompt": "{edit_prompt}" }}
+  "structured_data": {{ "format": "{format_type}" }}
 }}
 
-CANONICAL FACTS:
-{json.dumps(canonical_data.get('key_facts', []), indent=2)}
+CURRENT CONTENT:
+{current_text[:10000]}
 
-CURRENT TEXT:
-{current_text}"""
+CANONICAL FACTS:
+{json.dumps(canonical_data, indent=2)[:10000]}"""
 
         try:
             raw_json = await self._call_gemini(prompt)

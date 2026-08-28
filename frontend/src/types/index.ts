@@ -3,13 +3,24 @@ export interface SourceCitation {
   page?: number
   section?: string
   paragraph?: number
+  character_range?: number[]
 }
+
+export type ProvenanceTag =
+  | 'PRIMARY_SOURCE_FACT'
+  | 'VERIFIED_EXTERNAL_FACT'
+  | 'USER_CONTEXT'
+  | 'INFERENCE'
+  | 'RECOMMENDATION'
+  | 'UNSUPPORTED_CLAIM'
+  | 'CONFLICTING_CLAIM'
 
 export interface CanonicalFact {
   fact_id: string
   text: string
   source: SourceCitation
   confidence: number
+  provenance: ProvenanceTag
   verified: boolean
 }
 
@@ -39,10 +50,11 @@ export interface RecommendationItem {
 }
 
 export interface SensitiveDataItem {
-  type: 'EMAIL' | 'PHONE' | 'INTERNAL_IP' | 'CREDENTIAL' | 'PII'
+  type: 'EMAIL' | 'PHONE' | 'INTERNAL_IP' | 'INTERNAL_HOSTNAME' | 'CREDENTIAL' | 'AUTH_TOKEN' | 'CLOUD_KEY' | 'PII' | string
   value: string
   masked_value: string
   recommendation: string
+  severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | string
 }
 
 export interface SensitivityReport {
@@ -50,6 +62,38 @@ export interface SensitivityReport {
   detected_count: number
   items: SensitiveDataItem[]
   public_safety_advisory: string
+}
+
+export interface ConflictItem {
+  conflict_id?: string
+  claim_a: string
+  claim_b: string
+  source_a_title: string
+  source_b_title: string
+  discrepancy_description: string
+  possible_explanation?: string
+  human_flag: boolean
+}
+
+export interface UncertaintyItem {
+  topic: string
+  status: 'UNDER_INVESTIGATION' | 'UNCONFIRMED' | 'PARTIAL_DATA' | string
+  details: string
+}
+
+export interface ResearchEvidenceItem {
+  claim_text: string
+  evidence_snippet: string
+  source_title: string
+  source_url?: string
+  source_tier: number
+  confidence: number
+}
+
+export interface TimelineEvent {
+  timestamp: string
+  event: string
+  severity?: string
 }
 
 export interface CanonicalAnalysis {
@@ -64,14 +108,20 @@ export interface CanonicalAnalysis {
   key_facts: CanonicalFact[]
   entities: Entity[]
   dates: Array<{ date: string; event: string }>
+  events?: TimelineEvent[]
   locations: string[]
   statistics: StatisticMetric[]
   risks: RiskItem[]
   recommendations: RecommendationItem[]
   key_messages: string[]
-  claims: Array<{ claim_id: string; text: string; source_page?: number; verified: boolean }>
+  research_findings?: ResearchEvidenceItem[]
+  uncertainties?: UncertaintyItem[]
+  conflicts?: ConflictItem[]
+  claims: Array<{ claim_id: string; text: string; source_page?: number; verified: boolean; provenance?: string }>
   sensitivity: SensitivityReport
   source_references: Array<{ title: string; page?: number; excerpt: string }>
+  provenance_map?: Record<string, any>
+  confidence_score?: number
   created_at: string
 }
 
@@ -88,6 +138,73 @@ export interface Source {
   created_at: string
 }
 
+export interface ResearchSource {
+  id: string
+  research_job_id: string
+  url?: string
+  title: string
+  source_tier: number
+  source_type: string
+  publisher?: string
+  publish_date?: string
+  reliability_score: number
+  domain?: string
+  created_at: string
+}
+
+export interface ResearchEvidence {
+  id: string
+  research_job_id: string
+  claim_text: string
+  evidence_snippet: string
+  source_title?: string
+  source_url?: string
+  source_tier: number
+  confidence: number
+  limitation_notes?: string
+  created_at: string
+}
+
+export interface ConflictRecord {
+  id: string
+  research_job_id: string
+  claim_a: string
+  claim_b: string
+  source_a_title: string
+  source_b_title: string
+  discrepancy_description: string
+  possible_explanation?: string
+  resolution_status: string
+  human_flag: boolean
+  created_at: string
+}
+
+export interface ResearchJob {
+  id: string
+  project_id: string
+  research_mode: 'SOURCE_ONLY' | 'SOURCE_AND_VERIFY' | 'DEEP_RESEARCH' | string
+  status: string
+  research_questions: Array<{ question: string; priority: string }>
+  search_queries: Array<{ query: string; target_tier: number; intent?: string }>
+  research_summary?: string
+  sources?: ResearchSource[]
+  evidence?: ResearchEvidence[]
+  conflicts?: ConflictRecord[]
+  created_at: string
+}
+
+export interface BrandProfile {
+  id: string
+  organization_name: string
+  tone: string
+  terminology_rules: Record<string, string>
+  writing_style: string
+  target_audience_default: string
+  forbidden_terms: string[]
+  communication_rules: string[]
+  created_at: string
+}
+
 export interface ClaimVerification {
   claim_id: string
   text: string
@@ -98,6 +215,7 @@ export interface ClaimVerification {
   source_match?: string
   confidence: number
   reasoning?: string
+  provenance?: ProvenanceTag | string
 }
 
 export interface FactCheck {
@@ -124,6 +242,8 @@ export interface QualityScore {
   readability: number
   tone_consistency: number
   structure_score: number
+  research_confidence: number
+  safety_score: number
   details: Record<string, any>
   created_at: string
 }
@@ -142,7 +262,15 @@ export interface OutputVersion {
 export interface Output {
   id: string
   transformation_id: string
-  format_type: 'executive_summary' | 'linkedin' | 'twitter' | 'advisory' | 'presentation' | 'infographic' | 'video_package' | string
+  format_type:
+    | 'executive_summary'
+    | 'linkedin'
+    | 'twitter'
+    | 'advisory'
+    | 'presentation'
+    | 'infographic'
+    | 'video_package'
+    | string
   title?: string
   raw_content: string
   structured_data: Record<string, any>
@@ -161,12 +289,14 @@ export interface Transformation {
   id: string
   project_id: string
   canonical_id: string
+  brand_profile_id?: string
   target_audience: string
   tone: string
   language: string
   detail_level: string
   communication_objective: string
   content_style: string
+  research_mode: string
   custom_instructions?: string
   requested_formats: string[]
   status: string
@@ -177,7 +307,10 @@ export interface Project {
   id: string
   title: string
   description?: string
+  organization_name?: string
   domain: string
+  research_mode?: string
+  brand_profile_id?: string
   status: string
   created_at: string
   updated_at: string
@@ -185,9 +318,12 @@ export interface Project {
   outputs_count?: number
   approved_count?: number
   published_count?: number
+  conflicts_count?: number
   sources?: Source[]
   canonical_analysis?: CanonicalAnalysis
   transformations?: Transformation[]
+  research_jobs?: ResearchJob[]
+  conflicts?: ConflictRecord[]
   outputs?: Output[]
 }
 

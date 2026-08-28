@@ -42,6 +42,8 @@ class ExecutiveSummaryGenerator:
 ## 📄 PAGE 1 OF 3: STRATEGIC CONTEXT & QUANTIFIED SCORECARD
 
 ### 1.1 Strategic Executive Overview & Problem Statement
+**Topic Focus:** `{topic}`
+
 {exec_sum}
 
 The primary objective of this intelligence briefing is to establish verified situational clarity, reconcile raw data inputs against verified operational baselines, and present an actionable executive roadmap for senior leadership and cross-functional teams.

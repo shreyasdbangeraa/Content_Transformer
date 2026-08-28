@@ -7,6 +7,9 @@ import {
   DashboardStats,
   PublishingJob,
   OutputVersion,
+  BrandProfile,
+  ResearchJob,
+  ConflictRecord,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
@@ -50,7 +53,14 @@ export const api = {
   // Projects
   listProjects: () => request<Project[]>('/projects'),
   getProject: (id: string) => request<Project>(`/projects/${id}`),
-  createProject: (data: { title: string; description?: string; domain?: string }) =>
+  createProject: (data: {
+    title: string
+    description?: string
+    domain?: string
+    organization_name?: string
+    research_mode?: string
+    brand_profile_id?: string
+  }) =>
     request<Project>('/projects', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -58,8 +68,36 @@ export const api = {
   deleteProject: (id: string) =>
     request<{ message: string }>(`/projects/${id}`, { method: 'DELETE' }),
   loadNovaTechDemo: () =>
-    request<{ message: string; project_id: string; outputs_count: number }>(
+    request<{ message: string; project_id: string; outputs_count: number; formats_generated: string[] }>(
       '/projects/demo/novatech',
+      { method: 'POST' }
+    ),
+
+  // Brand Profiles
+  listBrandProfiles: () => request<BrandProfile[]>('/brand-profiles'),
+  getBrandProfile: (id: string) => request<BrandProfile>(`/brand-profiles/${id}`),
+  createBrandProfile: (data: Partial<BrandProfile>) =>
+    request<BrandProfile>('/brand-profiles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateBrandProfile: (id: string, data: Partial<BrandProfile>) =>
+    request<BrandProfile>(`/brand-profiles/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteBrandProfile: (id: string) =>
+    request<{ message: string }>(`/brand-profiles/${id}`, { method: 'DELETE' }),
+
+  // Research Engine & Conflicts
+  getResearchJob: (jobId: string) => request<ResearchJob>(`/research/jobs/${jobId}`),
+  listProjectResearchJobs: (projectId: string) =>
+    request<ResearchJob[]>(`/research/project/${projectId}`),
+  listProjectConflicts: (projectId: string) =>
+    request<ConflictRecord[]>(`/research/conflicts/${projectId}`),
+  resolveConflict: (conflictId: string, notes?: string) =>
+    request<{ message: string; conflict: ConflictRecord }>(
+      `/research/conflicts/${conflictId}/resolve?resolution_notes=${encodeURIComponent(notes || 'Resolved by operator')}`,
       { method: 'POST' }
     ),
 
@@ -107,6 +145,8 @@ export const api = {
       detail_level: string
       communication_objective: string
       content_style: string
+      research_mode?: string
+      brand_profile_id?: string
       custom_instructions?: string
       requested_formats: string[]
     }
@@ -149,33 +189,21 @@ export const api = {
   // Publishing & n8n
   publishToN8n: (
     outputId: string,
-    payload: {
-      platform: string
-      webhook_url?: string
-      scheduled_at?: string
-    }
-  ) =>
-    request<PublishingJob>(`/publishing/outputs/${outputId}/publish`, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
-  publishOutput: (
-    outputId: string,
-    platform: string,
-    scheduledAt?: string,
-    webhookUrl?: string
+    platform: string = 'n8n',
+    webhookUrl?: string,
+    scheduledAt?: string
   ) =>
     request<PublishingJob>(`/publishing/outputs/${outputId}/publish`, {
       method: 'POST',
       body: JSON.stringify({
         platform,
-        scheduled_at: scheduledAt,
         webhook_url: webhookUrl,
+        scheduled_at: scheduledAt,
       }),
     }),
   listPublishingJobs: () => request<PublishingJob[]>('/publishing/jobs'),
 
-  // Knowledge base
+  // Knowledge Base & RAG
   listKnowledge: () => request<any[]>('/knowledge'),
   addKnowledge: (data: { title: string; content: string; doc_type?: string; tags?: string[] }) =>
     request<any>('/knowledge', {

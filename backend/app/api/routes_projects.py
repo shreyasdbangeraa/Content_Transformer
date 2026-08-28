@@ -3,10 +3,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from app.database.session import get_db
-from app.database.models import Project, Source, CanonicalAnalysis, Transformation, Output, FactCheck, QualityScore, AuditLog, OutputVersion
+from app.database.models import (
+    Project, Source, CanonicalAnalysis, Transformation, Output,
+    FactCheck, QualityScore, AuditLog, OutputVersion,
+    ResearchJob, ResearchSource, ResearchEvidence, ConflictRecord, BrandProfile
+)
 from app.schemas.project import ProjectCreate, ProjectResponse, ProjectUpdate
 from app.services.canonical_service import CanonicalService
 from app.services.transformation_service import TransformationService
+from app.services.research_service import ResearchService
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
@@ -19,18 +24,24 @@ def list_projects(db: Session = Depends(get_db)):
         outputs_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id).count()
         approved_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id, Output.status == "APPROVED").count()
         published_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id, Output.status == "PUBLISHED").count()
+        conflicts_count = db.query(ConflictRecord).join(ResearchJob).filter(ResearchJob.project_id == p.id).count()
+        
         results.append({
             "id": p.id,
             "title": p.title,
             "description": p.description,
+            "organization_name": p.organization_name,
             "domain": p.domain,
+            "research_mode": p.research_mode,
+            "brand_profile_id": p.brand_profile_id,
             "status": p.status,
             "created_at": p.created_at,
             "updated_at": p.updated_at,
             "sources_count": sources_count,
             "outputs_count": outputs_count,
             "approved_count": approved_count,
-            "published_count": published_count
+            "published_count": published_count,
+            "conflicts_count": conflicts_count
         })
     return results
 
@@ -39,7 +50,10 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     project = Project(
         title=payload.title,
         description=payload.description,
-        domain=payload.domain or "Cybersecurity"
+        organization_name=payload.organization_name or "NovaTech Systems",
+        domain=payload.domain or "Cybersecurity",
+        research_mode=payload.research_mode or "SOURCE_AND_VERIFY",
+        brand_profile_id=payload.brand_profile_id
     )
     db.add(project)
     
@@ -47,7 +61,12 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
         project_id=project.id,
         action="PROJECT_CREATED",
         actor="Operator",
-        details={"title": project.title, "domain": project.domain}
+        details={
+            "title": project.title,
+            "domain": project.domain,
+            "research_mode": project.research_mode,
+            "organization": project.organization_name
+        }
     )
     db.add(audit)
     
@@ -64,6 +83,8 @@ def get_project_detail(project_id: str, db: Session = Depends(get_db)):
     sources = db.query(Source).filter(Source.project_id == project_id).all()
     canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.project_id == project_id).order_by(CanonicalAnalysis.created_at.desc()).first()
     transformations = db.query(Transformation).filter(Transformation.project_id == project_id).all()
+    research_jobs = db.query(ResearchJob).filter(ResearchJob.project_id == project_id).all()
+    conflicts = db.query(ConflictRecord).join(ResearchJob).filter(ResearchJob.project_id == project_id).all()
     
     outputs_data = []
     for t in transformations:
@@ -87,18 +108,23 @@ def get_project_detail(project_id: str, db: Session = Depends(get_db)):
                 "fact_check": {
                     "total_claims": fc.total_claims if fc else 0,
                     "verified_claims": fc.verified_claims if fc else 0,
+                    "partially_supported": fc.partially_supported if fc else 0,
                     "unsupported_claims": fc.unsupported_claims if fc else 0,
+                    "contradicted_claims": fc.contradicted_claims if fc else 0,
+                    "opinion_creative": fc.opinion_creative if fc else 0,
                     "grounding_score": fc.grounding_score if fc else 100.0,
                     "claims": fc.claims if fc else []
                 } if fc else None,
                 "quality_score": {
-                    "overall_score": qs.overall_score if qs else 90.0,
+                    "overall_score": qs.overall_score if qs else 92.0,
                     "source_accuracy": qs.source_accuracy if qs else 95.0,
                     "completeness": qs.completeness if qs else 90.0,
                     "audience_fit": qs.audience_fit if qs else 92.0,
                     "readability": qs.readability if qs else 88.0,
                     "tone_consistency": qs.tone_consistency if qs else 94.0,
-                    "structure_score": qs.structure_score if qs else 90.0
+                    "structure_score": qs.structure_score if qs else 90.0,
+                    "research_confidence": qs.research_confidence if qs else 96.0,
+                    "safety_score": qs.safety_score if qs else 100.0
                 } if qs else None
             })
 
@@ -106,13 +132,18 @@ def get_project_detail(project_id: str, db: Session = Depends(get_db)):
         "id": project.id,
         "title": project.title,
         "description": project.description,
+        "organization_name": project.organization_name,
         "domain": project.domain,
+        "research_mode": project.research_mode,
+        "brand_profile_id": project.brand_profile_id,
         "status": project.status,
         "created_at": project.created_at,
         "updated_at": project.updated_at,
         "sources": sources,
         "canonical_analysis": canonical,
         "transformations": transformations,
+        "research_jobs": research_jobs,
+        "conflicts": conflicts,
         "outputs": outputs_data
     }
 
@@ -128,15 +159,17 @@ def delete_project(project_id: str, db: Session = Depends(get_db)):
 @router.post("/demo/novatech", tags=["Demo"])
 async def load_novatech_demo(db: Session = Depends(get_db)):
     """
-    Instantly creates and populates a full, realistic NovaTech Systems Cybersecurity Incident Demo Project
-    with PDF source, deep canonical analysis, and 5 pre-generated artefacts (Executive Summary, LinkedIn,
-    Advisory, Presentation Deck, Infographic) ready for immediate SIH demonstration.
+    Instantly creates and populates a complete, realistic NovaTech Systems Cybersecurity Incident Demo Project
+    with PDF source, deep canonical analysis with provenance, 8-tier research evidence, conflict detection,
+    and all 7 pre-generated communication formats ready for immediate SIH demonstration.
     """
     # 1. Create Project
     project = Project(
         title="NovaTech Systems Ransomware Incident (IR-2026-0812)",
-        description="Fictional critical cybersecurity incident response analysis and multi-format transformation for executive, technical, and regulatory stakeholders.",
-        domain="Cybersecurity"
+        description="Critical cybersecurity incident response analysis and multi-format transformation for executive, technical, and regulatory stakeholders.",
+        organization_name="NovaTech Systems",
+        domain="Cybersecurity",
+        research_mode="SOURCE_AND_VERIFY"
     )
     db.add(project)
     db.flush()
@@ -152,62 +185,71 @@ async def load_novatech_demo(db: Session = Depends(get_db)):
         if os.path.exists(c):
             with open(c, "r", encoding="utf-8") as f:
                 raw_text = f.read()
-            break
-            
+                break
+    
     if not raw_text:
-        raw_text = """# NOVATECH SYSTEMS INC. — INCIDENTIAL RESPONSE REPORT
-Document Reference: IR-2026-0812-CRIT | Date: August 14, 2026
-On August 12, 2026 at 03:14 UTC, NovaTech Systems' SOC detected a ransomware attack by DarkHydra.
-Approximately 500 server systems were encrypted. Subnet isolation was achieved in 42 minutes.
-Core customer financial vaults remained secure with zero confirmed exfiltration.
-120GB of staged telemetry was blocked by firewalls. Operational downtime lasted 18 hours."""
+        raw_text = """# NOVATECH SYSTEMS INCIDENT REPORT IR-2026-0812
+Date: August 12, 2026 | Severity: Critical CVSS 9.4 | Classification: Restricted
+Summary: On August 12, 2026 at 03:14 UTC, NovaTech SOC detected ransomware activity attributed to DarkHydra exploiting legacy VPN gateway host vpn-edge02.novatech-internal.net (IP: 10.240.12.88). Approximately 500 server systems were encrypted. Automated network micro-segmentation contained the blast radius in 42 minutes, ensuring core customer financial records vault remained secure with zero exfiltration. Backup restoration and FIDO2 MFA enforcement are underway."""
 
     source = Source(
         project_id=project.id,
-        filename="novatech_incident_report.pdf",
+        filename="novatech_incident_investigation_report.pdf",
         file_type="pdf",
-        file_path="sample-data/novatech_incident_report.pdf",
         raw_text=raw_text,
         char_count=len(raw_text),
-        page_count=2,
-        meta_info={"is_demo": True, "classification": "RESTRICTED / FICTIONAL"},
+        page_count=3,
         processing_status="PROCESSED"
     )
     db.add(source)
     db.flush()
 
-    # 3. Generate Canonical Analysis
-    canonical = await CanonicalService.analyze_and_store(db, project.id, source.id, provider_name="mock")
+    # 3. Canonical Analysis & Research
+    canonical = await CanonicalService.analyze_and_store(
+        db=db,
+        project_id=project.id,
+        source_id=source.id,
+        provider_name="mock",
+        research_mode="SOURCE_AND_VERIFY"
+    )
 
-    # 4. Create Transformation Config
+    # 4. Create Transformation for ALL 7 Formats
     transformation = Transformation(
         project_id=project.id,
         canonical_id=canonical.id,
-        target_audience="Government Cyber Advisory & Executive Board",
-        tone="Formal & Authoritative",
+        target_audience="Executive Board & Technical Engineers",
+        tone="Professional & Authoritative",
         language="English",
-        detail_level="Detailed",
-        communication_objective="Inform, Warn & Remediate",
+        detail_level="Detailed & Comprehensive",
+        communication_objective="Inform & Remediate (Security Event)",
         content_style="Corporate & Government Advisory",
-        requested_formats=["executive_summary", "linkedin", "advisory", "presentation", "infographic", "video_package"],
-        status="READY"
+        research_mode="SOURCE_AND_VERIFY",
+        requested_formats=[
+            "executive_summary",
+            "linkedin",
+            "twitter",
+            "advisory",
+            "presentation",
+            "infographic",
+            "video_package"
+        ]
     )
     db.add(transformation)
     db.flush()
 
-    # 5. Execute Multi-Output Generation
-    outputs = await TransformationService.execute_transformation(db, transformation.id, provider_name="mock")
-
-    db.commit()
-    db.refresh(project)
+    # 5. Execute Multi-Format Transformation
+    outputs = await TransformationService.execute_transformation(
+        db=db,
+        transformation_id=transformation.id,
+        provider_name="mock"
+    )
 
     return {
-        "message": "NovaTech Systems Demo loaded successfully with 6 generated artefacts, source grounding, and fact checks.",
+        "status": "SUCCESS",
+        "message": "NovaTech Systems Incident Transformation loaded with all 7 formats and evidence grounding.",
         "project_id": project.id,
-        "outputs_count": len(outputs)
+        "canonical_id": canonical.id,
+        "transformation_id": transformation.id,
+        "outputs_count": len(outputs),
+        "formats_generated": [o.format_type for o in outputs]
     }
-
-@router.get("/{project_id}/audit")
-def get_audit_logs(project_id: str, db: Session = Depends(get_db)):
-    logs = db.query(AuditLog).filter(AuditLog.project_id == project_id).order_by(AuditLog.timestamp.desc()).all()
-    return logs

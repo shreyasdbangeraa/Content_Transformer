@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -20,8 +20,7 @@ class PublishingJobResponse(BaseModel):
     response_data: Dict[str, Any]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class N8nWebhookPayload(BaseModel):
     event: str = "content.approved_for_publishing"

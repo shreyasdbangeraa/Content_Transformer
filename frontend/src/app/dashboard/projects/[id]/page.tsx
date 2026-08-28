@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   CheckCircle2,
   Layers,
+  Search,
+  AlertOctagon,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Project, Output } from '@/types'
@@ -22,6 +24,8 @@ import AIEditorModal from '@/components/AIEditorModal'
 import SlideDeckPreview from '@/components/SlideDeckPreview'
 import LinkedInPostCard from '@/components/LinkedInPostCard'
 import InfographicCard from '@/components/InfographicCard'
+import VideoPackageCard from '@/components/VideoPackageCard'
+import TwitterThreadCard from '@/components/TwitterThreadCard'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
@@ -105,94 +109,108 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 max-w-6xl mx-auto w-full">
-      {/* Top Breadcrumb & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-3.5">
-          <button
-            onClick={() => router.push('/dashboard/projects')}
-            className="rounded-2xl p-2.5 border border-slate-300 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs"
-            title="Back to Projects"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <span className="rounded-md bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-0.5 text-xs font-bold uppercase font-mono">
+    <div className="space-y-8 animate-fade-in">
+      {/* Top Breadcrumb & Metadata Card */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-4 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <button
+              onClick={() => router.push('/dashboard/projects')}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Back to All Projects</span>
+            </button>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="rounded-md bg-sky-100 text-sky-800 text-xs font-black px-2.5 py-0.5 border border-sky-200 uppercase font-mono">
+                {project.organization_name || 'NovaTech Systems'}
+              </span>
+              <span className="rounded-md bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5">
                 {project.domain}
               </span>
-              <span className="text-xs text-slate-400 font-mono font-medium">ID: {project.id.slice(0, 8)}</span>
+              <span className="rounded-md bg-indigo-50 text-indigo-800 text-xs font-bold px-2 py-0.5 border border-indigo-200">
+                Mode: {project.research_mode || 'SOURCE_AND_VERIFY'}
+              </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">{project.title}</h1>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              {project.title}
+            </h2>
+            {project.description && (
+              <p className="text-sm text-slate-600 font-medium">{project.description}</p>
+            )}
           </div>
-        </div>
 
-        {/* View Mode Toggle: Outputs Studio vs Canonical Model */}
-        <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1.5 rounded-2xl text-xs sm:text-sm shadow-xs">
-          <button
-            onClick={() => setViewMode('outputs')}
-            className={clsx(
-              'px-4 py-2 rounded-xl font-bold transition-all',
-              viewMode === 'outputs'
-                ? 'bg-white text-sky-800 shadow-sm border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
-            )}
-          >
-            Artefact Studio ({outputs.length})
-          </button>
-          <button
-            onClick={() => setViewMode('canonical')}
-            className={clsx(
-              'px-4 py-2 rounded-xl font-bold transition-all',
-              viewMode === 'canonical'
-                ? 'bg-white text-sky-800 shadow-sm border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
-            )}
-          >
-            Canonical Knowledge
-          </button>
+          {/* View Toggle */}
+          <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl self-start sm:self-center">
+            <button
+              onClick={() => setViewMode('outputs')}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+                viewMode === 'outputs'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              )}
+            >
+              <Sparkles className="h-4 w-4 text-sky-600" />
+              <span>Deliverables ({outputs.length})</span>
+            </button>
+            <button
+              onClick={() => setViewMode('canonical')}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
+                viewMode === 'canonical'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              )}
+            >
+              <FileText className="h-4 w-4 text-indigo-600" />
+              <span>Canonical Knowledge & Evidence</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* VIEW 1: CANONICAL KNOWLEDGE */}
+      {/* VIEW: CANONICAL ANALYSIS */}
       {viewMode === 'canonical' && project.canonical_analysis && (
-        <div className="space-y-6">
-          <CanonicalViewer canonical={project.canonical_analysis} />
-          {project.canonical_analysis.sensitivity?.detected_count > 0 && (
-            <SensitivityInspector sensitivity={project.canonical_analysis.sensitivity} />
-          )}
-        </div>
+        <CanonicalViewer canonical={project.canonical_analysis} />
       )}
 
-      {/* VIEW 2: OUTPUTS STUDIO */}
+      {/* VIEW: OUTPUTS STUDIO */}
       {viewMode === 'outputs' && (
-        <div className="space-y-8">
+        <>
           {outputs.length === 0 ? (
-            <div className="rounded-3xl border-2 border-dashed border-slate-300 p-16 text-center space-y-4 bg-white">
-              <Layers className="h-10 w-10 mx-auto text-slate-400" />
-              <p className="text-base text-slate-600 font-medium">No generated artefacts found for this project.</p>
+            <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center space-y-4">
+              <p className="text-sm text-slate-600 font-medium">No outputs generated yet for this project.</p>
+              <button
+                onClick={() => router.push(`/dashboard/new`)}
+                className="rounded-2xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-sky-500"
+              >
+                Create New Transformation
+              </button>
             </div>
           ) : (
-            <>
-              {/* Output Format Switcher Tabs */}
-              <div className="flex overflow-x-auto gap-2.5 border-b border-slate-200 pb-4">
+            <div className="space-y-8">
+              {/* Formats Tab Strip */}
+              <div className="flex overflow-x-auto gap-2.5 border-b border-slate-200 pb-4 no-scrollbar">
                 {outputs.map((o) => {
                   const isActive = activeOutputTab === o.format_type
                   return (
                     <button
                       key={o.id}
                       onClick={() => setActiveOutputTab(o.format_type)}
-                      className={`flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold whitespace-nowrap transition-all shadow-xs ${
+                      className={clsx(
+                        'flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold whitespace-nowrap transition-all shadow-xs',
                         isActive
                           ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
                           : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
-                      }`}
+                      )}
                     >
                       <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-bold ${
+                        className={clsx(
+                          'rounded-full px-2 py-0.5 text-[10px] font-mono font-bold',
                           isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
-                        }`}
+                        )}
                       >
                         v{o.version}
                       </span>
@@ -268,6 +286,16 @@ export default function ProjectDetailPage() {
                         <LinkedInPostCard output={activeOutput} />
                       ) : activeOutput.format_type === 'infographic' ? (
                         <InfographicCard output={activeOutput} />
+                      ) : activeOutput.format_type === 'video_package' ? (
+                        <VideoPackageCard
+                          structuredData={activeOutput.structured_data}
+                          rawContent={activeOutput.raw_content}
+                        />
+                      ) : activeOutput.format_type === 'twitter' ? (
+                        <TwitterThreadCard
+                          structuredData={activeOutput.structured_data}
+                          rawContent={activeOutput.raw_content}
+                        />
                       ) : (
                         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
                           <StructuredContentRenderer content={activeOutput.raw_content} />
@@ -303,7 +331,7 @@ export default function ProjectDetailPage() {
                       </div>
                     </div>
 
-                    {/* Fact Check Details */}
+                    {/* Fact Check Inspection Panel */}
                     <FactCheckPanel factCheck={activeOutput.fact_check} />
                   </div>
 
@@ -311,36 +339,26 @@ export default function ProjectDetailPage() {
                   <div className="lg:col-span-4 space-y-6">
                     <QualityRadarCard qualityScore={activeOutput.quality_score} />
 
-                    {/* Ingested Source Overview */}
-                    {project.sources && project.sources.length > 0 && (
-                      <div className="rounded-3xl border border-slate-200 bg-white p-6 space-y-3.5 shadow-xs">
+                    {project.canonical_analysis && (
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 space-y-3 shadow-xs">
                         <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                           <FileText className="h-4 w-4 text-sky-600" />
-                          Source Document
+                          Canonical Source Summary
                         </h4>
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-1.5">
-                          <div className="text-sm font-bold text-slate-900 break-words">
-                            {project.sources[0].filename}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
-                            <span>{project.sources[0].file_type.toUpperCase()}</span>
-                            <span>•</span>
-                            <span>{project.sources[0].page_count} Pages</span>
-                            <span>•</span>
-                            <span>{project.sources[0].char_count} Chars</span>
-                          </div>
-                        </div>
+                        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium line-clamp-4">
+                          {project.canonical_analysis.executive_summary}
+                        </p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
-        </div>
+        </>
       )}
 
-      {/* MODALS */}
+      {/* Modals */}
       {editorOutput && (
         <AIEditorModal
           output={editorOutput}
@@ -364,7 +382,10 @@ export default function ProjectDetailPage() {
           output={publishOutput}
           isOpen={!!publishOutput}
           onClose={() => setPublishOutput(null)}
-          onPublished={() => loadProject()}
+          onPublished={() => {
+            setPublishOutput(null)
+            loadProject()
+          }}
         />
       )}
     </div>

@@ -40,6 +40,8 @@ ENV/
 # Uploads and temporary exports
 frontend/uploads/*
 !frontend/uploads/.gitkeep
+frontend/exports/*
+!frontend/exports/.gitkeep
 backend/uploads/*
 !backend/uploads/.gitkeep
 backend/exports/*

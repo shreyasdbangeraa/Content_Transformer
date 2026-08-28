@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 # Load .env file explicitly
 load_dotenv(override=True)
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
@@ -37,9 +37,7 @@ class Settings(BaseSettings):
     # Security & CORS
     CORS_ORIGINS: list[str] = ["*"]
     
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 settings = Settings()
 

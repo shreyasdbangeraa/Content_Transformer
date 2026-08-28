@@ -8,6 +8,7 @@ from app.processors.url_parser import is_safe_url
 from app.processors.sanitizer import sanitize_untrusted_text
 from app.services.sensitivity_service import SensitivityService
 from app.services.quality_service import QualityService
+from app.services.research_service import ResearchService
 from app.ai.mock_provider import MockProvider
 from app.generators.presentation import PresentationGenerator
 from app.generators.export_docx import DocxExportGenerator
@@ -47,6 +48,14 @@ def test_sensitivity_service_pii_detection():
     assert "PHONE" in types
     assert "INTERNAL_IP" in types
 
+def test_research_service_source_tiers():
+    tier1 = ResearchService.classify_source_tier("https://www.cisa.gov/advisories/aa26")
+    assert tier1["tier"] == 1
+    assert tier1["reliability_score"] == 1.0
+
+    tier6 = ResearchService.classify_source_tier("https://www.reuters.com/technology/article")
+    assert tier6["tier"] == 6
+
 def get_sample_text():
     candidates = [
         "sample-data/novatech_incident_report.txt",
@@ -71,7 +80,7 @@ async def test_mock_ai_provider_canonical_analysis():
     assert canonical["sensitivity"]["detected_count"] >= 3
 
 @pytest.mark.asyncio
-async def test_multi_output_generation():
+async def test_all_7_multi_output_generation():
     provider = MockProvider()
     text = get_sample_text()
     canonical = await provider.analyze_document(text, "novatech_incident_report.pdf")
@@ -86,16 +95,24 @@ async def test_multi_output_generation():
     assert "hook" in linkedin["structured_data"]
     assert len(linkedin["structured_data"]["hashtags"]) >= 3
 
-    # 3. Advisory
+    # 3. Twitter / X Thread
+    twitter = await provider.generate_artefact(canonical, "twitter", {})
+    assert twitter["structured_data"]["tweet_count"] >= 3
+
+    # 4. Advisory
     advisory = await provider.generate_artefact(canonical, "advisory", {})
     assert "ADV-2026-0814-HYDRA" in advisory["raw_content"]
     assert "IoCs" in advisory["raw_content"]
 
-    # 4. Presentation
+    # 5. Presentation
     deck = await provider.generate_artefact(canonical, "presentation", {})
     assert len(deck["structured_data"]["slides"]) == 5
 
-    # 5. Video package
+    # 6. Infographic
+    infographic = await provider.generate_artefact(canonical, "infographic", {})
+    assert len(infographic["structured_data"]["datapoints"]) >= 3
+
+    # 7. Video package
     video = await provider.generate_artefact(canonical, "video_package", {})
     assert len(video["structured_data"]["scenes"]) == 5
 
@@ -122,40 +139,53 @@ def test_docx_export_render():
     assert os.path.exists(file_path)
     assert file_path.endswith(".docx")
 
+def test_brand_profiles_api():
+    response = client.get("/api/brand-profiles")
+    assert response.status_code == 200
+    profiles = response.json()
+    assert len(profiles) >= 1
+    assert "NovaTech Systems" in [p["organization_name"] for p in profiles]
+
 def test_novatech_demo_api_workflow():
-    # Test 1-click NovaTech Demo endpoint
+    # 1. Test 1-click NovaTech Demo endpoint
     response = client.post("/api/projects/demo/novatech")
     assert response.status_code == 200
     data = response.json()
     project_id = data["project_id"]
-    assert data["outputs_count"] >= 5
+    assert data["outputs_count"] == 7 # All 7 formats generated!
 
-    # Get Project Detail
+    # 2. Get Project Detail with Research & Conflicts
     proj_resp = client.get(f"/api/projects/{project_id}")
     assert proj_resp.status_code == 200
     proj_data = proj_resp.json()
-    assert len(proj_data["outputs"]) >= 5
+    assert len(proj_data["outputs"]) == 7
     assert proj_data["canonical_analysis"] is not None
+    assert len(proj_data["research_jobs"]) >= 1
+    assert len(proj_data["conflicts"]) >= 1 # Discrepancy 500 vs 530 detected
 
-    # Test conversational edit on first output
+    # 3. Test conversational edit on first output
     output_id = proj_data["outputs"][0]["id"]
     edit_resp = client.post(f"/api/outputs/{output_id}/conversational-edit", json={"prompt": "Make it shorter and more concise"})
     assert edit_resp.status_code == 200
     edit_data = edit_resp.json()
     assert edit_data["version"] == 2
 
-    # Test Approval
+    # 4. Test Strict Approval Gate: Publish before approval should fail
+    unapproved_pub = client.post(f"/api/publishing/outputs/{output_id}/publish", json={"platform": "n8n"})
+    assert unapproved_pub.status_code == 400 # Strict gate blocks unapproved publishing with 400 Bad Request
+
+    # 5. Approve Output
     app_resp = client.post(f"/api/outputs/{output_id}/approve", json={"action": "APPROVE", "notes": "Approved for board"})
     assert app_resp.status_code == 200
     assert app_resp.json()["status"] == "APPROVED"
 
-    # Test Publish to n8n Webhook
+    # 6. Publish Approved Output to n8n Webhook
     pub_resp = client.post(f"/api/publishing/outputs/{output_id}/publish", json={"platform": "n8n"})
     assert pub_resp.status_code == 200
     pub_data = pub_resp.json()
     assert pub_data["status"] == "PUBLISHED"
-    assert pub_data["payload"]["format_type"] is not None
+    assert pub_data["payload"]["workflow_id"] == "CwDM3Nx2ruQ7lKt0"
 
-    # Test Export PPTX
+    # 7. Test Export PPTX
     export_resp = client.get(f"/api/outputs/{output_id}/export/pptx")
     assert export_resp.status_code == 200

@@ -13,6 +13,8 @@ from app.api.routes_outputs import router as outputs_router
 from app.api.routes_publishing import router as publishing_router
 from app.api.routes_knowledge import router as knowledge_router
 from app.api.routes_settings import router as settings_router
+from app.api.routes_brand_profiles import router as brand_profiles_router
+from app.api.routes_research import router as research_router
 
 # Initialize DB tables
 init_db()
@@ -44,6 +46,8 @@ app.include_router(transformations_router, prefix=settings.API_PREFIX)
 app.include_router(outputs_router, prefix=settings.API_PREFIX)
 app.include_router(publishing_router, prefix=settings.API_PREFIX)
 app.include_router(knowledge_router, prefix=settings.API_PREFIX)
+app.include_router(brand_profiles_router, prefix=settings.API_PREFIX)
+app.include_router(research_router, prefix=settings.API_PREFIX)
 app.include_router(settings_router, prefix=settings.API_PREFIX)
 
 @app.get("/")
@@ -55,6 +59,8 @@ def root():
         "docs": "/docs",
         "endpoints": {
             "projects": "/api/projects",
+            "brand_profiles": "/api/brand-profiles",
+            "research": "/api/research",
             "stats": "/api/settings/stats",
             "status": "/api/settings/status"
         }

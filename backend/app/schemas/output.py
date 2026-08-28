@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -12,8 +12,7 @@ class OutputVersionResponse(BaseModel):
     created_by: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ConversationalEditRequest(BaseModel):
     prompt: str = Field(..., description="User modification request, e.g. 'Make it shorter and more formal for government regulators'")
@@ -23,7 +22,7 @@ class DirectEditRequest(BaseModel):
     change_reason: Optional[str] = "Manual user edit"
 
 class ApprovalRequest(BaseModel):
-    action: str = Field(..., description="'APPROVE' or 'REJECT'")
+    action: str = Field(default="APPROVE", description="'APPROVE' or 'REJECT'")
     notes: Optional[str] = None
 
 class OutputResponse(BaseModel):
@@ -44,5 +43,4 @@ class OutputResponse(BaseModel):
     fact_check: Optional[Dict[str, Any]] = None
     quality_score: Optional[Dict[str, Any]] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

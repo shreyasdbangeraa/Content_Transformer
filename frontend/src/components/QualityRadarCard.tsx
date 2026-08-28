@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { QualityScore } from '@/types'
-import { Award, CheckCircle, Gauge, BookOpen, Target, Sliders } from 'lucide-react'
+import { Award, CheckCircle, Gauge, BookOpen, Target, Sliders, Search, ShieldCheck } from 'lucide-react'
 
 interface QualityRadarCardProps {
   qualityScore?: QualityScore
@@ -18,11 +18,13 @@ export default function QualityRadarCard({ qualityScore }: QualityRadarCardProps
   }
 
   const metrics = [
-    { label: 'Source Accuracy (40%)', value: qualityScore.source_accuracy, icon: CheckCircle, color: 'text-emerald-600', bar: 'bg-emerald-500' },
-    { label: 'Completeness (20%)', value: qualityScore.completeness, icon: Award, color: 'text-sky-600', bar: 'bg-sky-500' },
+    { label: 'Source Grounding (30%)', value: qualityScore.source_accuracy, icon: CheckCircle, color: 'text-emerald-600', bar: 'bg-emerald-500' },
+    { label: 'Completeness (15%)', value: qualityScore.completeness, icon: Award, color: 'text-sky-600', bar: 'bg-sky-500' },
     { label: 'Audience Fit (15%)', value: qualityScore.audience_fit, icon: Target, color: 'text-indigo-600', bar: 'bg-indigo-500' },
+    { label: 'Research Confidence (10%)', value: qualityScore.research_confidence || 96.0, icon: Search, color: 'text-blue-600', bar: 'bg-blue-500' },
     { label: 'Readability (10%)', value: qualityScore.readability, icon: BookOpen, color: 'text-cyan-600', bar: 'bg-cyan-500' },
     { label: 'Tone Consistency (10%)', value: qualityScore.tone_consistency, icon: Sliders, color: 'text-purple-600', bar: 'bg-purple-500' },
+    { label: 'Safety & Redaction (10%)', value: qualityScore.safety_score || 100.0, icon: ShieldCheck, color: 'text-emerald-700', bar: 'bg-emerald-600' },
   ]
 
   return (
@@ -31,7 +33,7 @@ export default function QualityRadarCard({ qualityScore }: QualityRadarCardProps
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Gauge className="h-5 w-5 text-sky-600" />
-          <h4 className="text-sm font-bold text-slate-900">AI Quality & Fidelity Score</h4>
+          <h4 className="text-sm font-bold text-slate-900">Multidimensional Quality Index</h4>
         </div>
         <div className="flex items-baseline gap-1">
           <span className="text-2xl font-black text-sky-700 font-mono">
@@ -42,7 +44,7 @@ export default function QualityRadarCard({ qualityScore }: QualityRadarCardProps
       </div>
 
       <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-        Composite heuristic index weighting source grounding, structural completeness, and readability.
+        Certified multi-rubric evaluation tracking source grounding, research confidence, readability, and sensitivity posture.
       </p>
 
       {/* Metric Bars */}

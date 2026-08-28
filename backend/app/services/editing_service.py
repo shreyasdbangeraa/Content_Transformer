@@ -15,16 +15,16 @@ class EditingService:
             raise ValueError(f"Output {output_id} not found")
 
         transformation = db.query(Transformation).filter(Transformation.id == output.transformation_id).first()
-        canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.id == transformation.canonical_id).first()
+        canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.id == transformation.canonical_id).first() if transformation else None
 
         canonical_dict = {
-            "title": canonical.title,
-            "topic": canonical.topic,
-            "executive_summary": canonical.executive_summary,
-            "key_facts": canonical.key_facts,
-            "statistics": canonical.statistics,
-            "risks": canonical.risks,
-            "recommendations": canonical.recommendations
+            "title": canonical.title if canonical else "Briefing",
+            "topic": canonical.topic if canonical else "General Topic",
+            "executive_summary": canonical.executive_summary if canonical else "",
+            "key_facts": canonical.key_facts if canonical else [],
+            "statistics": canonical.statistics if canonical else [],
+            "risks": canonical.risks if canonical else [],
+            "recommendations": canonical.recommendations if canonical else []
         }
 
         ai_provider = AIFactory.get_provider(provider_name)
@@ -79,32 +79,68 @@ class EditingService:
             existing_fc.verified_claims = fc_data.get("verified_claims", 0)
             existing_fc.partially_supported = fc_data.get("partially_supported", 0)
             existing_fc.unsupported_claims = fc_data.get("unsupported_claims", 0)
+            existing_fc.contradicted_claims = fc_data.get("contradicted_claims", 0)
+            existing_fc.opinion_creative = fc_data.get("opinion_creative", 0)
             existing_fc.grounding_score = fc_data.get("grounding_score", 100.0)
             existing_fc.claims = fc_data.get("claims", [])
+        else:
+            new_fc = FactCheck(
+                output_id=output.id,
+                total_claims=fc_data.get("total_claims", 0),
+                verified_claims=fc_data.get("verified_claims", 0),
+                partially_supported=fc_data.get("partially_supported", 0),
+                unsupported_claims=fc_data.get("unsupported_claims", 0),
+                contradicted_claims=fc_data.get("contradicted_claims", 0),
+                opinion_creative=fc_data.get("opinion_creative", 0),
+                grounding_score=fc_data.get("grounding_score", 100.0),
+                claims=fc_data.get("claims", [])
+            )
+            db.add(new_fc)
         
         # Recompute Quality Score
         quality_eval = QualityService.evaluate_output(
             format_type=output.format_type,
             raw_content=revised_text,
             grounding_score=fc_data.get("grounding_score", 100.0),
-            config={"target_audience": transformation.target_audience}
+            config={"target_audience": transformation.target_audience if transformation else "General"}
         )
         existing_qs = db.query(QualityScore).filter(QualityScore.output_id == output.id).first()
         if existing_qs:
             existing_qs.overall_score = quality_eval["overall_score"]
             existing_qs.source_accuracy = quality_eval["source_accuracy"]
             existing_qs.completeness = quality_eval["completeness"]
+            existing_qs.audience_fit = quality_eval["audience_fit"]
             existing_qs.readability = quality_eval["readability"]
+            existing_qs.tone_consistency = quality_eval["tone_consistency"]
+            existing_qs.structure_score = quality_eval["structure_score"]
+            existing_qs.research_confidence = quality_eval.get("research_confidence", 96.0)
+            existing_qs.safety_score = quality_eval.get("safety_score", 100.0)
             existing_qs.details = quality_eval["details"]
+        else:
+            new_qs = QualityScore(
+                output_id=output.id,
+                overall_score=quality_eval["overall_score"],
+                source_accuracy=quality_eval["source_accuracy"],
+                completeness=quality_eval["completeness"],
+                audience_fit=quality_eval["audience_fit"],
+                readability=quality_eval["readability"],
+                tone_consistency=quality_eval["tone_consistency"],
+                structure_score=quality_eval["structure_score"],
+                research_confidence=quality_eval.get("research_confidence", 96.0),
+                safety_score=quality_eval.get("safety_score", 100.0),
+                details=quality_eval["details"]
+            )
+            db.add(new_qs)
 
         # Audit Log
-        audit = AuditLog(
-            project_id=transformation.project_id,
-            action="OUTPUT_REFINED_AI",
-            actor="Operator via Conversational AI",
-            details={"output_id": output.id, "prompt": edit_prompt, "new_version": new_version_num}
-        )
-        db.add(audit)
+        if transformation:
+            audit = AuditLog(
+                project_id=transformation.project_id,
+                action="OUTPUT_REFINED_AI",
+                actor="Operator via Conversational AI",
+                details={"output_id": output.id, "prompt": edit_prompt, "new_version": new_version_num}
+            )
+            db.add(audit)
 
         db.commit()
         db.refresh(output)
@@ -135,13 +171,14 @@ class EditingService:
         db.add(new_version)
 
         # Audit Log
-        audit = AuditLog(
-            project_id=transformation.project_id,
-            action="OUTPUT_EDITED_MANUAL",
-            actor="Operator",
-            details={"output_id": output.id, "new_version": new_version_num}
-        )
-        db.add(audit)
+        if transformation:
+            audit = AuditLog(
+                project_id=transformation.project_id,
+                action="OUTPUT_EDITED_MANUAL",
+                actor="Operator",
+                details={"output_id": output.id, "new_version": new_version_num}
+            )
+            db.add(audit)
 
         db.commit()
         db.refresh(output)
@@ -161,13 +198,14 @@ class EditingService:
         output.approved_at = datetime.utcnow() if status == "APPROVED" else None
 
         # Audit Log
-        audit = AuditLog(
-            project_id=transformation.project_id,
-            action=f"OUTPUT_{status}",
-            actor="Operator",
-            details={"output_id": output.id, "format": output.format_type, "notes": notes}
-        )
-        db.add(audit)
+        if transformation:
+            audit = AuditLog(
+                project_id=transformation.project_id,
+                action=f"OUTPUT_{status}",
+                actor="Operator",
+                details={"output_id": output.id, "format": output.format_type, "notes": notes}
+            )
+            db.add(audit)
 
         db.commit()
         db.refresh(output)

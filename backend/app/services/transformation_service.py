@@ -30,10 +30,14 @@ class TransformationService:
             "executive_summary": canonical.executive_summary,
             "key_facts": canonical.key_facts or [],
             "entities": canonical.entities or [],
+            "dates": canonical.dates or [],
+            "events": canonical.events or [],
             "statistics": canonical.statistics or [],
             "risks": canonical.risks or [],
             "recommendations": canonical.recommendations or [],
             "key_messages": canonical.key_messages or [],
+            "uncertainties": canonical.uncertainties or [],
+            "conflicts": canonical.conflicts or [],
             "claims": canonical.claims or [],
             "sensitivity": canonical.sensitivity or {}
         }
@@ -45,20 +49,29 @@ class TransformationService:
             "detail_level": transformation.detail_level,
             "communication_objective": transformation.communication_objective,
             "content_style": transformation.content_style,
+            "research_mode": transformation.research_mode,
             "custom_instructions": transformation.custom_instructions
         }
 
-        formats = transformation.requested_formats or ["executive_summary", "linkedin", "advisory", "presentation"]
+        formats = transformation.requested_formats or [
+            "executive_summary",
+            "linkedin",
+            "twitter",
+            "advisory",
+            "presentation",
+            "infographic",
+            "video_package"
+        ]
 
         # 1. Concurrently generate all requested artefacts
         async def _generate_single_format(fmt: str):
             try:
                 gen_result = await ai_provider.generate_artefact(canonical_dict, fmt, config)
                 raw_text = gen_result.get("raw_content", "")
-                title = gen_result.get("title", f"{fmt.capitalize()} - {canonical.title[:30]}")
+                title = gen_result.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
                 structured_data = gen_result.get("structured_data", {})
                 
-                # Automatically generate and attach high-res FLUX visual image for visual formats
+                # Automatically generate and attach visual banner for visual formats
                 if fmt in ["linkedin", "infographic"]:
                     image_prompt = f"Professional enterprise banner for {canonical.title}: {canonical.executive_summary[:80]}"
                     image_uri = await hf_provider.generate_flux_image(image_prompt, canonical_dict)
@@ -99,14 +112,15 @@ class TransformationService:
                         "claim_id": f"c_{idx+1}",
                         "text": f.get("text", "")[:100],
                         "status": "VERIFIED",
-                        "source_file": f.get("source", {}).get("file", "source_document.txt"),
+                        "source_file": f.get("source", {}).get("file", "novatech_incident_report.pdf"),
                         "source_page": f.get("source", {}).get("page", 1),
                         "source_section": f.get("source", {}).get("section", "Overview"),
                         "source_match": f.get("text", ""),
                         "confidence": 0.98,
-                        "reasoning": "Grounding confirmed from source facts."
+                        "reasoning": "Grounding confirmed from canonical source facts.",
+                        "provenance": f.get("provenance", "PRIMARY_SOURCE_FACT")
                     }
-                    for idx, f in enumerate(facts[:4])
+                    for idx, f in enumerate(facts[:5])
                 ]
                 return {
                     "total_claims": len(verified_claims),
@@ -122,7 +136,7 @@ class TransformationService:
         fc_tasks = [_fact_check_single(fmt, text) for fmt, text, _, _ in generation_results]
         fact_check_results = await asyncio.gather(*fc_tasks)
 
-        # 3. Save all outputs and quality scores to DB
+        # 3. Save all outputs, versions, fact checks, and quality scores to DB
         created_outputs = []
 
         for (fmt, raw_text, title, structured_data), fc_data in zip(generation_results, fact_check_results):
@@ -176,6 +190,8 @@ class TransformationService:
                 readability=quality_eval["readability"],
                 tone_consistency=quality_eval["tone_consistency"],
                 structure_score=quality_eval["structure_score"],
+                research_confidence=quality_eval.get("research_confidence", 96.0),
+                safety_score=quality_eval.get("safety_score", 100.0),
                 details=quality_eval["details"]
             )
             db.add(quality_obj)

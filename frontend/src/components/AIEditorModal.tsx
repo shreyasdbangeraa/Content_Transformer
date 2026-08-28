@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Output } from '@/types'
 import {
   Sparkles,
@@ -9,6 +9,9 @@ import {
   Check,
   Edit3,
   RefreshCw,
+  Clock,
+  History,
+  FileCheck,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
@@ -35,11 +38,17 @@ export default function AIEditorModal({
   onClose,
   onUpdated,
 }: AIEditorModalProps) {
+  const [currentOutput, setCurrentOutput] = useState<Output>(output)
   const [prompt, setPrompt] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isDirectEdit, setIsDirectEdit] = useState(false)
   const [directContent, setDirectContent] = useState(output.raw_content)
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; text: string; time: string }>>([])
+
+  useEffect(() => {
+    setCurrentOutput(output)
+    setDirectContent(output.raw_content)
+  }, [output])
 
   if (!isOpen) return null
 
@@ -53,7 +62,8 @@ export default function AIEditorModal({
       setChatHistory((prev) => [...prev, userMsg])
       setPrompt('')
 
-      const updated = await api.conversationalEdit(output.id, textToSend)
+      const updated = await api.conversationalEdit(currentOutput.id, textToSend)
+      setCurrentOutput(updated)
       setDirectContent(updated.raw_content)
       onUpdated(updated)
 
@@ -73,7 +83,8 @@ export default function AIEditorModal({
   const handleDirectSave = async () => {
     try {
       setIsProcessing(true)
-      const updated = await api.directEdit(output.id, directContent, 'Manual operator adjustment')
+      const updated = await api.directEdit(currentOutput.id, directContent, 'Manual operator adjustment')
+      setCurrentOutput(updated)
       onUpdated(updated)
       setIsDirectEdit(false)
     } catch (err: any) {
@@ -97,12 +108,15 @@ export default function AIEditorModal({
                 <h3 className="text-base font-bold text-slate-900">
                   Conversational AI Editor & Versioning Studio
                 </h3>
-                <span className="rounded bg-sky-100 text-sky-800 px-2 py-0.5 text-xs font-mono font-bold">
-                  v{output.version}
+                <span className="rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 px-2.5 py-0.5 text-xs font-mono font-bold">
+                  v{currentOutput.version} (Active)
+                </span>
+                <span className="rounded-full bg-sky-100 text-sky-800 px-2 py-0.5 text-xs font-mono font-semibold">
+                  Grounding: {currentOutput.fact_check?.grounding_score?.toFixed(0) || '100'}%
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium">
-                Format: <strong className="text-slate-800">{output.format_type.toUpperCase()}</strong> • Grounded in canonical source facts
+                Format: <strong className="text-slate-800">{currentOutput.format_type.toUpperCase()}</strong> • Grounded in canonical source facts
               </p>
             </div>
           </div>
@@ -111,19 +125,19 @@ export default function AIEditorModal({
             <button
               onClick={() => setIsDirectEdit(!isDirectEdit)}
               className={clsx(
-                'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors shadow-2xs',
+                'flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-colors shadow-2xs',
                 isDirectEdit
                   ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
                   : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
               )}
             >
               <Edit3 className="h-3.5 w-3.5" />
-              <span>{isDirectEdit ? 'Direct Edit Mode Active' : 'Enable Direct Edit'}</span>
+              <span>{isDirectEdit ? 'Direct Edit Mode Active' : 'Manual Edit'}</span>
             </button>
 
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+              className="rounded-xl p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-800 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -136,13 +150,13 @@ export default function AIEditorModal({
           <div className="lg:col-span-7 flex flex-col border-r border-slate-200 bg-white p-5 overflow-y-auto">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                {isDirectEdit ? 'Edit Output Text Directly' : 'Live Output Document'}
+                {isDirectEdit ? 'Edit Output Text Directly' : `Live Output Preview (Version ${currentOutput.version})`}
               </span>
               {isDirectEdit && (
                 <button
                   onClick={handleDirectSave}
                   disabled={isProcessing}
-                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white hover:bg-emerald-500 transition-all shadow-xs"
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition-all shadow-xs"
                 >
                   <Check className="h-3.5 w-3.5" />
                   <span>Save Manual Edit</span>
@@ -154,11 +168,11 @@ export default function AIEditorModal({
               <textarea
                 value={directContent}
                 onChange={(e) => setDirectContent(e.target.value)}
-                className="w-full flex-1 rounded-xl border border-slate-300 bg-slate-50 p-4 text-xs text-slate-800 font-mono focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none min-h-[400px]"
+                className="w-full flex-1 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-xs text-slate-800 font-mono focus:border-sky-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-sky-500 resize-none min-h-[400px]"
               />
             ) : (
-              <div className="flex-1 rounded-xl border border-slate-200 bg-slate-50/50 p-5 overflow-y-auto">
-                <StructuredContentRenderer content={output.raw_content} />
+              <div className="flex-1 rounded-2xl border border-slate-200 bg-slate-50/50 p-5 overflow-y-auto">
+                <StructuredContentRenderer content={currentOutput.raw_content} />
               </div>
             )}
           </div>
@@ -187,7 +201,7 @@ export default function AIEditorModal({
                       key={idx}
                       onClick={() => handleConversationalSubmit(s)}
                       disabled={isProcessing}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-700 font-medium hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 transition-all text-left shadow-2xs disabled:opacity-50"
+                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] text-slate-700 font-medium hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 transition-all text-left shadow-2xs disabled:opacity-50"
                     >
                       ⚡ {s}
                     </button>
@@ -198,7 +212,7 @@ export default function AIEditorModal({
               {/* Chat Session Messages */}
               <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
                 {chatHistory.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-slate-400 bg-white/60 font-medium">
+                  <div className="rounded-2xl border border-dashed border-slate-300 p-4 text-center text-xs text-slate-400 bg-white/60 font-medium">
                     No revisions in this session yet. Type an instruction below or click a suggestion chip.
                   </div>
                 ) : (
@@ -206,7 +220,7 @@ export default function AIEditorModal({
                     <div
                       key={idx}
                       className={clsx(
-                        'rounded-xl p-3 text-xs space-y-1 shadow-2xs',
+                        'rounded-2xl p-3 text-xs space-y-1 shadow-2xs',
                         msg.role === 'user'
                           ? 'bg-sky-50 border border-sky-200 text-sky-900 ml-4 font-semibold'
                           : 'bg-white border border-slate-200 text-slate-800 mr-4 font-medium'

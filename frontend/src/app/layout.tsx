@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
+import { NavProvider } from '@/context/NavContext'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -28,8 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans bg-slate-50 text-slate-900 text-[15px] leading-normal antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
-        <Navbar />
-        <main className="flex-1 flex flex-col">{children}</main>
+        <NavProvider>
+          <Navbar />
+          <main className="flex-1 flex flex-col">{children}</main>
+        </NavProvider>
       </body>
     </html>
   )

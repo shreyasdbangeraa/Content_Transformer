@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -12,6 +12,7 @@ class ClaimVerification(BaseModel):
     source_match: Optional[str] = None
     confidence: float = 0.95
     reasoning: Optional[str] = None
+    provenance: Optional[str] = "PRIMARY_SOURCE_FACT"
 
 class FactCheckResponse(BaseModel):
     id: str
@@ -26,8 +27,7 @@ class FactCheckResponse(BaseModel):
     claims: List[ClaimVerification] = []
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class QualityScoreResponse(BaseModel):
     id: str
@@ -39,8 +39,9 @@ class QualityScoreResponse(BaseModel):
     readability: float
     tone_consistency: float
     structure_score: float
+    research_confidence: float = 96.0
+    safety_score: float = 100.0
     details: Dict[str, Any] = {}
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
