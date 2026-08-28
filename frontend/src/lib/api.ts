@@ -86,6 +86,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
+  scrapeUrl: (projectId: string, url: string) =>
+    request<Source>(`/sources/projects/${projectId}/url`, {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    }),
   analyzeSource: (sourceId: string, provider?: string) =>
     request<CanonicalAnalysis>(`/sources/${sourceId}/analyze?provider=${provider || ''}`, {
       method: 'POST',

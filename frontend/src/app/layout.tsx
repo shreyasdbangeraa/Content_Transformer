@@ -1,6 +1,19 @@
 import type { Metadata } from 'next'
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'AI Content Transformer — One Source. Every Communication Format.',
@@ -13,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+    <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
+      <body className="font-sans bg-slate-50 text-slate-900 text-[15px] leading-normal antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
         <Navbar />
         <main className="flex-1 flex flex-col">{children}</main>
       </body>

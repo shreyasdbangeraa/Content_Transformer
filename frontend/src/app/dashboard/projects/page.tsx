@@ -53,85 +53,85 @@ export default function ProjectsPage() {
   )
 
   return (
-    <div className="space-y-6 animate-fade-in pb-16">
+    <div className="space-y-8 animate-fade-in pb-20 max-w-7xl mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <FolderKanban className="h-5 w-5 text-sky-600" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-slate-200 pb-6">
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
+            <FolderKanban className="h-8 w-8 text-sky-600" />
             Transformation Projects
           </h1>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
+          <p className="text-sm sm:text-base text-slate-600 font-medium">
             Manage your past and active multi-format intelligence pipelines.
           </p>
         </div>
 
         <Link
           href="/dashboard/new"
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:from-sky-500 hover:to-indigo-500 transition-all shadow-md shadow-sky-600/20"
+          className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white hover:from-sky-500 hover:to-indigo-500 transition-all shadow-md shadow-sky-600/25 active:scale-95"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5" />
           <span>New Transformation</span>
         </Link>
       </div>
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="h-4 w-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search className="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search projects by title, domain, or keywords..."
-          className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:border-sky-500 focus:outline-none shadow-2xs font-medium"
+          className="w-full rounded-2xl border border-slate-300 bg-white pl-12 pr-5 py-3.5 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:border-sky-500 focus:outline-none shadow-xs font-medium"
         />
       </div>
 
       {/* Project Cards Grid */}
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-500">Loading projects...</div>
+        <div className="p-16 text-center text-sm font-bold text-slate-500">Loading projects...</div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-3 bg-white">
-          <FolderKanban className="h-8 w-8 mx-auto text-slate-400" />
-          <p className="text-xs text-slate-500 font-medium">No matching projects found.</p>
+        <div className="rounded-3xl border-2 border-dashed border-slate-300 p-16 text-center space-y-4 bg-white">
+          <FolderKanban className="h-10 w-10 mx-auto text-slate-400" />
+          <p className="text-base text-slate-600 font-medium">No matching projects found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((p) => (
             <div
               key={p.id}
               onClick={() => router.push(`/dashboard/projects/${p.id}`)}
-              className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4 hover:border-sky-400 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between shadow-xs"
+              className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-5 hover:border-sky-400 hover:shadow-lg cursor-pointer transition-all flex flex-col justify-between shadow-xs"
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] rounded bg-sky-50 text-sky-800 font-mono font-bold px-2 py-0.5 border border-sky-200">
+                  <span className="text-xs rounded-md bg-sky-50 text-sky-800 font-mono font-bold px-2.5 py-1 border border-sky-200">
                     {p.domain}
                   </span>
                   <button
                     onClick={(e) => handleDelete(p.id, e)}
-                    className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                    className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg p-1.5 transition-colors"
                     title="Delete project"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 hover:text-sky-700 transition-colors">
+                <h3 className="text-lg font-bold text-slate-900 hover:text-sky-700 transition-colors leading-snug">
                   {p.title}
                 </h3>
-                <p className="text-xs text-slate-500 line-clamp-2 font-medium">
-                  {p.description || 'No description provided.'}
+                <p className="text-sm text-slate-600 line-clamp-2 font-medium leading-relaxed">
+                  {p.description || 'Verified canonical transformation project.'}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Layers className="h-3.5 w-3.5 text-sky-600" />
+                  <Layers className="h-4 w-4 text-sky-600" />
                   <span>{p.outputs_count || 0} Artefacts</span>
                 </div>
-                <span className="flex items-center gap-1 text-sky-700 font-bold">
+                <span className="flex items-center gap-1.5 text-sky-700 font-bold text-sm">
                   <span>Open Studio</span>
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
             </div>

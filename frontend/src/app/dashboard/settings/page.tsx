@@ -53,157 +53,157 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-4xl pb-16">
+    <div className="space-y-10 animate-fade-in max-w-5xl pb-20 mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Settings className="h-5 w-5 text-sky-600" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-slate-200 pb-6">
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
+            <Settings className="h-8 w-8 text-sky-600" />
             System Configuration & AI Engine Status
           </h1>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
+          <p className="text-sm sm:text-base text-slate-600 font-medium">
             Status of backend AI providers, Supabase database, Hugging Face FLUX.1 models, and n8n webhooks.
           </p>
         </div>
 
         <button
           onClick={loadStatus}
-          className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+          className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className="h-4 w-4" />
           <span>Refresh Status</span>
         </button>
       </div>
 
       {/* System Status Indicators */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1 shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-2 shadow-xs">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
             AI Provider Engine
           </span>
-          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Cpu className="h-4 w-4 text-sky-600" />
+          <div className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+            <Cpu className="h-5 w-5 text-sky-600" />
             <span>{status?.default_ai_provider ? status.default_ai_provider.toUpperCase() : 'ONLINE'}</span>
           </div>
-          <span className="text-[11px] text-emerald-700 font-semibold">Active & grounded</span>
+          <span className="text-xs sm:text-sm text-emerald-700 font-semibold block">Active & grounded</span>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1 shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-2 shadow-xs">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
             Image Model
           </span>
-          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <ImageIcon className="h-4 w-4 text-indigo-600" />
+          <div className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+            <ImageIcon className="h-5 w-5 text-indigo-600" />
             <span>FLUX.1-schnell</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium">Hugging Face API</span>
+          <span className="text-xs sm:text-sm text-slate-500 font-medium block">Hugging Face API</span>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1 shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-2 shadow-xs">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
             Database Engine
           </span>
-          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+          <div className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+            <ShieldCheck className="h-5 w-5 text-emerald-600" />
             <span>{status?.database_engine || 'Supabase PostgreSQL'}</span>
           </div>
-          <span className="text-[11px] text-emerald-700 font-medium">
+          <span className="text-xs sm:text-sm text-emerald-700 font-semibold block">
             {status?.database_connected ? 'Connected & Active' : 'Supabase Cloud Pooler'}
           </span>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-1 shadow-xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-2 shadow-xs">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
             Automation Node
           </span>
-          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Workflow className="h-4 w-4 text-cyan-600" />
+          <div className="text-base font-bold text-slate-900 flex items-center gap-2.5">
+            <Workflow className="h-5 w-5 text-cyan-600" />
             <span>n8n Webhook</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium">Active signature check</span>
+          <span className="text-xs sm:text-sm text-slate-500 font-medium block">Active signature check</span>
         </div>
       </div>
 
       {/* Environment (.env) Configuration Notice */}
-      <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-6 space-y-3 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="rounded-xl bg-sky-100 p-2 text-sky-700">
-            <Lock className="h-5 w-5" />
+      <div className="rounded-3xl border border-sky-200 bg-sky-50/70 p-8 space-y-4 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="rounded-2xl bg-sky-100 p-3 text-sky-700">
+            <Lock className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">
               Server-Side Environment Security (.env)
             </h3>
-            <p className="text-xs text-slate-600 font-medium">
-              All credentials, API keys, and database endpoints are securely loaded from the project root <code className="bg-sky-100 px-1.5 py-0.5 rounded font-mono text-sky-800 font-bold">.env</code> file on the server.
+            <p className="text-sm text-slate-600 font-medium mt-0.5">
+              All credentials, API keys, and database endpoints are securely loaded from the project root <code className="bg-sky-100 px-2 py-0.5 rounded font-mono text-sky-800 font-bold">.env</code> file on the server.
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-sky-200 bg-white p-4 text-xs font-mono text-slate-700 space-y-1.5 shadow-2xs">
-          <div className="text-[11px] text-slate-400 uppercase font-bold tracking-wider mb-1 font-sans">
+        <div className="rounded-2xl border border-sky-200 bg-white p-6 text-sm font-mono text-slate-700 space-y-2.5 shadow-xs">
+          <div className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2 font-sans">
             Configured Environment Keys in .env:
           </div>
-          <div className="flex items-center gap-2 text-emerald-700 font-bold">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2.5 text-emerald-700 font-bold">
+            <CheckCircle2 className="h-4 w-4" />
             <span>GEMINI_API_KEY & OPENAI_API_KEY</span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-700 font-bold">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2.5 text-emerald-700 font-bold">
+            <CheckCircle2 className="h-4 w-4" />
             <span>HUGGINGFACE_API_KEY (FLUX.1-schnell / FLUX.1-dev)</span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-700 font-bold">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2.5 text-emerald-700 font-bold">
+            <CheckCircle2 className="h-4 w-4" />
             <span>SUPABASE_URL & SUPABASE_KEY</span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-700 font-bold">
-            <CheckCircle2 className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2.5 text-emerald-700 font-bold">
+            <CheckCircle2 className="h-4 w-4" />
             <span>N8N_WEBHOOK_URL & N8N_WEBHOOK_SECRET</span>
           </div>
         </div>
       </div>
 
       {/* Hugging Face FLUX.1 Visual Generation Test */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="rounded-xl bg-indigo-50 p-2 text-indigo-700">
-            <ImageIcon className="h-5 w-5" />
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 space-y-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="rounded-2xl bg-indigo-50 p-3 text-indigo-700 border border-indigo-100">
+            <ImageIcon className="h-6 w-6" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
+            <h3 className="text-lg font-bold text-slate-900">
               Hugging Face FLUX.1 Visual Generation Studio
             </h3>
-            <p className="text-xs text-slate-500 font-medium">
-              Test FLUX.1-schnell / FLUX.1-dev text-to-image synthesis for infographics and slide visual assets.
+            <p className="text-sm text-slate-500 font-medium mt-0.5">
+              Test FLUX.1-schnell text-to-image synthesis for infographics and slide visual assets.
             </p>
           </div>
         </div>
 
-        <div className="space-y-3 text-xs">
+        <div className="space-y-4">
           <textarea
             value={fluxPrompt}
             onChange={(e) => setFluxPrompt(e.target.value)}
-            rows={2}
-            className="w-full rounded-xl border border-slate-300 bg-slate-50 p-3.5 text-xs text-slate-800 focus:border-sky-500 focus:bg-white focus:outline-none shadow-2xs font-medium"
+            rows={3}
+            className="w-full rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-800 focus:border-sky-500 focus:bg-white focus:outline-none shadow-xs font-normal leading-relaxed"
           />
 
-          <div className="flex justify-between items-center">
-            <span className="text-[11px] text-slate-500 font-medium">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+            <span className="text-xs text-slate-500 font-medium">
               Model: <code className="text-sky-700 font-mono font-bold">black-forest-labs/FLUX.1-schnell</code>
             </span>
             <button
               onClick={handleTestFlux}
               disabled={isGeneratingFlux}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 px-4 py-2 font-bold text-white shadow-xs hover:from-indigo-500 hover:to-sky-500 disabled:opacity-50 transition-all"
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-6 py-3 font-bold text-sm text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 disabled:opacity-50 transition-all active:scale-95"
             >
               {isGeneratingFlux ? (
                 <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  <RefreshCw className="h-4 w-4 animate-spin" />
                   <span>Synthesizing FLUX Visual...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Sparkles className="h-4 w-4" />
                   <span>Generate FLUX Visual</span>
                 </>
               )}
@@ -211,15 +211,15 @@ export default function SettingsPage() {
           </div>
 
           {fluxImageUri && (
-            <div className="pt-3">
-              <span className="text-[11px] font-bold text-slate-700 block mb-2">
+            <div className="pt-4 border-t border-slate-100">
+              <span className="text-sm font-bold text-slate-800 block mb-3">
                 Generated FLUX Asset:
               </span>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 overflow-hidden flex justify-center shadow-xs">
+              <div className="rounded-3xl border border-slate-200 bg-slate-900 p-4 overflow-hidden flex justify-center shadow-lg">
                 <img
                   src={fluxImageUri}
                   alt="FLUX visual asset"
-                  className="max-h-64 rounded-xl object-contain shadow-xs"
+                  className="max-h-80 rounded-2xl object-contain shadow-md"
                 />
               </div>
             </div>

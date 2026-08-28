@@ -61,7 +61,7 @@ export default function ProjectDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-xs text-slate-500">
+      <div className="p-16 text-center text-sm font-bold text-slate-500">
         Loading Project Studio...
       </div>
     )
@@ -69,11 +69,11 @@ export default function ProjectDetailPage() {
 
   if (!project) {
     return (
-      <div className="p-12 text-center space-y-3">
-        <p className="text-xs text-slate-500">Project not found.</p>
+      <div className="p-16 text-center space-y-4">
+        <p className="text-base text-slate-600 font-medium">Project not found.</p>
         <button
           onClick={() => router.push('/dashboard/projects')}
-          className="rounded-lg bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 border border-sky-200"
+          className="rounded-2xl bg-sky-50 px-5 py-2.5 text-sm font-bold text-sky-700 border border-sky-200"
         >
           Back to Projects
         </button>
@@ -105,35 +105,36 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-16">
+    <div className="space-y-8 animate-fade-in pb-20 max-w-6xl mx-auto w-full">
       {/* Top Breadcrumb & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-slate-200 pb-6">
+        <div className="flex items-center gap-3.5">
           <button
             onClick={() => router.push('/dashboard/projects')}
-            className="rounded-xl p-2 border border-slate-300 bg-white text-slate-600 hover:text-slate-900 transition-colors shadow-2xs"
+            className="rounded-2xl p-2.5 border border-slate-300 bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-xs"
+            title="Back to Projects"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded bg-sky-50 text-sky-800 border border-sky-200 px-2 py-0.5 text-[10px] font-bold uppercase font-mono">
+            <div className="flex items-center gap-2.5">
+              <span className="rounded-md bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-0.5 text-xs font-bold uppercase font-mono">
                 {project.domain}
               </span>
-              <span className="text-xs text-slate-400 font-mono">ID: {project.id.slice(0, 8)}</span>
+              <span className="text-xs text-slate-400 font-mono font-medium">ID: {project.id.slice(0, 8)}</span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mt-1">{project.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">{project.title}</h1>
           </div>
         </div>
 
         {/* View Mode Toggle: Outputs Studio vs Canonical Model */}
-        <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-2xl text-xs shadow-2xs">
+        <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1.5 rounded-2xl text-xs sm:text-sm shadow-xs">
           <button
             onClick={() => setViewMode('outputs')}
             className={clsx(
-              'px-3.5 py-1.5 rounded-xl font-bold transition-all',
+              'px-4 py-2 rounded-xl font-bold transition-all',
               viewMode === 'outputs'
-                ? 'bg-white text-sky-800 shadow-xs border border-slate-200/80'
+                ? 'bg-white text-sky-800 shadow-sm border border-slate-200/80'
                 : 'text-slate-600 hover:text-slate-900'
             )}
           >
@@ -142,9 +143,9 @@ export default function ProjectDetailPage() {
           <button
             onClick={() => setViewMode('canonical')}
             className={clsx(
-              'px-3.5 py-1.5 rounded-xl font-bold transition-all',
+              'px-4 py-2 rounded-xl font-bold transition-all',
               viewMode === 'canonical'
-                ? 'bg-white text-sky-800 shadow-xs border border-slate-200/80'
+                ? 'bg-white text-sky-800 shadow-sm border border-slate-200/80'
                 : 'text-slate-600 hover:text-slate-900'
             )}
           >
@@ -165,32 +166,32 @@ export default function ProjectDetailPage() {
 
       {/* VIEW 2: OUTPUTS STUDIO */}
       {viewMode === 'outputs' && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {outputs.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center space-y-3 bg-white">
-              <Layers className="h-8 w-8 mx-auto text-slate-400" />
-              <p className="text-xs text-slate-500 font-medium">No generated artefacts found for this project.</p>
+            <div className="rounded-3xl border-2 border-dashed border-slate-300 p-16 text-center space-y-4 bg-white">
+              <Layers className="h-10 w-10 mx-auto text-slate-400" />
+              <p className="text-base text-slate-600 font-medium">No generated artefacts found for this project.</p>
             </div>
           ) : (
             <>
               {/* Output Format Switcher Tabs */}
-              <div className="flex overflow-x-auto gap-2 border-b border-slate-200 pb-3">
+              <div className="flex overflow-x-auto gap-2.5 border-b border-slate-200 pb-4">
                 {outputs.map((o) => {
                   const isActive = activeOutputTab === o.format_type
                   return (
                     <button
                       key={o.id}
                       onClick={() => setActiveOutputTab(o.format_type)}
-                      className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold whitespace-nowrap transition-all shadow-2xs ${
+                      className={`flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold whitespace-nowrap transition-all shadow-xs ${
                         isActive
-                          ? 'bg-sky-600 text-white shadow-xs'
+                          ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
                           : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
                       }`}
                     >
                       <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
                       <span
-                        className={`rounded-full px-1.5 py-0.2 text-[9px] font-mono ${
-                          isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-mono font-bold ${
+                          isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
                         }`}
                       >
                         v{o.version}
@@ -202,20 +203,20 @@ export default function ProjectDetailPage() {
 
               {/* Main Content & Sidebar Grid */}
               {activeOutput && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   {/* Left Main View (8 cols) */}
-                  <div className="lg:col-span-8 space-y-6">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5 shadow-xs">
+                  <div className="lg:col-span-8 space-y-8">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-6 shadow-xs">
                       {/* Top Bar */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold uppercase rounded bg-sky-100 text-sky-800 border border-sky-200 px-2 py-0.5 font-mono">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xs font-bold uppercase rounded-md bg-sky-100 text-sky-800 border border-sky-200 px-2.5 py-0.5 font-mono">
                               {activeOutput.format_type.toUpperCase()}
                             </span>
                             <span
                               className={clsx(
-                                'text-[10px] font-bold uppercase rounded px-2 py-0.5 border font-mono',
+                                'text-xs font-bold uppercase rounded-md px-2.5 py-0.5 border font-mono',
                                 activeOutput.status === 'APPROVED'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                                   : activeOutput.status === 'PUBLISHED'
@@ -226,18 +227,18 @@ export default function ProjectDetailPage() {
                               {activeOutput.status}
                             </span>
                           </div>
-                          <h3 className="text-base font-bold text-slate-900 mt-1">
+                          <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">
                             {activeOutput.title || `${activeOutput.format_type} Deliverable`}
                           </h3>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2.5 flex-wrap">
                           <button
                             onClick={() => setEditorOutput(activeOutput)}
-                            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+                            className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
                           >
-                            <Sparkles className="h-3.5 w-3.5 text-sky-600" />
+                            <Sparkles className="h-4 w-4 text-sky-600" />
                             <span>Ask AI to Edit</span>
                           </button>
 
@@ -249,9 +250,9 @@ export default function ProjectDetailPage() {
 
                           <button
                             onClick={() => setPublishOutput(activeOutput)}
-                            className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:from-sky-500 hover:to-indigo-500 transition-all"
+                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs hover:from-sky-500 hover:to-indigo-500 transition-all"
                           >
-                            <Send className="h-3.5 w-3.5" />
+                            <Send className="h-4 w-4" />
                             <span>Publish (n8n)</span>
                           </button>
                         </div>
@@ -268,34 +269,34 @@ export default function ProjectDetailPage() {
                       ) : activeOutput.format_type === 'infographic' ? (
                         <InfographicCard output={activeOutput} />
                       ) : (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+                        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
                           <StructuredContentRenderer content={activeOutput.raw_content} />
                         </div>
                       )}
 
                       {/* Human Approval Sign-off */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50">
-                        <div className="text-xs">
-                          <span className="font-bold text-slate-900 block">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-200 bg-slate-50/90">
+                        <div>
+                          <span className="text-sm font-bold text-slate-900 block">
                             Human Review & Decision
                           </span>
-                          <span className="text-[11px] text-slate-500 font-medium">
+                          <span className="text-xs text-slate-500 font-medium">
                             Required to authorize public publishing.
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2.5">
                           <button
                             onClick={() => handleApproval('REJECT')}
-                            className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors shadow-2xs"
+                            className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-rose-700 hover:bg-rose-50 transition-colors shadow-xs"
                           >
                             Reject
                           </button>
                           <button
                             onClick={() => handleApproval('APPROVE')}
-                            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 shadow-xs transition-all"
+                            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs sm:text-sm font-bold text-white hover:bg-emerald-500 shadow-sm transition-all"
                           >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <CheckCircle2 className="h-4 w-4" />
                             <span>Approve Output</span>
                           </button>
                         </div>
@@ -312,16 +313,16 @@ export default function ProjectDetailPage() {
 
                     {/* Ingested Source Overview */}
                     {project.sources && project.sources.length > 0 && (
-                      <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 text-xs shadow-xs">
-                        <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                      <div className="rounded-3xl border border-slate-200 bg-white p-6 space-y-3.5 shadow-xs">
+                        <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                           <FileText className="h-4 w-4 text-sky-600" />
                           Source Document
                         </h4>
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1">
-                          <div className="font-bold text-slate-900">
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-1.5">
+                          <div className="text-sm font-bold text-slate-900 break-words">
                             {project.sources[0].filename}
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium">
+                          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium flex-wrap">
                             <span>{project.sources[0].file_type.toUpperCase()}</span>
                             <span>•</span>
                             <span>{project.sources[0].page_count} Pages</span>
