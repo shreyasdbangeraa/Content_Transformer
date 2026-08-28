@@ -66,13 +66,18 @@ class TransformationService:
         # 1. Concurrently generate all requested artefacts
         async def _generate_single_format(fmt: str):
             try:
-                gen_result = await ai_provider.generate_artefact(canonical_dict, fmt, config)
+                # Dedicated Hugging Face Model Generation for LinkedIn Thought Leadership
+                if fmt == "linkedin":
+                    gen_result = await hf_provider.generate_linkedin_post(canonical_dict, config)
+                else:
+                    gen_result = await ai_provider.generate_artefact(canonical_dict, fmt, config)
+
                 raw_text = gen_result.get("raw_content", "")
                 title = gen_result.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
                 structured_data = gen_result.get("structured_data", {})
                 
-                # Automatically generate and attach visual banner for visual formats
-                if fmt in ["linkedin", "infographic"]:
+                # Dedicated Visual Infographic Asset Blueprint (SVG 1200x1200) ONLY for infographic
+                if fmt == "infographic":
                     image_prompt = f"Professional enterprise banner for {canonical.title}: {canonical.executive_summary[:80]}"
                     image_uri = await hf_provider.generate_flux_image(image_prompt, canonical_dict)
                     if image_uri:
@@ -89,7 +94,7 @@ class TransformationService:
                     raw_text += f"- {f.get('text', '')}\n"
                 
                 fallback_struct: Dict[str, Any] = {"format": fmt, "error": str(e)}
-                if fmt in ["linkedin", "infographic"]:
+                if fmt == "infographic":
                     image_uri = await hf_provider.generate_flux_image(topic, canonical_dict)
                     fallback_struct["image_url"] = image_uri
                     fallback_struct["image_uri"] = image_uri
