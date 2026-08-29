@@ -36,6 +36,14 @@ class PublishingService:
 
         target_webhook = webhook_url or settings.N8N_WEBHOOK_URL
 
+        struct_data = output.structured_data or {}
+        image_url = struct_data.get("image_url", "")
+        raw_hashtags = struct_data.get("hashtags", [])
+        if isinstance(raw_hashtags, list):
+            hashtags_str = " ".join([h if h.startswith("#") else f"#{h}" for h in raw_hashtags])
+        else:
+            hashtags_str = str(raw_hashtags or "#Technology #Innovation #AI")
+
         # Construct certified n8n payload
         payload = {
             "event": "content.approved_for_publishing",
@@ -43,11 +51,17 @@ class PublishingService:
             "workflow_name": "Social Media AI Publisher",
             "project_id": transformation.project_id if transformation else "",
             "output_id": output.id,
+            "post_id": output.id,
+            "topic": output.title or "Social Media Release",
             "format_type": output.format_type,
             "platform": platform,
             "title": output.title,
             "content": output.raw_content,
-            "structured_data": output.structured_data,
+            "linkedin_caption": output.raw_content,
+            "instagram_caption": output.raw_content,
+            "image_url": image_url,
+            "hashtags": hashtags_str,
+            "structured_data": struct_data,
             "scheduled_at": scheduled_at.isoformat() if scheduled_at else datetime.utcnow().isoformat(),
             "approved_by": "Operator (Human-in-the-loop Certification)",
             "approval_notes": output.approval_notes or "Certified by compliance lead",

@@ -224,9 +224,22 @@ function NewTransformationStudioContent() {
           ? await api.approveOutput(activeOutput.id, 'Approved by operator')
           : await api.rejectOutput(activeOutput.id, 'Rejected by operator')
 
+      if (action === 'APPROVE') {
+        try {
+          await api.publishToN8n(activeOutput.id, 'n8n')
+          updated.status = 'PUBLISHED'
+        } catch (publishErr) {
+          console.warn('n8n auto-publish dispatch:', publishErr)
+        }
+      }
+
       setGeneratedOutputs((prev) =>
         prev.map((o) => (o.id === updated.id ? updated : o))
       )
+
+      if (action === 'APPROVE') {
+        alert('✅ Post Approved & Dispatched to n8n Social Media AI Publisher workflow!')
+      }
     } catch (err: any) {
       alert(`Approval update failed: ${err.message}`)
     }

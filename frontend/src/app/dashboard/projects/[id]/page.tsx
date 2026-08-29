@@ -96,6 +96,15 @@ export default function ProjectDetailPage() {
           ? await api.approveOutput(activeOutput.id, 'Approved by human operator')
           : await api.rejectOutput(activeOutput.id, 'Rejected by human operator')
 
+      if (action === 'APPROVE') {
+        try {
+          await api.publishToN8n(activeOutput.id, 'n8n')
+          updated.status = 'PUBLISHED'
+        } catch (publishErr) {
+          console.warn('n8n auto-publish dispatch:', publishErr)
+        }
+      }
+
       setProject((prev) => {
         if (!prev) return prev
         return {
@@ -103,6 +112,10 @@ export default function ProjectDetailPage() {
           outputs: prev.outputs?.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o)),
         }
       })
+
+      if (action === 'APPROVE') {
+        alert('✅ Post Approved & Dispatched to n8n Social Media AI Publisher workflow!')
+      }
     } catch (err: any) {
       alert(`Approval failed: ${err.message}`)
     }

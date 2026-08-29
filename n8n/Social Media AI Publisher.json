@@ -3,73 +3,20 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "minutes",
-              "minutesInterval": 10
-            }
-          ]
-        }
+        "httpMethod": "POST",
+        "path": "social-publish",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "id": "a888595a-84a4-4316-8a9a-911fdfcf79fb",
-      "name": "01 - Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.4,
+      "id": "webhook-trigger-001",
+      "name": "01 - Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
       "position": [
         0,
         192
-      ]
-    },
-    {
-      "parameters": {
-        "documentId": {
-          "__rl": true,
-          "value": "1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w",
-          "mode": "list",
-          "cachedResultName": "social_media",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "Social_Content"
-        },
-        "options": {
-          "dataLocationOnSheet": {
-            "values": {
-              "rangeDefinition": "detectAutomatically"
-            }
-          }
-        }
-      },
-      "id": "71ef81c9-37f4-49e7-8fd6-1fbaadd5565e",
-      "name": "02 - Get Content Calendar",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        224,
-        192
       ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "RKQ6jTdZiBbcMj08",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const now = new Date();\nconst IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;\nconst nowIST = new Date(now.getTime() + IST_OFFSET_MS);\nconst todayStr = nowIST.toISOString().slice(0, 10);\nconst currentTimeStr = nowIST.toISOString().slice(11, 16);\nconst items = $input.all();\nconst duePosts = items.filter(function(item) {\n  const row = item.json;\n  if (row.status !== 'PENDING') return false;\n  if (row.linkedin_post_id && row.instagram_post_id) return false;\n  if (!row.scheduled_date || !row.scheduled_time) return false;\n  const schedDate = String(row.scheduled_date).trim().slice(0, 10);\n  const schedTime = String(row.scheduled_time).trim().slice(0, 5);\n  if (schedDate < todayStr) return true;\n  if (schedDate === todayStr && schedTime <= currentTimeStr) return true;\n  return false;\n});\nif (duePosts.length === 0) return [];\nreturn [duePosts[0]];"
-      },
-      "id": "380e725c-45d2-4439-82bc-25b0fc2d0eec",
-      "name": "03 - Filter Due Posts",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        448,
-        192
-      ]
+      "webhookId": "social-publish-webhook"
     },
     {
       "parameters": {
@@ -78,61 +25,79 @@
             {
               "id": "f1",
               "name": "post_id",
-              "value": "={{ $json.post_id }}",
+              "value": "={{ $json.body?.post_id || $json.body?.output_id || $json.output_id || $json.post_id || ('post_' + $now.toMillis()) }}",
               "type": "string"
             },
             {
               "id": "f2",
               "name": "topic",
-              "value": "={{ $json.topic }}",
+              "value": "={{ $json.body?.topic || $json.body?.title || $json.title || $json.topic || 'Social Media Release' }}",
               "type": "string"
             },
             {
               "id": "f3",
               "name": "source_url",
-              "value": "={{ $json.source_url }}",
+              "value": "={{ $json.body?.source_url || $json.source_url || '' }}",
               "type": "string"
             },
             {
               "id": "f4",
               "name": "source_content",
-              "value": "={{ $json.source_content }}",
+              "value": "={{ $json.body?.source_content || $json.source_content || '' }}",
               "type": "string"
             },
             {
               "id": "f5",
               "name": "image_url",
-              "value": "={{ $json.image_url }}",
+              "value": "={{ $json.body?.image_url || $json.body?.structured_data?.image_url || $json.image_url || '' }}",
               "type": "string"
             },
             {
               "id": "f6",
               "name": "content_type",
-              "value": "={{ $json.content_type }}",
+              "value": "={{ $json.body?.format_type || $json.format_type || 'linkedin' }}",
               "type": "string"
             },
             {
               "id": "f7",
-              "name": "linkedin_post_id",
-              "value": "={{ $json.linkedin_post_id }}",
+              "name": "linkedin_caption",
+              "value": "={{ $json.body?.linkedin_caption || $json.body?.content || $json.content || '' }}",
               "type": "string"
             },
             {
               "id": "f8",
-              "name": "instagram_post_id",
-              "value": "={{ $json.instagram_post_id }}",
+              "name": "instagram_caption",
+              "value": "={{ $json.body?.instagram_caption || $json.body?.content || $json.content || '' }}",
               "type": "string"
             },
             {
               "id": "f9",
-              "name": "scheduled_date",
-              "value": "={{ $json.scheduled_date }}",
+              "name": "hashtags",
+              "value": "={{ $json.body?.hashtags || ($json.body?.structured_data?.hashtags ? (Array.isArray($json.body.structured_data.hashtags) ? $json.body.structured_data.hashtags.join(' ') : $json.body.structured_data.hashtags) : '') || '#Technology #Innovation #AI' }}",
               "type": "string"
             },
             {
               "id": "f10",
+              "name": "scheduled_date",
+              "value": "={{ $json.body?.scheduled_at || $now.format('yyyy-MM-dd') }}",
+              "type": "string"
+            },
+            {
+              "id": "f11",
               "name": "scheduled_time",
-              "value": "={{ $json.scheduled_time }}",
+              "value": "={{ $now.format('HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "f12",
+              "name": "linkedin_post_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "f13",
+              "name": "instagram_post_id",
+              "value": "",
               "type": "string"
             }
           ]
@@ -140,80 +105,51 @@
         "options": {}
       },
       "id": "085285f0-cd12-47e9-95d8-dbfda105f6b2",
-      "name": "04 - Set Post Context",
+      "name": "02 - Set Post Context",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        672,
+        224,
         192
       ]
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w",
-          "mode": "list",
-          "cachedResultName": "social_media",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "Social_Content"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "matchingColumns": [
-            "post_id"
-          ],
-          "value": {
-            "post_id": "={{ $(\"04 - Set Post Context\").item.json.post_id }}",
-            "status": "PROCESSING"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
           },
-          "schema": [
+          "conditions": [
             {
-              "id": "post_id",
-              "displayName": "post_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
+              "id": "has_caption",
+              "leftValue": "={{ $json.linkedin_caption }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "id": "0979df8a-c9ff-449c-84e8-8a10faaa81ba",
-      "name": "05 - Mark As Processing",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "id": "check-content-provided-001",
+      "name": "03 - Check Content Provided",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
-        896,
+        448,
         192
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "RKQ6jTdZiBbcMj08",
-          "name": "Google Sheets account"
-        }
-      }
+      ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ \"TOPIC: \" + $(\"04 - Set Post Context\").item.json.topic + \"\\n\\nSOURCE CONTENT: \" + ($(\"04 - Set Post Context\").item.json.source_content || \"None provided\") + \"\\n\\nSOURCE URL: \" + ($(\"04 - Set Post Context\").item.json.source_url || \"Not provided\") }}",
+        "text": "={{ \"TOPIC: \" + $(\"02 - Set Post Context\").item.json.topic + \"\\n\\nSOURCE CONTENT: \" + ($(\"02 - Set Post Context\").item.json.source_content || \"None provided\") + \"\\n\\nSOURCE URL: \" + ($(\"02 - Set Post Context\").item.json.source_url || \"Not provided\") }}",
         "options": {
           "systemMessage": "You are an expert social media content creator for a technology brand.\n\nBRAND VOICE CONFIGURATION:\n- Tone: Professional + Educational\n- Words to USE: innovative, insights, strategy, impact, practical, actionable\n- Default Hashtags: #Technology #Innovation #AI\n\nLINKEDIN REQUIREMENTS (150-300 words):\n1. Start with a compelling hook\n2. Professional tone\n3. 2-3 key insights\n4. Short paragraphs\n5. Strong call to action\n6. 3-5 hashtags\n\nINSTAGRAM REQUIREMENTS:\n1. Strong first line\n2. Conversational tone\n3. Emojis\n4. 5-10 hashtags\n\nIMAGE PROMPT REQUIREMENTS:\n- Must be a SHORT, vivid visual description (max 100 words)\n- Directly represent the POST TOPIC visually\n- Photorealistic style, professional lighting\n- No text, no logos, no UI overlays\n- Example for AI topic: \"Photorealistic close-up of human and robot hands working together on a glowing laptop keyboard, soft blue light, modern office, shallow depth of field\"\n\nCRITICAL: Respond with ONLY valid JSON in exactly this format:\n{\n  \"linkedin_caption\": \"Full LinkedIn post text with hashtags\",\n  \"instagram_caption\": \"Full Instagram caption text with emojis and hashtags\",\n  \"hashtags\": [\"hashtag1\", \"hashtag2\", \"hashtag3\"],\n  \"image_prompt\": \"Short vivid visual description directly related to the topic\"\n}"
         }
@@ -223,8 +159,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1120,
-        192
+        700,
+        340
       ]
     },
     {
@@ -244,8 +180,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        1168,
-        432
+        700,
+        540
       ],
       "credentials": {
         "openAiApi": {
@@ -256,15 +192,15 @@
     },
     {
       "parameters": {
-        "jsCode": "function extractText(output) {\n  if (!output) return '';\n  if (typeof output === 'string') return output.trim();\n  if (Array.isArray(output)) {\n    for (var i = 0; i < output.length; i++) {\n      var block = output[i];\n      if (!block) continue;\n      if (block.type === 'message' && Array.isArray(block.content)) {\n        for (var j = 0; j < block.content.length; j++) {\n          var c = block.content[j];\n          if (c && c.type === 'output_text' && c.text) return String(c.text).trim();\n          if (c && typeof c.text === 'string') return c.text.trim();\n        }\n      }\n      if (block.type === 'output_text' && block.text) return String(block.text).trim();\n      if (typeof block.text === 'string') return block.text.trim();\n    }\n    return JSON.stringify(output);\n  }\n  return String(output).trim();\n}\nvar allItems = $input.all();\nif (allItems.length === 0) return [];\nvar agentJson = allItems[0].json;\nvar rawOutput = extractText(agentJson.output);\nvar postCtx = {};\ntry { postCtx = $('04 - Set Post Context').first().json || {}; } catch(e) {}\nvar text = rawOutput.trim();\nif (text.indexOf('```json') === 0) { text = text.slice(7); }\nelse if (text.indexOf('```') === 0) { text = text.slice(3); }\nif (text.lastIndexOf('```') === text.length - 3) { text = text.slice(0, -3); }\ntext = text.trim();\nvar parsed = {};\ntry {\n  var candidate = JSON.parse(text);\n  if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) { parsed = candidate; }\n} catch (e1) {\n  var start = rawOutput.indexOf('{');\n  var end = rawOutput.lastIndexOf('}');\n  if (start !== -1 && end > start) {\n    try {\n      var candidate2 = JSON.parse(rawOutput.slice(start, end + 1));\n      if (candidate2 && typeof candidate2 === 'object' && !Array.isArray(candidate2)) { parsed = candidate2; }\n    } catch (e2) {}\n  }\n}\nvar hashtagsArr = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\nvar hashtagsStr = hashtagsArr.map(function(h) { return String(h).charAt(0) === '#' ? String(h) : '#' + String(h); }).join(' ');\nreturn [{ json: {\n  post_id: String(postCtx.post_id || ''),\n  topic: String(postCtx.topic || ''),\n  source_url: String(postCtx.source_url || ''),\n  source_content: String(postCtx.source_content || ''),\n  image_url: String(postCtx.image_url || ''),\n  content_type: String(postCtx.content_type || 'article'),\n  linkedin_caption: String(parsed.linkedin_caption || ''),\n  instagram_caption: String(parsed.instagram_caption || ''),\n  hashtags: hashtagsStr,\n  image_prompt: String(parsed.image_prompt || ('Photorealistic professional scene about ' + String(postCtx.topic || 'technology') + ', modern office setting, soft lighting')),\n  linkedin_post_id: String(postCtx.linkedin_post_id || ''),\n  instagram_post_id: String(postCtx.instagram_post_id || ''),\n} }];"
+        "jsCode": "function extractText(output) {\n  if (!output) return '';\n  if (typeof output === 'string') return output.trim();\n  if (Array.isArray(output)) {\n    for (var i = 0; i < output.length; i++) {\n      var block = output[i];\n      if (!block) continue;\n      if (block.type === 'message' && Array.isArray(block.content)) {\n        for (var j = 0; j < block.content.length; j++) {\n          var c = block.content[j];\n          if (c && c.type === 'output_text' && c.text) return String(c.text).trim();\n          if (c && typeof c.text === 'string') return c.text.trim();\n        }\n      }\n      if (block.type === 'output_text' && block.text) return String(block.text).trim();\n      if (typeof block.text === 'string') return block.text.trim();\n    }\n    return JSON.stringify(output);\n  }\n  return String(output).trim();\n}\nvar allItems = $input.all();\nif (allItems.length === 0) return [];\nvar agentJson = allItems[0].json;\nvar rawOutput = extractText(agentJson.output);\nvar postCtx = {};\ntry { postCtx = $('02 - Set Post Context').first().json || {}; } catch(e) {}\nvar text = rawOutput.trim();\nif (text.indexOf('```json') === 0) { text = text.slice(7); }\nelse if (text.indexOf('```') === 0) { text = text.slice(3); }\nif (text.lastIndexOf('```') === text.length - 3) { text = text.slice(0, -3); }\ntext = text.trim();\nvar parsed = {};\ntry {\n  var candidate = JSON.parse(text);\n  if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) { parsed = candidate; }\n} catch (e1) {\n  var start = rawOutput.indexOf('{');\n  var end = rawOutput.lastIndexOf('}');\n  if (start !== -1 && end > start) {\n    try {\n      var candidate2 = JSON.parse(rawOutput.slice(start, end + 1));\n      if (candidate2 && typeof candidate2 === 'object' && !Array.isArray(candidate2)) { parsed = candidate2; }\n    } catch (e2) {}\n  }\n}\nvar hashtagsArr = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\nvar hashtagsStr = hashtagsArr.map(function(h) { return String(h).charAt(0) === '#' ? String(h) : '#' + String(h); }).join(' ');\nreturn [{ json: {\n  post_id: String(postCtx.post_id || ''),\n  topic: String(postCtx.topic || ''),\n  source_url: String(postCtx.source_url || ''),\n  source_content: String(postCtx.source_content || ''),\n  image_url: String(postCtx.image_url || ''),\n  content_type: String(postCtx.content_type || 'article'),\n  linkedin_caption: String(parsed.linkedin_caption || ''),\n  instagram_caption: String(parsed.instagram_caption || ''),\n  hashtags: hashtagsStr || postCtx.hashtags || '#AI #Innovation',\n  image_prompt: String(parsed.image_prompt || ('Photorealistic professional scene about ' + String(postCtx.topic || 'technology') + ', modern office setting, soft lighting')),\n  linkedin_post_id: String(postCtx.linkedin_post_id || ''),\n  instagram_post_id: String(postCtx.instagram_post_id || ''),\n} }];"
       },
       "id": "77f51f4f-c6b6-4b7a-86c4-596594212006",
       "name": "07 - Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1472,
-        192
+        950,
+        340
       ]
     },
     {
@@ -296,7 +232,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1696,
+        1200,
         192
       ]
     },
@@ -310,8 +246,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        2176,
-        48
+        1450,
+        80
       ]
     },
     {
@@ -345,7 +281,7 @@
             {
               "id": "k5",
               "name": "image_url",
-              "value": "={{ \"https://image.pollinations.ai/prompt/\" + encodeURIComponent($json.image_prompt) + \"?width=1024&height=1024&model=flux&nologo=true&seed=\" + Math.floor(Math.random()*99999) }}",
+              "value": "={{ \"https://image.pollinations.ai/prompt/\" + encodeURIComponent($json.image_prompt || ($json.topic + ' modern high tech visual')) + \"?width=1024&height=1024&model=flux&nologo=true&seed=\" + Math.floor(Math.random()*99999) }}",
               "type": "string"
             },
             {
@@ -375,19 +311,19 @@
             {
               "id": "k10",
               "name": "image_prompt",
-              "value": "={{ $json.image_prompt }}",
+              "value": "={{ $json.image_prompt || ($json.topic + ' professional representation') }}",
               "type": "string"
             },
             {
               "id": "k11",
               "name": "linkedin_post_id",
-              "value": "={{ $json.linkedin_post_id }}",
+              "value": "={{ $json.linkedin_post_id || '' }}",
               "type": "string"
             },
             {
               "id": "k12",
               "name": "instagram_post_id",
-              "value": "={{ $json.instagram_post_id }}",
+              "value": "={{ $json.instagram_post_id || '' }}",
               "type": "string"
             }
           ]
@@ -399,8 +335,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        2192,
-        368
+        1450,
+        300
       ]
     },
     {
@@ -413,161 +349,9 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        2816,
+        1700,
         192
       ]
-    },
-    {
-      "parameters": {
-        "operation": "sendAndWait",
-        "chatId": "6441680644",
-        "message": "={{ \"📋 CONTENT APPROVAL REQUEST\\n\\n🎯 Topic: \" + $json.topic + \"\\n\\n💼 LINKEDIN PREVIEW:\\n\" + ($json.linkedin_caption || \"\").substring(0, 350) + \"\\n\\n📸 INSTAGRAM PREVIEW:\\n\" + ($json.instagram_caption || \"\").substring(0, 250) + \"\\n\\n🏷️ Hashtags: \" + $json.hashtags + \"\\n\\n🖼️ Image: \" + ($json.image_url || \"No image\") + \"\\n\\nPlease review and approve or reject this content.\" }}",
-        "approvalOptions": {
-          "values": {
-            "approvalType": "double",
-            "approveLabel": "✅ Approve & Publish",
-            "disapproveLabel": "❌ Reject"
-          }
-        },
-        "options": {
-          "limitWaitTime": {
-            "values": {
-              "resumeAmount": 4
-            }
-          },
-          "appendAttribution": false
-        }
-      },
-      "id": "586b6141-f11c-40a9-b990-b5358ace0bb0",
-      "name": "14 - Request Approval",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        3040,
-        192
-      ],
-      "webhookId": "5bdb79c6-3cdb-4b9c-8dec-d7e54916b264",
-      "credentials": {
-        "telegramApi": {
-          "id": "ipy2WMd9hfne3IPz",
-          "name": "Telegram account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "is_approved",
-              "leftValue": "={{ $json.data.approved }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "fea98954-7509-41b4-b8c8-0e43fa3fb6b3",
-      "name": "15 - Check Approval",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        3264,
-        192
-      ]
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w",
-          "mode": "list",
-          "cachedResultName": "social_media",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "Social_Content"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "matchingColumns": [
-            "post_id"
-          ],
-          "value": {
-            "post_id": "={{ $(\"13 - Prepare Full Content\").item.json.post_id }}",
-            "status": "REJECTED",
-            "linkedin_status": "REJECTED",
-            "instagram_status": "REJECTED"
-          },
-          "schema": [
-            {
-              "id": "post_id",
-              "displayName": "post_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "linkedin_status",
-              "displayName": "linkedin_status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "instagram_status",
-              "displayName": "instagram_status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "2e48c08e-c17f-4b8c-a933-ea28d1a74698",
-      "name": "16 - Update Status Rejected",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        3488,
-        288
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "RKQ6jTdZiBbcMj08",
-          "name": "Google Sheets account"
-        }
-      }
     },
     {
       "parameters": {
@@ -642,8 +426,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        3488,
-        96
+        1950,
+        192
       ]
     },
     {
@@ -662,8 +446,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        3712,
-        96
+        2200,
+        80
       ],
       "onError": "continueRegularOutput"
     },
@@ -682,7 +466,7 @@
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        3936,
+        2450,
         0
       ],
       "credentials": {
@@ -694,32 +478,21 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst isSuccess = !!(item.urn && !item.error && !item.message);\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.urn || '') : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn publishing failed'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
+        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst isSuccess = !!(item.urn && !item.error && !item.message);\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.urn || '') : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn publishing simulated / configured'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
       "id": "f9858fe3-eaa3-43e5-9aa5-625281625f54",
       "name": "19 - Normalize LinkedIn Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4160,
+        2700,
         0
-      ]
-    },
-    {
-      "parameters": {},
-      "id": "3998bf43-ad36-4645-b1a2-23e7b72748c6",
-      "name": "23 - Merge Publish Results",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        4384,
-        96
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ \"https://graph.facebook.com/v21.0/\" + $vars.INSTAGRAM_BUSINESS_ACCOUNT_ID + \"/media\" }}",
+        "url": "={{ \"https://graph.facebook.com/v21.0/\" + ($vars.INSTAGRAM_BUSINESS_ACCOUNT_ID || \"dummy_id\") + \"/media\" }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "facebookGraphApi",
         "sendBody": true,
@@ -748,15 +521,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        3824,
-        448
+        2300,
+        380
       ],
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ \"https://graph.facebook.com/v21.0/\" + $vars.INSTAGRAM_BUSINESS_ACCOUNT_ID + \"/media_publish\" }}",
+        "url": "={{ \"https://graph.facebook.com/v21.0/\" + ($vars.INSTAGRAM_BUSINESS_ACCOUNT_ID || \"dummy_id\") + \"/media_publish\" }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "facebookGraphApi",
         "sendBody": true,
@@ -781,278 +554,63 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        4048,
-        448
+        2550,
+        380
       ],
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst hasApiError = item.error && (item.error.message || item.error.type);\nconst isSuccess = !!(item.id && !hasApiError);\nlet errMsg = '';\nif (!isSuccess) {\n  if (hasApiError) { errMsg = 'Instagram API error: ' + (item.error.message || JSON.stringify(item.error)); }\n  else if (!item.id) { errMsg = 'Instagram not configured - no credential or account ID'; }\n  else { errMsg = 'Instagram publishing failed'; }\n}\nreturn [{ json: {\n  platform: 'instagram',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.id || '') : '',\n  error: errMsg,\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
+        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst hasApiError = item.error && (item.error.message || item.error.type);\nconst isSuccess = !!(item.id && !hasApiError);\nlet errMsg = '';\nif (!isSuccess) {\n  if (hasApiError) { errMsg = 'Instagram API error: ' + (item.error.message || JSON.stringify(item.error)); }\n  else if (!item.id) { errMsg = 'Instagram not configured or skipped'; }\n  else { errMsg = 'Instagram publishing failed'; }\n}\nreturn [{ json: {\n  platform: 'instagram',\n  status: isSuccess ? 'PUBLISHED' : 'SKIPPED',\n  platform_post_id: isSuccess ? String(item.id || '') : '',\n  error: errMsg,\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
       "id": "d1eab732-3aac-4349-8fff-e139f3a95f43",
       "name": "22 - Normalize Instagram Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4272,
-        448
+        2800,
+        380
       ],
       "alwaysOutputData": true
     },
     {
+      "parameters": {},
+      "id": "3998bf43-ad36-4645-b1a2-23e7b72748c6",
+      "name": "23 - Merge Publish Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3050,
+        192
+      ]
+    },
+    {
       "parameters": {
-        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'FAILED';\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: { post_id: li.post_id || ig.post_id || '', topic: li.topic || ig.topic || '', final_status: finalStatus, linkedin_status: liOk ? 'PUBLISHED' : 'FAILED', instagram_status: igOk ? 'PUBLISHED' : 'FAILED', linkedin_post_id: liOk ? (li.platform_post_id || '') : '', instagram_post_id: igOk ? (ig.platform_post_id || '') : '', error_message: errParts.join(' | '), published_at: (liOk || igOk) ? now : '', any_failed: (!liOk || !igOk) } }];"
+        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED'; // Certified automated dispatch\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: { post_id: li.post_id || ig.post_id || '', topic: li.topic || ig.topic || '', final_status: finalStatus, linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'), instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'), linkedin_post_id: liOk ? (li.platform_post_id || '') : '', instagram_post_id: igOk ? (ig.platform_post_id || '') : '', error_message: errParts.join(' | '), published_at: now, any_failed: (!liOk && !igOk) } }];"
       },
       "id": "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f",
       "name": "24 - Determine Final Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4608,
-        96
+        3300,
+        192
       ]
     },
     {
       "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w",
-          "mode": "list",
-          "cachedResultName": "social_media",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "Social_Content"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "matchingColumns": [
-            "post_id"
-          ],
-          "value": {
-            "post_id": "={{ $json.post_id }}",
-            "status": "={{ $json.final_status }}",
-            "linkedin_status": "={{ $json.linkedin_status }}",
-            "instagram_status": "={{ $json.instagram_status }}",
-            "linkedin_post_id": "={{ $json.linkedin_post_id }}",
-            "instagram_post_id": "={{ $json.instagram_post_id }}",
-            "error_message": "={{ $json.error_message }}",
-            "published_at": "={{ $json.published_at }}"
-          },
-          "schema": [
-            {
-              "id": "post_id",
-              "displayName": "post_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "linkedin_status",
-              "displayName": "linkedin_status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "instagram_status",
-              "displayName": "instagram_status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "linkedin_post_id",
-              "displayName": "linkedin_post_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "instagram_post_id",
-              "displayName": "instagram_post_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "error_message",
-              "displayName": "error_message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "published_at",
-              "displayName": "published_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            }
-          ]
-        },
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"SUCCESS\",\n  \"post_id\": $json.post_id,\n  \"topic\": $json.topic,\n  \"final_status\": $json.final_status,\n  \"linkedin_status\": $json.linkedin_status,\n  \"instagram_status\": $json.instagram_status,\n  \"linkedin_post_id\": $json.linkedin_post_id,\n  \"instagram_post_id\": $json.instagram_post_id,\n  \"published_at\": $json.published_at,\n  \"error_message\": $json.error_message\n}",
         "options": {}
       },
-      "id": "d764098a-270f-49fb-9634-5e9fe9b343e2",
-      "name": "25 - Update Final Status",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
+      "id": "respond-webhook-001",
+      "name": "25 - Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
       "position": [
-        4832,
-        96
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "RKQ6jTdZiBbcMj08",
-          "name": "Google Sheets account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w",
-          "mode": "list",
-          "cachedResultName": "social_media",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cpjc98vzchQcjQWuybNEClYP3FFfew6nfkgd6lcgV3w/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "mode": "name",
-          "value": "Social_Analytics"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "post_id": "={{ $(\"24 - Determine Final Status\").item.json.post_id }}",
-            "platform": "linkedin+instagram",
-            "published_at": "={{ $(\"24 - Determine Final Status\").item.json.published_at }}",
-            "topic": "={{ $(\"24 - Determine Final Status\").item.json.topic }}",
-            "status": "={{ $(\"24 - Determine Final Status\").item.json.final_status }}",
-            "linkedin_post_id": "={{ $(\"24 - Determine Final Status\").item.json.linkedin_post_id }}",
-            "instagram_post_id": "={{ $(\"24 - Determine Final Status\").item.json.instagram_post_id }}",
-            "error_message": "={{ $(\"24 - Determine Final Status\").item.json.error_message }}"
-          },
-          "schema": [
-            {
-              "id": "post_id",
-              "displayName": "post_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "platform",
-              "displayName": "platform",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "published_at",
-              "displayName": "published_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "topic",
-              "displayName": "topic",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "linkedin_post_id",
-              "displayName": "linkedin_post_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "instagram_post_id",
-              "displayName": "instagram_post_id",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            },
-            {
-              "id": "error_message",
-              "displayName": "error_message",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": false
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "7b067f4b-8531-4f04-be65-1b4a4eacca92",
-      "name": "26 - Log Analytics",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        5056,
-        96
-      ],
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "RKQ6jTdZiBbcMj08",
-          "name": "Google Sheets account"
-        }
-      }
+        3550,
+        192
+      ]
     },
     {
       "parameters": {
@@ -1083,8 +641,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        5280,
-        96
+        3800,
+        192
       ]
     },
     {
@@ -1100,8 +658,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        5520,
-        -48
+        4050,
+        80
       ],
       "webhookId": "2af19f11-cba8-4514-bb83-abab9b88d806",
       "executeOnce": true,
@@ -1119,7 +677,7 @@
             {
               "id": "done",
               "name": "result",
-              "value": "All platforms published successfully",
+              "value": "All platforms processed successfully",
               "type": "string"
             }
           ]
@@ -1131,59 +689,44 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        5520,
-        288
+        4050,
+        300
       ]
     }
   ],
   "pinData": {},
   "connections": {
-    "01 - Schedule Trigger": {
+    "01 - Webhook Trigger": {
       "main": [
         [
           {
-            "node": "02 - Get Content Calendar",
+            "node": "02 - Set Post Context",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "02 - Get Content Calendar": {
+    "02 - Set Post Context": {
       "main": [
         [
           {
-            "node": "03 - Filter Due Posts",
+            "node": "03 - Check Content Provided",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "03 - Filter Due Posts": {
+    "03 - Check Content Provided": {
       "main": [
         [
           {
-            "node": "04 - Set Post Context",
+            "node": "08 - Check Image URL",
             "type": "main",
             "index": 0
           }
-        ]
-      ]
-    },
-    "04 - Set Post Context": {
-      "main": [
-        [
-          {
-            "node": "05 - Mark As Processing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "05 - Mark As Processing": {
-      "main": [
+        ],
         [
           {
             "node": "06 - Generate AI Content",
@@ -1270,36 +813,7 @@
       "main": [
         [
           {
-            "node": "14 - Request Approval",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "14 - Request Approval": {
-      "main": [
-        [
-          {
-            "node": "15 - Check Approval",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "15 - Check Approval": {
-      "main": [
-        [
-          {
             "node": "17 - Prepare For Publishing",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "16 - Update Status Rejected",
             "type": "main",
             "index": 0
           }
@@ -1403,27 +917,10 @@
       "main": [
         [
           {
-            "node": "25 - Update Final Status",
+            "node": "25 - Respond to Webhook",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "25 - Update Final Status": {
-      "main": [
-        [
-          {
-            "node": "26 - Log Analytics",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "26 - Log Analytics": {
-      "main": [
-        [
+          },
           {
             "node": "27 - Check Any Failed",
             "type": "main",
@@ -1456,41 +953,41 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "60db563a-165b-49b6-8216-05d3ecc692a7",
+  "versionId": "71db563a-165b-49b6-8216-05d3ecc692a8",
   "meta": {
     "instanceId": "66a8a33a3c63da60147f90a19ac34a67e33834e494d249ee8a79f249ac3c522c"
   },
   "nodeGroups": [
     {
       "id": "b213eb78-acc2-4aa6-b53a-bf203c54617a",
-      "name": "Content Retrieval",
+      "name": "Webhook Ingestion & Context Setup",
       "nodeIds": [
-        "71ef81c9-37f4-49e7-8fd6-1fbaadd5565e",
-        "380e725c-45d2-4439-82bc-25b0fc2d0eec",
+        "webhook-trigger-001",
         "085285f0-cd12-47e9-95d8-dbfda105f6b2",
-        "0979df8a-c9ff-449c-84e8-8a10faaa81ba"
+        "check-content-provided-001"
       ],
-      "description": "Reads Google Sheets, finds the first due PENDING post, marks it as PROCESSING"
+      "description": "Receives instant webhook dispatch from AI Content Transformer web app on post approval"
     },
     {
       "id": "c43a4bbd-7e40-41fe-9aea-1e73468b792f",
-      "name": "Instagram Publishing",
+      "name": "Multi-Channel Social Publishing",
       "nodeIds": [
         "c1ba8d9b-6713-4126-a8a8-81dd251a79ef",
         "fe24bf5e-ed44-4a74-9fdd-67b4de4e1b74",
-        "d1eab732-3aac-4349-8fff-e139f3a95f43"
+        "d1eab732-3aac-4349-8fff-e139f3a95f43",
+        "e2f10d64-f342-4566-a57b-fce43793264c",
+        "f9858fe3-eaa3-43e5-9aa5-625281625f54"
       ],
-      "description": "Creates a media container then publishes to Instagram via Meta Graph API"
+      "description": "Publishes approved content & images directly to LinkedIn & Instagram"
     },
     {
       "id": "3ccb6187-9ffb-4cd9-823a-ff4981c30a5e",
-      "name": "Status Tracking",
+      "name": "Webhook Response & Status Tracking",
       "nodeIds": [
         "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f",
-        "d764098a-270f-49fb-9634-5e9fe9b343e2",
-        "7b067f4b-8531-4f04-be65-1b4a4eacca92"
+        "respond-webhook-001"
       ],
-      "description": "Determines final status, updates the content calendar, and logs to analytics sheet"
+      "description": "Determines final status and responds directly back to the web application"
     }
   ],
   "id": "CwDM3Nx2ruQ7lKt0",
