@@ -34,6 +34,7 @@ import FactCheckPanel from '@/components/FactCheckPanel'
 import QualityRadarCard from '@/components/QualityRadarCard'
 import SensitivityInspector from '@/components/SensitivityInspector'
 import AIEditorModal from '@/components/AIEditorModal'
+import ManualEditorModal from '@/components/ManualEditorModal'
 import SlideDeckPreview from '@/components/SlideDeckPreview'
 import LinkedInPostCard from '@/components/LinkedInPostCard'
 import InfographicCard from '@/components/InfographicCard'
@@ -44,6 +45,7 @@ import LiveGenerationProgress from '@/components/LiveGenerationProgress'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
+import { Edit3 } from 'lucide-react'
 import clsx from 'clsx'
 
 const OUTPUT_OPTIONS = [
@@ -110,6 +112,7 @@ function NewTransformationStudioContent() {
 
   // Modals State
   const [editorModalOutput, setEditorModalOutput] = useState<Output | null>(null)
+  const [manualEditorModalOutput, setManualEditorModalOutput] = useState<Output | null>(null)
   const [publishModalOutput, setPublishModalOutput] = useState<Output | null>(null)
 
   // Load Brand Profiles on Mount
@@ -798,6 +801,14 @@ function NewTransformationStudioContent() {
                   {/* Action Controls */}
                   <div className="flex items-center gap-2.5 flex-wrap">
                     <button
+                      onClick={() => setManualEditorModalOutput(activeOutput)}
+                      className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2 text-xs sm:text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs"
+                    >
+                      <Edit3 className="h-4 w-4 text-indigo-600" />
+                      <span>Manual Edit</span>
+                    </button>
+
+                    <button
                       onClick={() => setEditorModalOutput(activeOutput)}
                       className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
                     >
@@ -887,6 +898,20 @@ function NewTransformationStudioContent() {
       )}
 
       {/* MODALS */}
+      {manualEditorModalOutput && (
+        <ManualEditorModal
+          output={manualEditorModalOutput}
+          isOpen={!!manualEditorModalOutput}
+          onClose={() => setManualEditorModalOutput(null)}
+          onUpdated={(updated) => {
+            setGeneratedOutputs((prev) =>
+              prev.map((o) => (o.id === updated.id ? updated : o))
+            )
+            setManualEditorModalOutput(null)
+          }}
+        />
+      )}
+
       {editorModalOutput && (
         <AIEditorModal
           output={editorModalOutput}

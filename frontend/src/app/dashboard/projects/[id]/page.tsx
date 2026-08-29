@@ -24,6 +24,7 @@ import FactCheckPanel from '@/components/FactCheckPanel'
 import QualityRadarCard from '@/components/QualityRadarCard'
 import SensitivityInspector from '@/components/SensitivityInspector'
 import AIEditorModal from '@/components/AIEditorModal'
+import ManualEditorModal from '@/components/ManualEditorModal'
 import SlideDeckPreview from '@/components/SlideDeckPreview'
 import LinkedInPostCard from '@/components/LinkedInPostCard'
 import InfographicCard from '@/components/InfographicCard'
@@ -32,6 +33,7 @@ import TwitterThreadCard from '@/components/TwitterThreadCard'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
+import { Edit3 } from 'lucide-react'
 import clsx from 'clsx'
 
 export default function ProjectDetailPage() {
@@ -46,6 +48,7 @@ export default function ProjectDetailPage() {
 
   // Modals
   const [editorOutput, setEditorOutput] = useState<Output | null>(null)
+  const [manualEditorOutput, setManualEditorOutput] = useState<Output | null>(null)
   const [publishOutput, setPublishOutput] = useState<Output | null>(null)
 
   const loadProject = async () => {
@@ -270,6 +273,14 @@ export default function ProjectDetailPage() {
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <button
+                            onClick={() => setManualEditorOutput(activeOutput)}
+                            className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2 text-xs sm:text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs"
+                          >
+                            <Edit3 className="h-4 w-4 text-indigo-600" />
+                            <span>Manual Edit</span>
+                          </button>
+
+                          <button
                             onClick={() => setEditorOutput(activeOutput)}
                             className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
                           >
@@ -365,6 +376,24 @@ export default function ProjectDetailPage() {
       )}
 
       {/* Modals */}
+      {manualEditorOutput && (
+        <ManualEditorModal
+          output={manualEditorOutput}
+          isOpen={!!manualEditorOutput}
+          onClose={() => setManualEditorOutput(null)}
+          onUpdated={(updated) => {
+            setProject((prev) => {
+              if (!prev) return prev
+              return {
+                ...prev,
+                outputs: prev.outputs?.map((o) => (o.id === updated.id ? updated : o)),
+              }
+            })
+            setManualEditorOutput(null)
+          }}
+        />
+      )}
+
       {editorOutput && (
         <AIEditorModal
           output={editorOutput}
