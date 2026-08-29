@@ -10,21 +10,33 @@ class SearchQueryItem(BaseModel):
 
 class ResearchQuestionItem(BaseModel):
     question: str
-    priority: str = "HIGH" # CRITICAL, HIGH, MEDIUM
+    priority: str = "HIGH" # CRITICAL, HIGH, MEDIUM, LOW
     claims_to_verify: List[str] = []
 
 class FreshnessPolicy(BaseModel):
+    policy: str = "CURRENT_REQUIRED" # CURRENT_REQUIRED, RECENT_PREFERRED, HISTORICAL_ACCEPTABLE, NO_EXTERNAL_FRESHNESS_REQUIREMENT
     is_temporal_request: bool = False
     freshness_threshold: str = "Strictly Current (< 48 hours for breaking events / <= 30 days for standards)"
     anti_stale_model_notice: str = "Live external search mandatory. Outdated static LLM training cutoff is prohibited from being labeled as 'latest'."
     temporal_triggers_found: List[str] = []
     max_information_age_hours: int = 48
 
+class ClaimVerificationItem(BaseModel):
+    claim: str
+    priority: str = "HIGH"
+    provenance: str = "PRIMARY_DOCUMENT_FACT"
+    research_need: str = "RESEARCH_REQUIRED"
+    reason: str
+
 class ResearchPlanResponse(BaseModel):
     research_mode: str = "SOURCE_AND_VERIFY"
     status: str = "PLANNED"
+    detected_domain: str = "General Enterprise & Multidisciplinary Document"
+    detected_domain_key: str = "GENERAL"
+    detected_purpose: str = "Synthesize verified operational facts, strategic insights, and structured directives from the uploaded document."
+    key_topics: List[str] = []
     what_needs_research: str
-    claims_requiring_verification: List[str] = []
+    claims_requiring_verification: List[Dict[str, Any]] = []
     questions_to_answer: List[ResearchQuestionItem] = []
     search_queries: List[SearchQueryItem] = []
     preferred_sources: List[Dict[str, Any]] = []
@@ -79,7 +91,7 @@ class ResearchJobResponse(BaseModel):
     project_id: str
     research_mode: str
     status: str
-    research_questions: List[Dict[str, Any]] = []
+    research_questions: Any = None # Full Universal Section 9 plan dictionary
     search_queries: List[Dict[str, Any]] = []
     research_summary: Optional[str] = None
     sources: List[ResearchSourceResponse] = []

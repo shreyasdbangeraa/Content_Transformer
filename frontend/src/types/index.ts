@@ -184,7 +184,7 @@ export interface ResearchJob {
   project_id: string
   research_mode: 'SOURCE_ONLY' | 'SOURCE_AND_VERIFY' | 'DEEP_RESEARCH' | string
   status: string
-  research_questions: Array<{ question: string; priority: string }>
+  research_questions?: ResearchPlan | any
   search_queries: Array<{ query: string; target_tier: number; intent?: string }>
   research_summary?: string
   sources?: ResearchSource[]
@@ -327,6 +327,40 @@ export interface Project {
   outputs?: Output[]
 }
 
+export interface FreshnessPolicy {
+  policy: 'CURRENT_REQUIRED' | 'RECENT_PREFERRED' | 'HISTORICAL_ACCEPTABLE' | 'NO_EXTERNAL_FRESHNESS_REQUIREMENT' | string
+  is_temporal_request: boolean
+  freshness_threshold: string
+  anti_stale_model_notice: string
+  temporal_triggers_found: string[]
+  max_information_age_hours: number
+}
+
+export interface ClaimVerificationItem {
+  claim: string
+  priority: 'HIGH' | 'MEDIUM' | 'LOW' | string
+  provenance: 'PRIMARY_DOCUMENT_FACT' | 'EXTERNAL_VERIFIED_FACT' | 'INFERENCE' | string
+  research_need: 'RESEARCH_REQUIRED' | 'RESEARCH_RECOMMENDED' | 'NO_RESEARCH_REQUIRED' | string
+  reason: string
+}
+
+export interface ResearchPlan {
+  research_mode: string
+  status: string
+  detected_domain: string
+  detected_domain_key: string
+  detected_purpose: string
+  key_topics: string[]
+  what_needs_research: string
+  claims_requiring_verification: ClaimVerificationItem[]
+  questions_to_answer: Array<{ question: string; priority: string; claims_to_verify: string[] }>
+  search_queries: Array<{ query: string; target_tier: number; intent: string; rationale: string }>
+  preferred_sources: Array<{ tier: number; tier_name: string; domains: string[]; priority: string }>
+  freshness_policy: FreshnessPolicy
+}
+
+
+
 export interface DashboardStats {
   total_projects: number
   total_sources: number
@@ -349,3 +383,4 @@ export interface PublishingJob {
   response_data: Record<string, any>
   created_at: string
 }
+

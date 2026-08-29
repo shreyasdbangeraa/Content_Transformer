@@ -33,13 +33,15 @@ class CanonicalService:
         if sens_scan.get("detected_count", 0) > 0:
             analysis_data["sensitivity"] = sens_scan
 
-        # 3. Multi-Source Research & Evidence Collection & Conflict Detection
+        # 3. Universal Multi-Source Research & Evidence Collection & Conflict Detection
         research_job = ResearchService.execute_research_and_verification(
             db=db,
             project_id=project_id,
             topic=analysis_data.get("topic", source.filename),
             canonical_facts=analysis_data.get("key_facts", []),
-            research_mode=active_mode
+            research_mode=active_mode,
+            text_sample=source.raw_text[:3000],
+            filename=source.filename
         )
 
         # Assemble Research Evidence & Conflict payloads for Canonical Layer
