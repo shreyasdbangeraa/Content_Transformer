@@ -13,8 +13,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
-        192
+        100,
+        200
       ],
       "webhookId": "social-publish-webhook"
     },
@@ -23,416 +23,81 @@
         "assignments": {
           "assignments": [
             {
-              "id": "f1",
+              "id": "p1",
               "name": "post_id",
               "value": "={{ $json.body?.post_id || $json.body?.output_id || $json.output_id || $json.post_id || ('post_' + $now.toMillis()) }}",
               "type": "string"
             },
             {
-              "id": "f2",
+              "id": "p2",
               "name": "topic",
               "value": "={{ $json.body?.topic || $json.body?.title || $json.title || $json.topic || 'Social Media Release' }}",
               "type": "string"
             },
             {
-              "id": "f3",
-              "name": "source_url",
-              "value": "={{ $json.body?.source_url || $json.source_url || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "f4",
-              "name": "source_content",
-              "value": "={{ $json.body?.source_content || $json.source_content || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "f5",
-              "name": "image_url",
-              "value": "={{ $json.body?.image_url || $json.body?.structured_data?.image_url || $json.image_url || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "f6",
-              "name": "content_type",
-              "value": "={{ $json.body?.format_type || $json.format_type || 'linkedin' }}",
-              "type": "string"
-            },
-            {
-              "id": "f7",
+              "id": "p3",
               "name": "linkedin_caption",
               "value": "={{ $json.body?.linkedin_caption || $json.body?.content || $json.content || '' }}",
               "type": "string"
             },
             {
-              "id": "f8",
+              "id": "p4",
               "name": "instagram_caption",
               "value": "={{ $json.body?.instagram_caption || $json.body?.content || $json.content || '' }}",
               "type": "string"
             },
             {
-              "id": "f9",
+              "id": "p5",
+              "name": "image_url",
+              "value": "={{ $json.body?.image_url || $json.body?.structured_data?.image_url || $json.image_url || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "p6",
               "name": "hashtags",
               "value": "={{ $json.body?.hashtags || ($json.body?.structured_data?.hashtags ? (Array.isArray($json.body.structured_data.hashtags) ? $json.body.structured_data.hashtags.join(' ') : $json.body.structured_data.hashtags) : '') || '#Technology #Innovation #AI' }}",
               "type": "string"
             },
             {
-              "id": "f10",
-              "name": "scheduled_date",
-              "value": "={{ $json.body?.scheduled_at || $now.format('yyyy-MM-dd') }}",
-              "type": "string"
-            },
-            {
-              "id": "f11",
-              "name": "scheduled_time",
-              "value": "={{ $now.format('HH:mm') }}",
-              "type": "string"
-            },
-            {
-              "id": "f12",
-              "name": "linkedin_post_id",
-              "value": "",
-              "type": "string"
-            },
-            {
-              "id": "f13",
-              "name": "instagram_post_id",
-              "value": "",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "085285f0-cd12-47e9-95d8-dbfda105f6b2",
-      "name": "02 - Set Post Context",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        224,
-        192
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "has_caption",
-              "leftValue": "={{ $json.linkedin_caption }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "check-content-provided-001",
-      "name": "03 - Check Content Provided",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        448,
-        192
-      ]
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ \"TOPIC: \" + $(\"02 - Set Post Context\").item.json.topic + \"\\n\\nSOURCE CONTENT: \" + ($(\"02 - Set Post Context\").item.json.source_content || \"None provided\") + \"\\n\\nSOURCE URL: \" + ($(\"02 - Set Post Context\").item.json.source_url || \"Not provided\") }}",
-        "options": {
-          "systemMessage": "You are an expert social media content creator for a technology brand.\n\nBRAND VOICE CONFIGURATION:\n- Tone: Professional + Educational\n- Words to USE: innovative, insights, strategy, impact, practical, actionable\n- Default Hashtags: #Technology #Innovation #AI\n\nLINKEDIN REQUIREMENTS (150-300 words):\n1. Start with a compelling hook\n2. Professional tone\n3. 2-3 key insights\n4. Short paragraphs\n5. Strong call to action\n6. 3-5 hashtags\n\nINSTAGRAM REQUIREMENTS:\n1. Strong first line\n2. Conversational tone\n3. Emojis\n4. 5-10 hashtags\n\nIMAGE PROMPT REQUIREMENTS:\n- Must be a SHORT, vivid visual description (max 100 words)\n- Directly represent the POST TOPIC visually\n- Photorealistic style, professional lighting\n- No text, no logos, no UI overlays\n- Example for AI topic: \"Photorealistic close-up of human and robot hands working together on a glowing laptop keyboard, soft blue light, modern office, shallow depth of field\"\n\nCRITICAL: Respond with ONLY valid JSON in exactly this format:\n{\n  \"linkedin_caption\": \"Full LinkedIn post text with hashtags\",\n  \"instagram_caption\": \"Full Instagram caption text with emojis and hashtags\",\n  \"hashtags\": [\"hashtag1\", \"hashtag2\", \"hashtag3\"],\n  \"image_prompt\": \"Short vivid visual description directly related to the topic\"\n}"
-        }
-      },
-      "id": "3741ebc9-7638-4882-82c2-9c15e065a020",
-      "name": "06 - Generate AI Content",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        700,
-        340
-      ]
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "mode": "id",
-          "value": "gpt-5-mini"
-        },
-        "builtInTools": {},
-        "options": {
-          "maxTokens": 2000
-        }
-      },
-      "id": "a1c1c6bd-55b2-4bde-837b-b02783572392",
-      "name": "OpenAI Chat Model",
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        700,
-        540
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "ZigDFHQlYD0SrGjV",
-          "name": "n8n free OpenAI API credits"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "function extractText(output) {\n  if (!output) return '';\n  if (typeof output === 'string') return output.trim();\n  if (Array.isArray(output)) {\n    for (var i = 0; i < output.length; i++) {\n      var block = output[i];\n      if (!block) continue;\n      if (block.type === 'message' && Array.isArray(block.content)) {\n        for (var j = 0; j < block.content.length; j++) {\n          var c = block.content[j];\n          if (c && c.type === 'output_text' && c.text) return String(c.text).trim();\n          if (c && typeof c.text === 'string') return c.text.trim();\n        }\n      }\n      if (block.type === 'output_text' && block.text) return String(block.text).trim();\n      if (typeof block.text === 'string') return block.text.trim();\n    }\n    return JSON.stringify(output);\n  }\n  return String(output).trim();\n}\nvar allItems = $input.all();\nif (allItems.length === 0) return [];\nvar agentJson = allItems[0].json;\nvar rawOutput = extractText(agentJson.output);\nvar postCtx = {};\ntry { postCtx = $('02 - Set Post Context').first().json || {}; } catch(e) {}\nvar text = rawOutput.trim();\nif (text.indexOf('```json') === 0) { text = text.slice(7); }\nelse if (text.indexOf('```') === 0) { text = text.slice(3); }\nif (text.lastIndexOf('```') === text.length - 3) { text = text.slice(0, -3); }\ntext = text.trim();\nvar parsed = {};\ntry {\n  var candidate = JSON.parse(text);\n  if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) { parsed = candidate; }\n} catch (e1) {\n  var start = rawOutput.indexOf('{');\n  var end = rawOutput.lastIndexOf('}');\n  if (start !== -1 && end > start) {\n    try {\n      var candidate2 = JSON.parse(rawOutput.slice(start, end + 1));\n      if (candidate2 && typeof candidate2 === 'object' && !Array.isArray(candidate2)) { parsed = candidate2; }\n    } catch (e2) {}\n  }\n}\nvar hashtagsArr = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];\nvar hashtagsStr = hashtagsArr.map(function(h) { return String(h).charAt(0) === '#' ? String(h) : '#' + String(h); }).join(' ');\nreturn [{ json: {\n  post_id: String(postCtx.post_id || ''),\n  topic: String(postCtx.topic || ''),\n  source_url: String(postCtx.source_url || ''),\n  source_content: String(postCtx.source_content || ''),\n  image_url: String(postCtx.image_url || ''),\n  content_type: String(postCtx.content_type || 'article'),\n  linkedin_caption: String(parsed.linkedin_caption || ''),\n  instagram_caption: String(parsed.instagram_caption || ''),\n  hashtags: hashtagsStr || postCtx.hashtags || '#AI #Innovation',\n  image_prompt: String(parsed.image_prompt || ('Photorealistic professional scene about ' + String(postCtx.topic || 'technology') + ', modern office setting, soft lighting')),\n  linkedin_post_id: String(postCtx.linkedin_post_id || ''),\n  instagram_post_id: String(postCtx.instagram_post_id || ''),\n} }];"
-      },
-      "id": "77f51f4f-c6b6-4b7a-86c4-596594212006",
-      "name": "07 - Parse AI Response",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        950,
-        340
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "has_image",
-              "leftValue": "={{ $json.image_url }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "65f92dd6-ab7b-47fe-88da-4c60422ecf9e",
-      "name": "08 - Check Image URL",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1200,
-        192
-      ]
-    },
-    {
-      "parameters": {
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "id": "e03208ac-4c11-4c90-962b-306cb2d61a4f",
-      "name": "09a - Use Existing Image",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1450,
-        80
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "k1",
-              "name": "post_id",
-              "value": "={{ $json.post_id }}",
-              "type": "string"
-            },
-            {
-              "id": "k2",
-              "name": "topic",
-              "value": "={{ $json.topic }}",
-              "type": "string"
-            },
-            {
-              "id": "k3",
-              "name": "source_url",
-              "value": "={{ $json.source_url }}",
-              "type": "string"
-            },
-            {
-              "id": "k4",
-              "name": "source_content",
-              "value": "={{ $json.source_content }}",
-              "type": "string"
-            },
-            {
-              "id": "k5",
-              "name": "image_url",
-              "value": "={{ \"https://image.pollinations.ai/prompt/\" + encodeURIComponent($json.image_prompt || ($json.topic + ' modern high tech visual')) + \"?width=1024&height=1024&model=flux&nologo=true&seed=\" + Math.floor(Math.random()*99999) }}",
-              "type": "string"
-            },
-            {
-              "id": "k6",
-              "name": "content_type",
-              "value": "={{ $json.content_type }}",
-              "type": "string"
-            },
-            {
-              "id": "k7",
-              "name": "linkedin_caption",
-              "value": "={{ $json.linkedin_caption }}",
-              "type": "string"
-            },
-            {
-              "id": "k8",
-              "name": "instagram_caption",
-              "value": "={{ $json.instagram_caption }}",
-              "type": "string"
-            },
-            {
-              "id": "k9",
-              "name": "hashtags",
-              "value": "={{ $json.hashtags }}",
-              "type": "string"
-            },
-            {
-              "id": "k10",
-              "name": "image_prompt",
-              "value": "={{ $json.image_prompt || ($json.topic + ' professional representation') }}",
-              "type": "string"
-            },
-            {
-              "id": "k11",
-              "name": "linkedin_post_id",
-              "value": "={{ $json.linkedin_post_id || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "k12",
-              "name": "instagram_post_id",
-              "value": "={{ $json.instagram_post_id || '' }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "336aa0e3-be24-435b-81c7-b0672ac8870a",
-      "name": "09b - Generate Pollinations Image",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1450,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "id": "4d5960f1-1e2a-49e2-ba9a-e96f1ae349fe",
-      "name": "13 - Prepare Full Content",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1700,
-        192
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "post_id",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.post_id }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "topic",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.topic }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "linkedin_caption",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.linkedin_caption }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "instagram_caption",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.instagram_caption }}",
-              "type": "string"
-            },
-            {
-              "id": "p5",
-              "name": "hashtags",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.hashtags }}",
-              "type": "string"
-            },
-            {
-              "id": "p6",
-              "name": "image_url",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.image_url }}",
-              "type": "string"
-            },
-            {
               "id": "p7",
               "name": "source_url",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.source_url }}",
+              "value": "={{ $json.body?.source_url || $json.source_url || '' }}",
               "type": "string"
             },
             {
               "id": "p8",
               "name": "content_type",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.content_type }}",
+              "value": "={{ $json.body?.format_type || $json.format_type || 'linkedin' }}",
               "type": "string"
             },
             {
               "id": "p9",
-              "name": "linkedin_post_id",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.linkedin_post_id }}",
+              "name": "scheduled_at",
+              "value": "={{ $json.body?.scheduled_at || $now.toISO() }}",
               "type": "string"
             },
             {
               "id": "p10",
-              "name": "instagram_post_id",
-              "value": "={{ $(\"13 - Prepare Full Content\").item.json.instagram_post_id }}",
+              "name": "approved_by",
+              "value": "={{ $json.body?.approved_by || 'Platform Human Operator' }}",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "d5c76bd6-b64f-4160-8e4e-959845cc29f7",
-      "name": "17 - Prepare For Publishing",
+      "id": "set-approved-post-002",
+      "name": "02 - Set Approved Post Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1950,
-        192
+        360,
+        200
       ]
     },
     {
       "parameters": {
-        "url": "={{ $(\"17 - Prepare For Publishing\").item.json.image_url }}",
+        "url": "={{ $('02 - Set Approved Post Data').item.json.image_url }}",
         "options": {
           "response": {
             "response": {
@@ -441,12 +106,12 @@
           }
         }
       },
-      "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
-      "name": "17b - Download Image for LinkedIn",
+      "id": "download-image-003",
+      "name": "03 - Download Image for LinkedIn",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        2200,
+        640,
         80
       ],
       "onError": "continueRegularOutput"
@@ -454,21 +119,22 @@
     {
       "parameters": {
         "person": "J5LgfaRQIx",
-        "text": "={{ $(\"17 - Prepare For Publishing\").item.json.linkedin_caption }}",
+        "text": "={{ $('02 - Set Approved Post Data').item.json.linkedin_caption }}",
         "shareMediaCategory": "IMAGE",
         "additionalFields": {
-          "title": "={{ $(\"17 - Prepare For Publishing\").item.json.topic }}",
+          "title": "={{ $('02 - Set Approved Post Data').item.json.topic }}",
           "visibility": "PUBLIC"
         }
       },
-      "id": "e2f10d64-f342-4566-a57b-fce43793264c",
-      "name": "18 - Publish LinkedIn",
+      "id": "publish-linkedin-004",
+      "name": "04 - Publish LinkedIn",
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        2450,
-        0
+        900,
+        80
       ],
+      "onError": "continueRegularOutput",
       "credentials": {
         "linkedInOAuth2Api": {
           "id": "6hVc51x6mWfQStUV",
@@ -478,15 +144,15 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst isSuccess = !!(item.urn && !item.error && !item.message);\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.urn || '') : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn publishing simulated / configured'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
+        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('02 - Set Approved Post Data').first().json || {};\nconst isSuccess = !!(item.urn && !item.error && !item.message);\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.urn || '') : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn published or simulated'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
-      "id": "f9858fe3-eaa3-43e5-9aa5-625281625f54",
-      "name": "19 - Normalize LinkedIn Result",
+      "id": "normalize-linkedin-005",
+      "name": "05 - Normalize LinkedIn Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2700,
-        0
+        1160,
+        80
       ]
     },
     {
@@ -500,11 +166,11 @@
           "parameters": [
             {
               "name": "image_url",
-              "value": "={{ $(\"17 - Prepare For Publishing\").item.json.image_url }}"
+              "value": "={{ $('02 - Set Approved Post Data').item.json.image_url }}"
             },
             {
               "name": "caption",
-              "value": "={{ $(\"17 - Prepare For Publishing\").item.json.instagram_caption + \" \" + $(\"17 - Prepare For Publishing\").item.json.hashtags }}"
+              "value": "={{ $('02 - Set Approved Post Data').item.json.instagram_caption + \" \" + $('02 - Set Approved Post Data').item.json.hashtags }}"
             }
           ]
         },
@@ -516,13 +182,13 @@
           }
         }
       },
-      "id": "c1ba8d9b-6713-4126-a8a8-81dd251a79ef",
-      "name": "20 - Create Instagram Container",
+      "id": "create-ig-container-006",
+      "name": "06 - Create Instagram Container",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        2300,
-        380
+        780,
+        340
       ],
       "onError": "continueRegularOutput"
     },
@@ -549,52 +215,52 @@
           }
         }
       },
-      "id": "fe24bf5e-ed44-4a74-9fdd-67b4de4e1b74",
-      "name": "21 - Publish Instagram",
+      "id": "publish-ig-007",
+      "name": "07 - Publish Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        2550,
-        380
+        1020,
+        340
       ],
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('17 - Prepare For Publishing').first().json || {};\nconst hasApiError = item.error && (item.error.message || item.error.type);\nconst isSuccess = !!(item.id && !hasApiError);\nlet errMsg = '';\nif (!isSuccess) {\n  if (hasApiError) { errMsg = 'Instagram API error: ' + (item.error.message || JSON.stringify(item.error)); }\n  else if (!item.id) { errMsg = 'Instagram not configured or skipped'; }\n  else { errMsg = 'Instagram publishing failed'; }\n}\nreturn [{ json: {\n  platform: 'instagram',\n  status: isSuccess ? 'PUBLISHED' : 'SKIPPED',\n  platform_post_id: isSuccess ? String(item.id || '') : '',\n  error: errMsg,\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
+        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('02 - Set Approved Post Data').first().json || {};\nconst hasApiError = item.error && (item.error.message || item.error.type);\nconst isSuccess = !!(item.id && !hasApiError);\nlet errMsg = '';\nif (!isSuccess) {\n  if (hasApiError) { errMsg = 'Instagram API error: ' + (item.error.message || JSON.stringify(item.error)); }\n  else if (!item.id) { errMsg = 'Instagram not configured or skipped'; }\n  else { errMsg = 'Instagram publishing failed'; }\n}\nreturn [{ json: {\n  platform: 'instagram',\n  status: isSuccess ? 'PUBLISHED' : 'SKIPPED',\n  platform_post_id: isSuccess ? String(item.id || '') : '',\n  error: errMsg,\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
-      "id": "d1eab732-3aac-4349-8fff-e139f3a95f43",
-      "name": "22 - Normalize Instagram Result",
+      "id": "normalize-ig-008",
+      "name": "08 - Normalize Instagram Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2800,
-        380
+        1260,
+        340
       ],
       "alwaysOutputData": true
     },
     {
       "parameters": {},
-      "id": "3998bf43-ad36-4645-b1a2-23e7b72748c6",
-      "name": "23 - Merge Publish Results",
+      "id": "merge-results-009",
+      "name": "09 - Merge Publish Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        3050,
-        192
+        1500,
+        200
       ]
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED'; // Certified automated dispatch\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: { post_id: li.post_id || ig.post_id || '', topic: li.topic || ig.topic || '', final_status: finalStatus, linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'), instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'), linkedin_post_id: liOk ? (li.platform_post_id || '') : '', instagram_post_id: igOk ? (ig.platform_post_id || '') : '', error_message: errParts.join(' | '), published_at: now, any_failed: (!liOk && !igOk) } }];"
+        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED';\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: {\n  post_id: li.post_id || ig.post_id || '',\n  topic: li.topic || ig.topic || '',\n  final_status: finalStatus,\n  linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'),\n  instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'),\n  linkedin_post_id: liOk ? (li.platform_post_id || '') : '',\n  instagram_post_id: igOk ? (ig.platform_post_id || '') : '',\n  error_message: errParts.join(' | '),\n  published_at: now,\n  any_failed: (!liOk && !igOk)\n} }];"
       },
-      "id": "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f",
-      "name": "24 - Determine Final Status",
+      "id": "determine-status-010",
+      "name": "10 - Determine Final Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3300,
-        192
+        1740,
+        200
       ]
     },
     {
@@ -609,7 +275,7 @@
           "conditions": [
             {
               "id": "any_failed",
-              "leftValue": "={{ $(\"24 - Determine Final Status\").item.json.any_failed }}",
+              "leftValue": "={{ $('10 - Determine Final Status').item.json.any_failed }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -621,30 +287,30 @@
         },
         "options": {}
       },
-      "id": "3dd2f3c0-1d9a-4dbd-bf6a-1521ded587ca",
-      "name": "27 - Check Any Failed",
+      "id": "check-failed-011",
+      "name": "11 - Check Any Failed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3800,
-        192
+        1980,
+        200
       ]
     },
     {
       "parameters": {
         "chatId": "6441680644",
-        "text": "={{ \"⚠️ Social Media Publishing Issue\\n\\n📌 Post: \" + $(\"24 - Determine Final Status\").item.json.topic + \"\\n\\n💼 LinkedIn: \" + ($(\"24 - Determine Final Status\").item.json.linkedin_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n📸 Instagram: \" + ($(\"24 - Determine Final Status\").item.json.instagram_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n\\n❗ Error: \" + $(\"24 - Determine Final Status\").item.json.error_message + \"\\n\\n🔧 Post ID: \" + $(\"24 - Determine Final Status\").item.json.post_id }}",
+        "text": "={{ \"⚠️ Social Media Publishing Notice\\n\\n📌 Post: \" + $('10 - Determine Final Status').item.json.topic + \"\\n\\n💼 LinkedIn: \" + ($('10 - Determine Final Status').item.json.linkedin_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n📸 Instagram: \" + ($('10 - Determine Final Status').item.json.instagram_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n\\n❗ Detail: \" + $('10 - Determine Final Status').item.json.error_message + \"\\n\\n🔧 Post ID: \" + $('10 - Determine Final Status').item.json.post_id }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
-      "id": "73cd881d-5c10-4740-9595-f97ecf1342f8",
-      "name": "28 - Send Error Notification",
+      "id": "telegram-error-012",
+      "name": "12 - Send Error Notification",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        4050,
-        80
+        2240,
+        100
       ],
       "webhookId": "2af19f11-cba8-4514-bb83-abab9b88d806",
       "executeOnce": true,
@@ -662,19 +328,19 @@
             {
               "id": "done",
               "name": "result",
-              "value": "All platforms processed successfully",
+              "value": "Approved content published successfully across active channels",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "0be83331-503d-41ec-80e9-03e6cce8c6ee",
-      "name": "29 - All Published",
+      "id": "all-published-013",
+      "name": "13 - All Published",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        4050,
+        2240,
         300
       ]
     }
@@ -685,242 +351,129 @@
       "main": [
         [
           {
-            "node": "02 - Set Post Context",
+            "node": "02 - Set Approved Post Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "02 - Set Post Context": {
+    "02 - Set Approved Post Data": {
       "main": [
         [
           {
-            "node": "03 - Check Content Provided",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "03 - Check Content Provided": {
-      "main": [
-        [
-          {
-            "node": "08 - Check Image URL",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "06 - Generate AI Content",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "06 - Generate AI Content": {
-      "main": [
-        [
-          {
-            "node": "07 - Parse AI Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "06 - Generate AI Content",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "07 - Parse AI Response": {
-      "main": [
-        [
-          {
-            "node": "08 - Check Image URL",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "08 - Check Image URL": {
-      "main": [
-        [
-          {
-            "node": "09a - Use Existing Image",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "09b - Generate Pollinations Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "09a - Use Existing Image": {
-      "main": [
-        [
-          {
-            "node": "13 - Prepare Full Content",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "09b - Generate Pollinations Image": {
-      "main": [
-        [
-          {
-            "node": "13 - Prepare Full Content",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "13 - Prepare Full Content": {
-      "main": [
-        [
-          {
-            "node": "17 - Prepare For Publishing",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "17 - Prepare For Publishing": {
-      "main": [
-        [
-          {
-            "node": "17b - Download Image for LinkedIn",
+            "node": "03 - Download Image for LinkedIn",
             "type": "main",
             "index": 0
           },
           {
-            "node": "20 - Create Instagram Container",
+            "node": "06 - Create Instagram Container",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "17b - Download Image for LinkedIn": {
+    "03 - Download Image for LinkedIn": {
       "main": [
         [
           {
-            "node": "18 - Publish LinkedIn",
+            "node": "04 - Publish LinkedIn",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "18 - Publish LinkedIn": {
+    "04 - Publish LinkedIn": {
       "main": [
         [
           {
-            "node": "19 - Normalize LinkedIn Result",
+            "node": "05 - Normalize LinkedIn Result",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "19 - Normalize LinkedIn Result": {
+    "05 - Normalize LinkedIn Result": {
       "main": [
         [
           {
-            "node": "23 - Merge Publish Results",
+            "node": "09 - Merge Publish Results",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "20 - Create Instagram Container": {
+    "06 - Create Instagram Container": {
       "main": [
         [
           {
-            "node": "21 - Publish Instagram",
+            "node": "07 - Publish Instagram",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "21 - Publish Instagram": {
+    "07 - Publish Instagram": {
       "main": [
         [
           {
-            "node": "22 - Normalize Instagram Result",
+            "node": "08 - Normalize Instagram Result",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "22 - Normalize Instagram Result": {
+    "08 - Normalize Instagram Result": {
       "main": [
         [
           {
-            "node": "23 - Merge Publish Results",
+            "node": "09 - Merge Publish Results",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "23 - Merge Publish Results": {
+    "09 - Merge Publish Results": {
       "main": [
         [
           {
-            "node": "24 - Determine Final Status",
+            "node": "10 - Determine Final Status",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "24 - Determine Final Status": {
+    "10 - Determine Final Status": {
       "main": [
         [
           {
-            "node": "27 - Check Any Failed",
+            "node": "11 - Check Any Failed",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "27 - Check Any Failed": {
+    "11 - Check Any Failed": {
       "main": [
         [
           {
-            "node": "28 - Send Error Notification",
+            "node": "12 - Send Error Notification",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "29 - All Published",
+            "node": "13 - All Published",
             "type": "main",
             "index": 0
           }
@@ -933,40 +486,51 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "71db563a-165b-49b6-8216-05d3ecc692a8",
+  "versionId": "82eb563a-165b-49b6-8216-05d3ecc692b9",
   "meta": {
     "instanceId": "66a8a33a3c63da60147f90a19ac34a67e33834e494d249ee8a79f249ac3c522c"
   },
   "nodeGroups": [
     {
-      "id": "b213eb78-acc2-4aa6-b53a-bf203c54617a",
-      "name": "Webhook Ingestion & Context Setup",
+      "id": "g1",
+      "name": "Webhook Ingestion",
       "nodeIds": [
         "webhook-trigger-001",
-        "085285f0-cd12-47e9-95d8-dbfda105f6b2",
-        "check-content-provided-001"
+        "set-approved-post-002"
       ],
-      "description": "Receives instant webhook dispatch from AI Content Transformer web app on post approval"
+      "description": "Receives the exact approved content, image, and hashtags from the AI Content Transformer web app"
     },
     {
-      "id": "c43a4bbd-7e40-41fe-9aea-1e73468b792f",
-      "name": "Multi-Channel Social Publishing",
+      "id": "g2",
+      "name": "LinkedIn Publishing",
       "nodeIds": [
-        "c1ba8d9b-6713-4126-a8a8-81dd251a79ef",
-        "fe24bf5e-ed44-4a74-9fdd-67b4de4e1b74",
-        "d1eab732-3aac-4349-8fff-e139f3a95f43",
-        "e2f10d64-f342-4566-a57b-fce43793264c",
-        "f9858fe3-eaa3-43e5-9aa5-625281625f54"
+        "download-image-003",
+        "publish-linkedin-004",
+        "normalize-linkedin-005"
       ],
-      "description": "Publishes approved content & images directly to LinkedIn & Instagram"
+      "description": "Publishes approved text & image directly to LinkedIn"
     },
     {
-      "id": "3ccb6187-9ffb-4cd9-823a-ff4981c30a5e",
-      "name": "Webhook & Status Tracking",
+      "id": "g3",
+      "name": "Instagram Publishing",
       "nodeIds": [
-        "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f"
+        "create-ig-container-006",
+        "publish-ig-007",
+        "normalize-ig-008"
       ],
-      "description": "Determines final status and verifies publishing execution"
+      "description": "Publishes approved image & caption directly to Instagram via Meta Graph API"
+    },
+    {
+      "id": "g4",
+      "name": "Status Aggregation & Alerting",
+      "nodeIds": [
+        "merge-results-009",
+        "determine-status-010",
+        "check-failed-011",
+        "telegram-error-012",
+        "all-published-013"
+      ],
+      "description": "Aggregates multi-channel status and notifies via Telegram if any channel fails"
     }
   ],
   "id": "CwDM3Nx2ruQ7lKt0",
