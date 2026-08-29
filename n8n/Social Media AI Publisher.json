@@ -252,7 +252,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED';\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: {\n  post_id: li.post_id || ig.post_id || '',\n  topic: li.topic || ig.topic || '',\n  final_status: finalStatus,\n  linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'),\n  instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'),\n  linkedin_post_id: liOk ? (li.platform_post_id || '') : '',\n  instagram_post_id: igOk ? (ig.platform_post_id || '') : '',\n  error_message: errParts.join(' | '),\n  published_at: now,\n  any_failed: (!liOk && !igOk)\n} }];"
+        "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED';\n\nconst now = new Date();\nconst formattedDate = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';\n\nconst topic = (li.topic || ig.topic || 'Social Media Release').trim();\nconst postId = (li.post_id || ig.post_id || '').trim();\n\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error && !ig.error.includes('skipped') && !ig.error.includes('not configured')) errParts.push('Instagram: ' + ig.error);\nconst errorDetail = errParts.join(' | ');\n\nconst liBadge = liOk ? '✅ Published' : (li.status === 'FAILED' ? '❌ Failed' : '⏳ ' + (li.status || 'Ready'));\nconst igBadge = igOk ? '✅ Published' : 'ℹ️ Skipped / Optional';\n\nlet msg = `🚀 <b>Social Media Publishing Report</b>\\n\\n`;\nmsg += `📌 <b>Topic:</b> ${topic}\\n`;\nmsg += `💼 <b>LinkedIn:</b> ${liBadge}\\n`;\nmsg += `📸 <b>Instagram:</b> ${igBadge}\\n`;\nmsg += `🆔 <b>Post ID:</b> <code>${postId}</code>\\n`;\nmsg += `⏱️ <b>Time:</b> ${formattedDate}`;\n\nif (errorDetail) {\n  msg += `\\n⚠️ <b>Note:</b> ${errorDetail}`;\n}\n\nreturn [{ json: {\n  post_id: postId,\n  topic: topic,\n  final_status: finalStatus,\n  linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'),\n  instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'),\n  linkedin_post_id: liOk ? (li.platform_post_id || '') : '',\n  instagram_post_id: igOk ? (ig.platform_post_id || '') : '',\n  error_message: errorDetail,\n  telegram_message: msg,\n  published_at: now.toISOString(),\n  any_failed: (!liOk && !igOk)\n} }];"
       },
       "id": "determine-status-010",
       "name": "10 - Determine Final Status",
@@ -265,52 +265,20 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "any_failed",
-              "leftValue": "={{ $('10 - Determine Final Status').item.json.any_failed }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "id": "check-failed-011",
-      "name": "11 - Check Any Failed",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1980,
-        200
-      ]
-    },
-    {
-      "parameters": {
         "chatId": "6441680644",
-        "text": "={{ \"⚠️ Social Media Publishing Notice\\n\\n📌 Post: \" + $('10 - Determine Final Status').item.json.topic + \"\\n\\n💼 LinkedIn: \" + ($('10 - Determine Final Status').item.json.linkedin_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n📸 Instagram: \" + ($('10 - Determine Final Status').item.json.instagram_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n\\n❗ Detail: \" + $('10 - Determine Final Status').item.json.error_message + \"\\n\\n🔧 Post ID: \" + $('10 - Determine Final Status').item.json.post_id }}",
+        "text": "={{ $json.telegram_message }}",
         "additionalFields": {
+          "parse_mode": "HTML",
           "appendAttribution": false
         }
       },
-      "id": "telegram-error-012",
-      "name": "12 - Send Error Notification",
+      "id": "telegram-notification-012",
+      "name": "11 - Send Telegram Notification",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
-        100
+        1980,
+        200
       ],
       "webhookId": "2af19f11-cba8-4514-bb83-abab9b88d806",
       "executeOnce": true,
@@ -328,7 +296,7 @@
             {
               "id": "done",
               "name": "result",
-              "value": "Approved content published successfully across active channels",
+              "value": "Approved content published successfully across active channels and notified via Telegram",
               "type": "string"
             }
           ]
@@ -336,12 +304,12 @@
         "options": {}
       },
       "id": "all-published-013",
-      "name": "13 - All Published",
+      "name": "12 - All Published",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
         2240,
-        300
+        200
       ]
     }
   ],
@@ -455,25 +423,18 @@
       "main": [
         [
           {
-            "node": "11 - Check Any Failed",
+            "node": "11 - Send Telegram Notification",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "11 - Check Any Failed": {
+    "11 - Send Telegram Notification": {
       "main": [
         [
           {
-            "node": "12 - Send Error Notification",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "13 - All Published",
+            "node": "12 - All Published",
             "type": "main",
             "index": 0
           }
@@ -486,7 +447,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "82eb563a-165b-49b6-8216-05d3ecc692b9",
+  "versionId": "91ab563a-165b-49b6-8216-05d3ecc692c1",
   "meta": {
     "instanceId": "66a8a33a3c63da60147f90a19ac34a67e33834e494d249ee8a79f249ac3c522c"
   },
@@ -498,7 +459,7 @@
         "webhook-trigger-001",
         "set-approved-post-002"
       ],
-      "description": "Receives the exact approved content, image, and hashtags from the AI Content Transformer web app"
+      "description": "Receives approved post content from website"
     },
     {
       "id": "g2",
@@ -518,7 +479,7 @@
         "publish-ig-007",
         "normalize-ig-008"
       ],
-      "description": "Publishes approved image & caption directly to Instagram via Meta Graph API"
+      "description": "Publishes to Instagram via Meta Graph API"
     },
     {
       "id": "g4",
@@ -526,11 +487,10 @@
       "nodeIds": [
         "merge-results-009",
         "determine-status-010",
-        "check-failed-011",
-        "telegram-error-012",
+        "telegram-notification-012",
         "all-published-013"
       ],
-      "description": "Aggregates multi-channel status and notifies via Telegram if any channel fails"
+      "description": "Aggregates multi-channel status and notifies via Telegram with zero unnecessary spaces"
     }
   ],
   "id": "CwDM3Nx2ruQ7lKt0",
