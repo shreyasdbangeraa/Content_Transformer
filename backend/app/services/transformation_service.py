@@ -5,6 +5,7 @@ from app.database.models import Transformation, CanonicalAnalysis, Output, Outpu
 from app.ai.factory import AIFactory
 from app.ai.huggingface_provider import HuggingFaceProvider
 from app.services.quality_service import QualityService
+from app.services.blockchain_service import BlockchainService
 
 class TransformationService:
     """Transforms Canonical Structured Knowledge into multiple target communication artefacts concurrently."""
@@ -201,6 +202,23 @@ class TransformationService:
             )
             db.add(quality_obj)
             created_outputs.append(output_obj)
+
+            # Register initial V1 cryptographic version on blockchain
+            try:
+                BlockchainService.register_content_version(
+                    db=db,
+                    content_id=output_obj.id,
+                    content=raw_text,
+                    action_type="AI_TRANSFORMATION",
+                    version_number=1,
+                    version_tag="V1",
+                    created_by="AI_Engine",
+                    project_id=transformation.project_id,
+                    content_location="database:outputs:raw_content",
+                    metadata={"format_type": fmt, "title": title}
+                )
+            except Exception:
+                pass
 
         transformation.status = "COMPLETED"
         

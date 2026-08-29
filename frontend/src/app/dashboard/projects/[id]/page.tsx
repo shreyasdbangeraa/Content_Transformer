@@ -33,6 +33,7 @@ import TwitterThreadCard from '@/components/TwitterThreadCard'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
+import BlockchainVerificationCard from '@/components/BlockchainVerificationCard'
 import { Edit3 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -347,6 +348,22 @@ export default function ProjectDetailPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Blockchain Cryptographic Verification & Tamper Detection */}
+                    <BlockchainVerificationCard
+                      output={activeOutput}
+                      onContentUpdated={(newText) => {
+                        setProject((prev) => {
+                          if (!prev) return prev
+                          return {
+                            ...prev,
+                            outputs: prev.outputs?.map((o) =>
+                              o.id === activeOutput.id ? { ...o, raw_content: newText } : o
+                            ),
+                          }
+                        })
+                      }}
+                    />
 
                     {/* Fact Check Inspection Panel */}
                     <FactCheckPanel factCheck={activeOutput.fact_check} />

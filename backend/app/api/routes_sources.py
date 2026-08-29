@@ -11,6 +11,7 @@ from app.processors.document_parser import DocumentParser
 from app.processors.url_parser import URLParser
 from app.processors.sanitizer import sanitize_untrusted_text
 from app.services.canonical_service import CanonicalService
+from app.services.blockchain_service import BlockchainService
 from app.config import settings
 
 router = APIRouter(prefix="/sources", tags=["Sources"])
@@ -50,6 +51,24 @@ async def upload_file(
         processing_status="PROCESSED"
     )
     db.add(source)
+    db.flush()
+
+    # Blockchain Anchor (ORIGINAL_UPLOAD)
+    try:
+        BlockchainService.register_content_version(
+            db=db,
+            content_id=source.id,
+            content=parsed["raw_text"],
+            action_type="ORIGINAL_UPLOAD",
+            version_number=1,
+            version_tag="V1",
+            created_by="Operator_Upload",
+            project_id=project_id,
+            content_location="database:sources:raw_text",
+            metadata={"filename": filename, "file_type": ext}
+        )
+    except Exception:
+        pass
 
     audit = AuditLog(
         project_id=project_id,
@@ -92,6 +111,24 @@ def ingest_text_paste(
         processing_status="PROCESSED"
     )
     db.add(source)
+    db.flush()
+
+    # Blockchain Anchor (ORIGINAL_UPLOAD)
+    try:
+        BlockchainService.register_content_version(
+            db=db,
+            content_id=source.id,
+            content=clean_text,
+            action_type="ORIGINAL_UPLOAD",
+            version_number=1,
+            version_tag="V1",
+            created_by="Operator_Text_Paste",
+            project_id=project_id,
+            content_location="database:sources:raw_text",
+            metadata={"title": title, "file_type": "text_paste"}
+        )
+    except Exception:
+        pass
 
     audit = AuditLog(
         project_id=project_id,

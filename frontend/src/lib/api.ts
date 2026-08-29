@@ -220,4 +220,37 @@ export const api = {
     }),
   deleteKnowledge: (id: string) =>
     request<{ message: string }>(`/knowledge/${id}`, { method: 'DELETE' }),
+
+  // Blockchain Content Integrity & Version Verification
+  verifyContent: (contentId: string, currentContent: string, versionTag?: string) =>
+    request<any>('/blockchain/verify', {
+      method: 'POST',
+      body: JSON.stringify({
+        content_id: contentId,
+        current_content: currentContent,
+        version_tag: versionTag,
+      }),
+    }),
+  getBlockchainHistory: (contentId: string) =>
+    request<any[]>(`/blockchain/content/${contentId}/history`),
+  getLatestBlockchainRecord: (contentId: string) =>
+    request<any>(`/blockchain/content/${contentId}/latest`),
+  getBlockchainStats: () => request<any>('/blockchain/stats'),
+  getBlockchainStatus: () => request<any>('/blockchain/status'),
+  simulateTamper: (contentId: string, tamperedText?: string) =>
+    request<any>('/blockchain/demo/tamper', {
+      method: 'POST',
+      body: JSON.stringify({
+        content_id: contentId,
+        tampered_text: tamperedText,
+      }),
+    }),
+  restoreOriginal: (contentId: string, versionTag?: string) =>
+    request<any>('/blockchain/demo/restore', {
+      method: 'POST',
+      body: JSON.stringify({
+        content_id: contentId,
+        version_tag: versionTag,
+      }),
+    }),
 }

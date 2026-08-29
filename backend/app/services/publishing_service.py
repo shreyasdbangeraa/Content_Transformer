@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from app.database.models import Output, PublishingJob, Transformation, FactCheck, QualityScore, AuditLog
 from app.config import settings
 from app.utils.text_sanitizer import sanitize_linkedin_content
+from app.services.blockchain_service import BlockchainService
 
 class PublishingService:
     """Dispatches approved artefacts to n8n webhooks and external automation platforms."""
@@ -129,6 +130,22 @@ class PublishingService:
 
         job.response_data = response_data
         output.status = "PUBLISHED"
+
+        # Blockchain Anchor on Publish
+        try:
+            BlockchainService.register_content_version(
+                db=db,
+                content_id=output.id,
+                content=output.raw_content,
+                action_type="PUBLISHED",
+                version_number=output.version,
+                version_tag=f"V{output.version}",
+                created_by="Publishing_Service",
+                project_id=transformation.project_id if transformation else None,
+                metadata={"platform": platform, "job_id": job.id, "workflow_id": PublishingService.N8N_WORKFLOW_ID}
+            )
+        except Exception:
+            pass
 
         # Audit Log
         audit = AuditLog(

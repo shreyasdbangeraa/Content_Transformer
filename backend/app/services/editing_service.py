@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 from app.database.models import Output, OutputVersion, Transformation, CanonicalAnalysis, FactCheck, QualityScore, AuditLog
 from app.ai.factory import AIFactory
 from app.services.quality_service import QualityService
+from app.services.blockchain_service import BlockchainService
 
 class EditingService:
     """Handles conversational AI refinement, manual direct edits, versioning, and human approval."""
@@ -142,6 +143,22 @@ class EditingService:
             )
             db.add(audit)
 
+        # Blockchain Anchor
+        try:
+            BlockchainService.register_content_version(
+                db=db,
+                content_id=output.id,
+                content=revised_text,
+                action_type="AI_REFINEMENT",
+                version_number=new_version_num,
+                version_tag=f"V{new_version_num}",
+                created_by="AI_Refinement",
+                project_id=transformation.project_id if transformation else None,
+                metadata={"prompt": edit_prompt, "change_reason": change_reason}
+            )
+        except Exception:
+            pass
+
         db.commit()
         db.refresh(output)
         return output
@@ -180,6 +197,22 @@ class EditingService:
             )
             db.add(audit)
 
+        # Blockchain Anchor
+        try:
+            BlockchainService.register_content_version(
+                db=db,
+                content_id=output.id,
+                content=content,
+                action_type="HUMAN_EDIT",
+                version_number=new_version_num,
+                version_tag=f"V{new_version_num}",
+                created_by="User",
+                project_id=transformation.project_id if transformation else None,
+                metadata={"change_reason": change_reason}
+            )
+        except Exception:
+            pass
+
         db.commit()
         db.refresh(output)
         return output
@@ -206,6 +239,23 @@ class EditingService:
                 details={"output_id": output.id, "format": output.format_type, "notes": notes}
             )
             db.add(audit)
+
+        # Blockchain Anchor on Approval
+        if status == "APPROVED":
+            try:
+                BlockchainService.register_content_version(
+                    db=db,
+                    content_id=output.id,
+                    content=output.raw_content,
+                    action_type="APPROVED",
+                    version_number=output.version,
+                    version_tag=f"V{output.version}",
+                    created_by="Operator_Approval",
+                    project_id=transformation.project_id if transformation else None,
+                    metadata={"notes": notes, "status": status}
+                )
+            except Exception:
+                pass
 
         db.commit()
         db.refresh(output)

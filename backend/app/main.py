@@ -15,6 +15,7 @@ from app.api.routes_knowledge import router as knowledge_router
 from app.api.routes_settings import router as settings_router
 from app.api.routes_brand_profiles import router as brand_profiles_router
 from app.api.routes_research import router as research_router
+from app.api.routes_blockchain import router as blockchain_router
 
 # Initialize DB tables
 init_db()
@@ -49,6 +50,7 @@ app.include_router(knowledge_router, prefix=settings.API_PREFIX)
 app.include_router(brand_profiles_router, prefix=settings.API_PREFIX)
 app.include_router(research_router, prefix=settings.API_PREFIX)
 app.include_router(settings_router, prefix=settings.API_PREFIX)
+app.include_router(blockchain_router, prefix=settings.API_PREFIX)
 
 @app.get("/")
 def root():

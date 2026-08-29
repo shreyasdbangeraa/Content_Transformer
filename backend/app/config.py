@@ -29,6 +29,14 @@ class Settings(BaseSettings):
     N8N_WEBHOOK_URL: Optional[str] = os.getenv("N8N_WEBHOOK_URL", "")
     N8N_WEBHOOK_SECRET: Optional[str] = os.getenv("N8N_WEBHOOK_SECRET", "")
     
+    # Blockchain Content Integrity & Version Verification
+    BLOCKCHAIN_ENABLED: bool = os.getenv("BLOCKCHAIN_ENABLED", "true").lower() in ["true", "1", "yes"]
+    BLOCKCHAIN_MODE: str = os.getenv("BLOCKCHAIN_MODE", "mock") # "mock", "evm"
+    BLOCKCHAIN_NETWORK: str = os.getenv("BLOCKCHAIN_NETWORK", "Ethereum Sepolia Testnet")
+    BLOCKCHAIN_RPC_URL: Optional[str] = os.getenv("BLOCKCHAIN_RPC_URL", "")
+    BLOCKCHAIN_CONTRACT_ADDRESS: str = os.getenv("BLOCKCHAIN_CONTRACT_ADDRESS", "0x8f3c71E765691C3b7654b1d6A3C4D116a4e72390")
+    BLOCKCHAIN_PRIVATE_KEY: Optional[str] = os.getenv("BLOCKCHAIN_PRIVATE_KEY", "")
+
     # Storage / Uploads
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
     EXPORT_DIR: str = os.getenv("EXPORT_DIR", "./exports")

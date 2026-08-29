@@ -43,6 +43,7 @@ import TwitterThreadCard from '@/components/TwitterThreadCard'
 import LiveResearchProgress from '@/components/LiveResearchProgress'
 import LiveGenerationProgress from '@/components/LiveGenerationProgress'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
+import BlockchainVerificationCard from '@/components/BlockchainVerificationCard'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
 import { Edit3 } from 'lucide-react'
@@ -886,6 +887,16 @@ function NewTransformationStudioContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Blockchain Cryptographic Verification & Tamper Detection */}
+              <BlockchainVerificationCard
+                output={activeOutput}
+                onContentUpdated={(newText) => {
+                  setGeneratedOutputs((prev) =>
+                    prev.map((o) => (o.id === activeOutput.id ? { ...o, raw_content: newText } : o))
+                  )
+                }}
+              />
 
               {/* Fact Check Inspection Panel (Stacked Down) */}
               <FactCheckPanel factCheck={activeOutput.fact_check} />

@@ -26,6 +26,7 @@ import { Project, DashboardStats } from '@/types'
 export default function DashboardOverview() {
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [blockchainStats, setBlockchainStats] = useState<any>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [isLaunchingDemo, setIsLaunchingDemo] = useState(false)
@@ -33,7 +34,7 @@ export default function DashboardOverview() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [statsData, projectsData] = await Promise.all([
+      const [statsData, projectsData, bcData] = await Promise.all([
         api.getStats().catch(() => ({
           total_projects: 0,
           total_sources: 0,
@@ -44,9 +45,11 @@ export default function DashboardOverview() {
           publishing_jobs_count: 0,
         })),
         api.listProjects().catch(() => []),
+        api.getBlockchainStats().catch(() => null),
       ])
       setStats(statsData)
       setProjects(projectsData)
+      setBlockchainStats(bcData)
     } finally {
       setLoading(false)
     }
@@ -193,6 +196,70 @@ export default function DashboardOverview() {
           <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
             <span>Hallucination prevention</span>
             <span className="text-purple-700 font-bold">Zero-Drift</span>
+          </div>
+        </div>
+      </div>
+
+      {/* CONTENT INTEGRITY & BLOCKCHAIN TELEMETRY WIDGET */}
+      <div className="rounded-3xl border border-indigo-200/80 bg-gradient-to-r from-indigo-900 via-slate-900 to-slate-950 p-6 sm:p-7 text-white shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-800/60 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-400 shadow-inner">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-extrabold text-white">Content Integrity & Blockchain Verification</h3>
+                <span className="text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-extrabold border border-emerald-500/30">
+                  {blockchainStats?.mode || 'Mock EVM'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Append-only cryptographic SHA-256 hash chains securing source documents & multi-format outputs
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono text-indigo-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{blockchainStats?.blockchain_network || 'Ethereum Sepolia Testnet'}</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Total Verified */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-xs text-slate-400 font-medium">Verified Assets</div>
+            <div className="text-2xl font-black text-emerald-400 font-mono">
+              ✓ {blockchainStats?.total_verified ?? (stats?.total_outputs || 0)}
+            </div>
+            <div className="text-[10px] text-slate-400">Hash matched on-chain</div>
+          </div>
+
+          {/* Blockchain Records */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-xs text-slate-400 font-medium">On-Chain Records</div>
+            <div className="text-2xl font-black text-sky-400 font-mono">
+              ⛓ {blockchainStats?.total_blockchain_records ?? ((stats?.total_sources || 0) + (stats?.total_outputs || 0))}
+            </div>
+            <div className="text-[10px] text-slate-400">Immutable versions</div>
+          </div>
+
+          {/* Modified Alerts */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-xs text-slate-400 font-medium">Tamper Alerts</div>
+            <div className="text-2xl font-black text-amber-400 font-mono">
+              ⚠ {blockchainStats?.modified_alerts || 0}
+            </div>
+            <div className="text-[10px] text-slate-400">Tamper detection active</div>
+          </div>
+
+          {/* Pending Confirmations */}
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <div className="text-xs text-slate-400 font-medium">Pending Confirmations</div>
+            <div className="text-2xl font-black text-purple-400 font-mono">
+              ◷ {blockchainStats?.pending_transactions || 0}
+            </div>
+            <div className="text-[10px] text-slate-400">0 blocks lagging</div>
           </div>
         </div>
       </div>

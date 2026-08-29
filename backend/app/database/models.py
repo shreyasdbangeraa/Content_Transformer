@@ -28,6 +28,7 @@ class Project(Base):
     transformations = relationship("Transformation", back_populates="project", cascade="all, delete-orphan")
     research_jobs = relationship("ResearchJob", back_populates="project", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="project", cascade="all, delete-orphan")
+    content_version_records = relationship("ContentVersionRecord", back_populates="project", cascade="all, delete-orphan")
 
 class Source(Base):
     __tablename__ = "sources"
@@ -305,9 +306,45 @@ class AuditLog(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
-    action = Column(String(100), nullable=False) # SOURCE_UPLOADED, SOURCE_PROCESSED, RESEARCH_STARTED, RESEARCH_COMPLETED, CANONICAL_CREATED, OUTPUT_GENERATED, CLAIMS_VERIFIED, QUALITY_COMPLETED, OUTPUT_EDITED, OUTPUT_APPROVED, OUTPUT_REJECTED, OUTPUT_EXPORTED, PUBLISH_STARTED, PUBLISH_COMPLETED, PUBLISH_FAILED
+    action = Column(String(100), nullable=False) # SOURCE_UPLOADED, SOURCE_PROCESSED, RESEARCH_STARTED, RESEARCH_COMPLETED, CANONICAL_CREATED, OUTPUT_GENERATED, CLAIMS_VERIFIED, QUALITY_COMPLETED, OUTPUT_EDITED, OUTPUT_APPROVED, OUTPUT_REJECTED, OUTPUT_EXPORTED, PUBLISH_STARTED, PUBLISH_COMPLETED, PUBLISH_FAILED, BLOCKCHAIN_REGISTERED, BLOCKCHAIN_VERIFIED
     actor = Column(String(100), default="System")
     details = Column(JSON, default=dict)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     project = relationship("Project", back_populates="audit_logs")
+
+class ContentVersionRecord(Base):
+    __tablename__ = "content_version_records"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    content_id = Column(String(100), nullable=False, index=True) # Refers to Output.id or Source.id
+    project_id = Column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=True)
+    
+    version_number = Column(Integer, nullable=False, default=1)
+    version_tag = Column(String(50), nullable=False, default="V1") # "V1", "V2", "V3"
+    parent_version_id = Column(String(100), nullable=True) # Previous version ID or tag
+    
+    content_location = Column(String(255), default="database:outputs:raw_content")
+    content_hash = Column(String(66), nullable=False, index=True) # 0x... or 64-char SHA256 hex
+    previous_hash = Column(String(66), default="0x0000000000000000000000000000000000000000000000000000000000000000")
+    hash_algorithm = Column(String(50), default="SHA-256")
+    
+    action_type = Column(String(100), nullable=False) # ORIGINAL_UPLOAD, AI_TRANSFORMATION, HUMAN_EDIT, AI_REFINEMENT, APPROVED, PUBLISHED
+    created_by = Column(String(100), default="AI_Engine")
+    
+    # Blockchain Anchor Details
+    blockchain_status = Column(String(50), default="CONFIRMED") # CONFIRMED, PENDING, FAILED
+    blockchain_network = Column(String(100), default="Ethereum Sepolia Testnet")
+    transaction_hash = Column(String(100), nullable=True) # 0x...
+    block_number = Column(Integer, nullable=True)
+    wallet_address = Column(String(100), nullable=True)
+    contract_address = Column(String(100), nullable=True)
+    gas_used = Column(Integer, default=42100)
+    
+    # Snapshot of metadata & verified status
+    metadata_snapshot = Column(JSON, default=dict)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    project = relationship("Project", back_populates="content_version_records")
+
