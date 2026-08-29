@@ -37,15 +37,16 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
   const imageUri = structured.image_url || structured.image_uri
   const modelName = structured.model || 'Hugging Face (Llama-3.3-70B / Mistral)'
 
+  const cleanText = (output.raw_content || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .join('\n')
+    .trim()
+
   const handleCopy = () => {
-    const cleaned = (output.raw_content || '')
-      .replace(/\r\n/g, '\n')
-      .split('\n')
-      .map((l) => l.trim())
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim()
-    navigator.clipboard.writeText(cleaned)
+    navigator.clipboard.writeText(cleanText)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -132,7 +133,7 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
 
         {/* Post Body Copy */}
         <div className="p-6 sm:p-8 space-y-4">
-          <StructuredContentRenderer content={output.raw_content} />
+          <StructuredContentRenderer content={cleanText} />
         </div>
 
         {/* Optional Media Preview if attached */}

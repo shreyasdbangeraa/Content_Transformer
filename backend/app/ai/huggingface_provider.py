@@ -4,7 +4,7 @@ import httpx
 import re
 from typing import Optional, Dict, Any, List
 from app.config import settings
-from app.utils.text_cleaning import clean_linkedin_text
+from app.utils.text_sanitizer import sanitize_linkedin_content
 
 def _escape_xml(t: str) -> str:
     """Escape special XML characters for SVG rendering."""
@@ -222,13 +222,14 @@ class HuggingFaceProvider:
                         if isinstance(res_json, list) and len(res_json) > 0 and "generated_text" in res_json[0]:
                             raw_text = res_json[0]["generated_text"].split("[/INST]")[-1].strip()
                             if raw_text:
+                                clean_text = sanitize_linkedin_content(raw_text)
                                 return {
                                     "title": f"LinkedIn Thought Leadership - {title[:40]}",
-                                    "raw_content": raw_text,
+                                    "raw_content": clean_text,
                                     "structured_data": {
                                         "engine": "Hugging Face Inference API",
                                         "model": "mistralai/Mistral-7B-Instruct-v0.3",
-                                        "character_count": len(raw_text),
+                                        "character_count": len(clean_text),
                                         "target_audience": audience
                                     }
                                 }
@@ -247,19 +248,18 @@ class HuggingFaceProvider:
         )
         paragraphs.append(f"Here is what our verified intelligence confirms regarding {topic}:")
         
-        # Bulleted takeaways (clean, single-spaced list)
+        # Bulleted takeaways
         bullets = []
         for i, f in enumerate(facts[:4]):
             f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-            bullets.append(f"📌 Key Finding #{i+1}: {f_text}")
+            bullets.append(f"📌 **Key Finding #{i+1}:** {f_text}")
             
         if stats:
             for s in stats[:2]:
                 if isinstance(s, dict):
-                    bullets.append(f"📊 Telemetry Metric: {s.get('metric', 'Metric')} = {s.get('value', 'Value')} ({s.get('context', 'Verified')})")
+                    bullets.append(f"📊 **Telemetry Metric:** {s.get('metric', 'Metric')} = **{s.get('value', 'Value')}** ({s.get('context', 'Verified')})")
                     
-        if bullets:
-            paragraphs.append("\n".join(bullets))
+        paragraphs.append("\n".join(bullets))
         
         # Directives
         if recs:
@@ -267,10 +267,10 @@ class HuggingFaceProvider:
             for idx, r in enumerate(recs[:2]):
                 r_text = r.get("recommendation", "") if isinstance(r, dict) else str(r)
                 rec_lines.append(f"{idx+1}️⃣ {r_text}")
-            paragraphs.append("🎯 Strategic Action Plan:\n" + "\n".join(rec_lines))
+            paragraphs.append("🎯 **Strategic Action Plan:**\n" + "\n".join(rec_lines))
             
         paragraphs.append(
-            "💡 Executive Takeaway: Operational resilience is built on an unassailable Single Source of Truth that leadership can trust without ambiguity."
+            "💡 **Executive Takeaway:** Operational resilience is built on an unassailable Single Source of Truth that leadership can trust without ambiguity."
         )
         
         cta = f"How is your organization navigating {topic.lower()[:40]} and building structured operational safeguards? I’d welcome your thoughts below."
@@ -279,8 +279,7 @@ class HuggingFaceProvider:
         hashtags = ["#Cybersecurity", "#IncidentResponse", "#ExecutiveLeadership", "#EnterpriseSecurity", "#ZeroTrust"] if is_novatech else ["#Leadership", "#StrategicInsights", "#BusinessGrowth", "#EnterpriseAI", "#Transformation"]
         paragraphs.append(" ".join(hashtags))
         
-        raw_joined = "\n\n".join(paragraphs)
-        full_post = clean_linkedin_text(raw_joined)
+        full_post = sanitize_linkedin_content("\n\n".join(paragraphs))
         
         return {
             "title": f"LinkedIn Thought Leadership - {title[:40]}",

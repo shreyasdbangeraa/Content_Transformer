@@ -3,7 +3,7 @@ import json
 from typing import Dict, Any, List, Optional
 from app.ai.base import AIProvider
 from app.generators.executive_summary import ExecutiveSummaryGenerator
-from app.utils.text_cleaning import clean_linkedin_text
+from app.utils.text_sanitizer import sanitize_linkedin_content
 
 class MockProvider(AIProvider):
     """High-fidelity fallback AI provider capable of dynamic offline analysis and generation for any topic."""
@@ -239,32 +239,28 @@ class MockProvider(AIProvider):
         # 2. LinkedIn Post
         elif format_type == "linkedin":
             hook = "🛡️ Resilient Response & Executive Briefing: NovaTech Incident IR-2026-0812" if is_novatech else f"🚀 Key Strategic Insights: {title}"
-            
-            paragraphs = []
-            paragraphs.append(hook)
-            paragraphs.append(
-                "Navigating complex operational events demands rapid cross-functional alignment, decisive containment, and rigorous factual grounding."
-            )
-            paragraphs.append(f"Here are the key verified takeaways from our official analysis on {topic}:")
+            body_parts = [
+                hook,
+                "Navigating complex operational events demands rapid cross-functional alignment, decisive containment, and rigorous factual grounding.",
+                f"Here are the key verified takeaways from our official analysis on {topic}:"
+            ]
             
             bullet_lines = []
             for f in facts[:4]:
                 f_text = f.get("text", "") if isinstance(f, dict) else str(f)
                 bullet_lines.append(f"🔹 {f_text}")
-            if bullet_lines:
-                paragraphs.append("\n".join(bullet_lines))
+            body_parts.append("\n".join(bullet_lines))
 
             rec_text = recs[0].get("recommendation", "") if (recs and isinstance(recs[0], dict)) else "Maintain continuous air-gapped monitoring."
-            paragraphs.append(f"🎯 Key Directive: {rec_text}")
+            body_parts.append(f"Key Directive: {rec_text}")
             
             cta = "How is your organization hardening perimeter appliances and incident response protocols? Let's discuss in the comments below."
-            paragraphs.append(cta)
+            body_parts.append(cta)
             
             hashtags = ["#Cybersecurity", "#IncidentResponse", "#Leadership", "#EnterpriseSecurity", "#ZeroTrust"] if is_novatech else ["#Leadership", "#Innovation", "#StrategicInsights", "#BusinessGrowth", "#Transformation"]
-            paragraphs.append(" ".join(hashtags))
+            body_parts.append(" ".join(hashtags))
 
-            raw_joined = "\n\n".join(paragraphs)
-            full_text = clean_linkedin_text(raw_joined)
+            full_text = sanitize_linkedin_content("\n\n".join(body_parts))
             return {
                 "title": f"LinkedIn Brief - {title[:40]}",
                 "raw_content": full_text,

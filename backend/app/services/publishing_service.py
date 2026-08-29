@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 from app.database.models import Output, PublishingJob, Transformation, FactCheck, QualityScore, AuditLog
 from app.config import settings
-
-from app.utils.text_cleaning import clean_linkedin_text
+from app.utils.text_sanitizer import sanitize_linkedin_content
 
 class PublishingService:
     """Dispatches approved artefacts to n8n webhooks and external automation platforms."""
@@ -46,8 +45,7 @@ class PublishingService:
         else:
             hashtags_str = str(raw_hashtags or "#Technology #Innovation #AI")
 
-        # Clean copy for LinkedIn and Instagram
-        cleaned_copy = clean_linkedin_text(output.raw_content)
+        clean_caption = sanitize_linkedin_content(output.raw_content) if output.format_type in ["linkedin", "twitter"] else output.raw_content.strip()
 
         # Construct certified n8n payload
         payload = {
@@ -61,9 +59,9 @@ class PublishingService:
             "format_type": output.format_type,
             "platform": platform,
             "title": output.title,
-            "content": cleaned_copy,
-            "linkedin_caption": cleaned_copy,
-            "instagram_caption": cleaned_copy,
+            "content": clean_caption,
+            "linkedin_caption": clean_caption,
+            "instagram_caption": clean_caption,
             "image_url": image_url,
             "hashtags": hashtags_str,
             "structured_data": struct_data,

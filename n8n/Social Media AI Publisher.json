@@ -37,13 +37,13 @@
             {
               "id": "p3",
               "name": "linkedin_caption",
-              "value": "={{ ($json.body?.linkedin_caption || $json.body?.content || $json.content || '').replace(/\\r\\n/g, '\\n').split('\\n').map(l => l.trim()).join('\\n').replace(/\\n{3,}/g, '\\n\\n').trim() }}",
+              "value": "={{ ($json.body?.linkedin_caption || $json.body?.content || $json.content || '').replace(/\\r\\n/g, '\\n').replace(/\\n{3,}/g, '\\n\\n').trim() }}",
               "type": "string"
             },
             {
               "id": "p4",
               "name": "instagram_caption",
-              "value": "={{ ($json.body?.instagram_caption || $json.body?.content || $json.content || '').replace(/\\r\\n/g, '\\n').split('\\n').map(l => l.trim()).join('\\n').replace(/\\n{3,}/g, '\\n\\n').trim() }}",
+              "value": "={{ ($json.body?.instagram_caption || $json.body?.content || $json.content || '').replace(/\\r\\n/g, '\\n').replace(/\\n{3,}/g, '\\n\\n').trim() }}",
               "type": "string"
             },
             {
