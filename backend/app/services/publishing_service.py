@@ -5,6 +5,8 @@ from typing import Dict, Any, Optional
 from app.database.models import Output, PublishingJob, Transformation, FactCheck, QualityScore, AuditLog
 from app.config import settings
 
+from app.utils.text_cleaning import clean_linkedin_text
+
 class PublishingService:
     """Dispatches approved artefacts to n8n webhooks and external automation platforms."""
 
@@ -44,6 +46,9 @@ class PublishingService:
         else:
             hashtags_str = str(raw_hashtags or "#Technology #Innovation #AI")
 
+        # Clean copy for LinkedIn and Instagram
+        cleaned_copy = clean_linkedin_text(output.raw_content)
+
         # Construct certified n8n payload
         payload = {
             "event": "content.approved_for_publishing",
@@ -56,9 +61,9 @@ class PublishingService:
             "format_type": output.format_type,
             "platform": platform,
             "title": output.title,
-            "content": output.raw_content,
-            "linkedin_caption": output.raw_content,
-            "instagram_caption": output.raw_content,
+            "content": cleaned_copy,
+            "linkedin_caption": cleaned_copy,
+            "instagram_caption": cleaned_copy,
             "image_url": image_url,
             "hashtags": hashtags_str,
             "structured_data": struct_data,

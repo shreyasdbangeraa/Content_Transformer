@@ -38,7 +38,14 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
   const modelName = structured.model || 'Hugging Face (Llama-3.3-70B / Mistral)'
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(output.raw_content)
+    const cleaned = (output.raw_content || '')
+      .replace(/\r\n/g, '\n')
+      .split('\n')
+      .map((l) => l.trim())
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+    navigator.clipboard.writeText(cleaned)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
