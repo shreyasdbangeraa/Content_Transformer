@@ -12,6 +12,7 @@ import {
   FileCode,
   CheckCircle2,
   Lock,
+  Zap,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 
@@ -25,6 +26,11 @@ export default function SettingsPage() {
   )
   const [fluxImageUri, setFluxImageUri] = useState<string | null>(null)
   const [isGeneratingFlux, setIsGeneratingFlux] = useState(false)
+
+  // n8n Webhook Test state
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState('https://shreyasdb.app.n8n.cloud/webhook/social-publish')
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false)
+  const [webhookTestResult, setWebhookTestResult] = useState<any>(null)
 
   const loadStatus = async () => {
     try {
@@ -49,6 +55,19 @@ export default function SettingsPage() {
       alert(`FLUX generation error: ${err.message}`)
     } finally {
       setIsGeneratingFlux(false)
+    }
+  }
+
+  const handleTestWebhook = async () => {
+    try {
+      setIsTestingWebhook(true)
+      setWebhookTestResult(null)
+      const res = await api.testN8nWebhook(n8nWebhookUrl)
+      setWebhookTestResult(res)
+    } catch (err: any) {
+      setWebhookTestResult({ success: false, error: err.message })
+    } finally {
+      setIsTestingWebhook(false)
     }
   }
 
@@ -222,6 +241,87 @@ export default function SettingsPage() {
                   className="max-h-80 rounded-2xl object-contain shadow-md"
                 />
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* n8n Automation Webhook Live Diagnostics */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 space-y-5 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="rounded-2xl bg-cyan-50 p-3 text-cyan-700 border border-cyan-100">
+            <Workflow className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">
+              n8n Social Media Publisher Webhook Diagnostics
+            </h3>
+            <p className="text-sm text-slate-500 font-medium mt-0.5">
+              Verify live connectivity to your active n8n cloud or self-hosted webhook.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block mb-1.5">
+              Target n8n Webhook URL
+            </label>
+            <input
+              type="url"
+              value={n8nWebhookUrl}
+              onChange={(e) => setN8nWebhookUrl(e.target.value)}
+              placeholder="https://shreyasdb.app.n8n.cloud/webhook/social-publish"
+              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 font-mono focus:border-cyan-500 focus:bg-white focus:outline-none shadow-xs"
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+            <span className="text-xs text-slate-500 font-medium">
+              Workflow ID: <code className="text-cyan-700 font-mono font-bold">CwDM3Nx2ruQ7lKt0</code> (Social Media AI Publisher)
+            </span>
+            <button
+              onClick={handleTestWebhook}
+              disabled={isTestingWebhook}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-sky-600 px-6 py-3 font-bold text-sm text-white shadow-md shadow-cyan-600/25 hover:from-cyan-500 hover:to-sky-500 disabled:opacity-50 transition-all active:scale-95"
+            >
+              {isTestingWebhook ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  <span>Dispatching Ping Test...</span>
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4" />
+                  <span>Test n8n Webhook Connection</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {webhookTestResult && (
+            <div className={`p-4 rounded-2xl border ${webhookTestResult.success ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-rose-50 border-rose-200 text-rose-900'} space-y-2 text-xs font-mono`}>
+              <div className="flex items-center gap-2 font-bold text-sm">
+                <CheckCircle2 className={`h-4 w-4 ${webhookTestResult.success ? 'text-emerald-600' : 'text-rose-600'}`} />
+                <span>{webhookTestResult.success ? 'Connection Successful (200 OK)' : 'Webhook Connection Warning / Inactive'}</span>
+              </div>
+              {webhookTestResult.response_body && (
+                <div>
+                  <span className="font-bold">n8n Response: </span>
+                  <code>{webhookTestResult.response_body}</code>
+                </div>
+              )}
+              {webhookTestResult.error && (
+                <div>
+                  <span className="font-bold">Detail: </span>
+                  <span>{webhookTestResult.error}</span>
+                </div>
+              )}
+              {!webhookTestResult.success && (
+                <div className="font-sans text-xs text-rose-800 bg-white/60 p-3 rounded-xl mt-2 border border-rose-200">
+                  <strong>Troubleshooting Hint:</strong> In your n8n cloud dashboard, make sure the <strong>Social Media AI Publisher</strong> workflow is toggled to <strong>ACTIVE (Enabled)</strong> in the top right.
+                </div>
+              )}
             </div>
           )}
         </div>

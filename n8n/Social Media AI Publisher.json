@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "social-publish",
-        "responseMode": "responseNode",
+        "responseMode": "onReceived",
         "options": {}
       },
       "id": "webhook-trigger-001",
@@ -599,21 +599,6 @@
     },
     {
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"SUCCESS\",\n  \"post_id\": $json.post_id,\n  \"topic\": $json.topic,\n  \"final_status\": $json.final_status,\n  \"linkedin_status\": $json.linkedin_status,\n  \"instagram_status\": $json.instagram_status,\n  \"linkedin_post_id\": $json.linkedin_post_id,\n  \"instagram_post_id\": $json.instagram_post_id,\n  \"published_at\": $json.published_at,\n  \"error_message\": $json.error_message\n}",
-        "options": {}
-      },
-      "id": "respond-webhook-001",
-      "name": "25 - Respond to Webhook",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        3550,
-        192
-      ]
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": false,
@@ -917,11 +902,6 @@
       "main": [
         [
           {
-            "node": "25 - Respond to Webhook",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "27 - Check Any Failed",
             "type": "main",
             "index": 0
@@ -982,12 +962,11 @@
     },
     {
       "id": "3ccb6187-9ffb-4cd9-823a-ff4981c30a5e",
-      "name": "Webhook Response & Status Tracking",
+      "name": "Webhook & Status Tracking",
       "nodeIds": [
-        "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f",
-        "respond-webhook-001"
+        "aa7fff04-5cb1-4507-acfd-9c7b54f06c3f"
       ],
-      "description": "Determines final status and responds directly back to the web application"
+      "description": "Determines final status and verifies publishing execution"
     }
   ],
   "id": "CwDM3Nx2ruQ7lKt0",

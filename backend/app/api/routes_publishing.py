@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from app.database.session import get_db
 from app.database.models import PublishingJob, Output
 from app.schemas.publishing import PublishRequest, PublishingJobResponse
@@ -30,3 +30,40 @@ async def publish_output_to_n8n(
 def list_publishing_jobs(db: Session = Depends(get_db)):
     jobs = db.query(PublishingJob).order_by(PublishingJob.created_at.desc()).all()
     return jobs
+
+import httpx
+from datetime import datetime
+from app.config import settings
+
+@router.post("/test-webhook")
+async def test_n8n_webhook(payload: Optional[Dict[str, Any]] = None):
+    webhook_url = payload.get("webhook_url") if payload else None
+    target = webhook_url or settings.N8N_WEBHOOK_URL
+    if not target or not target.startswith("http"):
+        return {"success": False, "error": "N8N_WEBHOOK_URL is not configured", "target_url": target}
+    
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                target,
+                json={
+                    "event": "test.ping",
+                    "post_id": "test_ping_001",
+                    "topic": "Ping Connection Test",
+                    "content": "Diagnostic ping payload from AI Content Transformation Platform",
+                    "timestamp": datetime.utcnow().isoformat()
+                },
+                headers={"Content-Type": "application/json"}
+            )
+            return {
+                "success": resp.status_code in [200, 201, 202],
+                "status_code": resp.status_code,
+                "response_body": resp.text[:500],
+                "target_url": target
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "target_url": target
+        }

@@ -94,7 +94,7 @@ class PublishingService:
                 if settings.N8N_WEBHOOK_SECRET:
                     headers["X-Webhook-Secret"] = settings.N8N_WEBHOOK_SECRET
 
-                async with httpx.AsyncClient(timeout=10.0) as client:
+                async with httpx.AsyncClient(timeout=30.0) as client:
                     resp = await client.post(target_webhook, json=payload, headers=headers)
                     job.published_at = datetime.utcnow()
                     job.status = "PUBLISHED" if resp.status_code in [200, 201, 202] else "FAILED"

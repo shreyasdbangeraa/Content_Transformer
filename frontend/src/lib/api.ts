@@ -205,6 +205,11 @@ export const api = {
       }),
     }),
   listPublishingJobs: () => request<PublishingJob[]>('/publishing/jobs'),
+  testN8nWebhook: (webhookUrl?: string) =>
+    request<any>('/publishing/test-webhook', {
+      method: 'POST',
+      body: JSON.stringify({ webhook_url: webhookUrl }),
+    }),
 
   // Knowledge Base & RAG
   listKnowledge: () => request<any[]>('/knowledge'),
