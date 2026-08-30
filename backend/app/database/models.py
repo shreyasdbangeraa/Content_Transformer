@@ -161,6 +161,8 @@ class CanonicalAnalysis(Base):
     sensitivity = Column(JSON, default=dict) # {level: "low"|"medium"|"high", items: [{type, value, masked_value, recommendation}]}
     source_references = Column(JSON, default=list)
     provenance_map = Column(JSON, default=dict)
+    rag_context = Column(JSON, default=list) # [{chunk_id, doc_title, doc_type, text, similarity}]
+    rag_sources = Column(JSON, default=list) # List of referenced knowledge documents
     confidence_score = Column(Float, default=0.98)
     
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -295,11 +297,30 @@ class KnowledgeDocument(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     title = Column(String(255), nullable=False)
-    doc_type = Column(String(100), default="Policy") # Policy, Brand Guidelines, Terminology, Template, Research Paper
+    doc_type = Column(String(100), default="Policy") # Policy, Brand Guidelines, Terminology, Template, Research Paper, Internal Document
     content = Column(Text, nullable=False)
+    file_name = Column(String(255), nullable=True)
     tags = Column(JSON, default=list)
-    embedding_id = Column(String(255), nullable=True) # Vector embedding reference
+    char_count = Column(Integer, default=0)
+    chunk_count = Column(Integer, default=0)
+    embedding_status = Column(String(50), default="INDEXED") # INDEXED, PENDING, FAILED
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    chunks = relationship("KnowledgeChunk", back_populates="document", cascade="all, delete-orphan")
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    document_id = Column(String(36), ForeignKey("knowledge_documents.id", ondelete="CASCADE"), nullable=False)
+    chunk_index = Column(Integer, nullable=False, default=0)
+    content = Column(Text, nullable=False)
+    embedding = Column(JSON, default=list) # 384-dimensional normalized float vector
+    char_count = Column(Integer, default=0)
+    word_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    document = relationship("KnowledgeDocument", back_populates="chunks")
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

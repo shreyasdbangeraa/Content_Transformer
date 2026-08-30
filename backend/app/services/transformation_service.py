@@ -41,8 +41,29 @@ class TransformationService:
             "uncertainties": canonical.uncertainties or [],
             "conflicts": canonical.conflicts or [],
             "claims": canonical.claims or [],
-            "sensitivity": canonical.sensitivity or {}
+            "sensitivity": canonical.sensitivity or {},
+            "rag_context": canonical.rag_context or [],
+            "rag_sources": canonical.rag_sources or []
         }
+
+        # Check if Knowledge Base has relevant guidelines if not already attached
+        if not canonical_dict["rag_context"]:
+            from app.services.rag_service import RAGService
+            try:
+                rag_data = await RAGService.retrieve_context_for_topic(
+                    db=db,
+                    topic=canonical.topic or canonical.title,
+                    text_sample=canonical.executive_summary or "",
+                    top_k=4
+                )
+                if rag_data.get("retrieved_chunks"):
+                    canonical_dict["rag_context"] = rag_data["retrieved_chunks"]
+                    canonical_dict["rag_sources"] = rag_data["sources_referenced"]
+                    canonical.rag_context = rag_data["retrieved_chunks"]
+                    canonical.rag_sources = rag_data["sources_referenced"]
+                    db.flush()
+            except Exception:
+                pass
 
         config = {
             "target_audience": transformation.target_audience,
@@ -78,6 +99,11 @@ class TransformationService:
                 title = gen_result.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
                 structured_data = gen_result.get("structured_data", {})
                 
+                # Attach RAG Knowledge Base provenance and citations
+                structured_data["rag_sources"] = canonical_dict.get("rag_sources", [])
+                structured_data["rag_context"] = canonical_dict.get("rag_context", [])
+                structured_data["is_rag_grounded"] = len(canonical_dict.get("rag_sources", [])) > 0
+                
                 # Attach Verified Domain Image URL and Crisp Vector SVG Visual Asset
                 if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
                     domain_name = transformation.project.domain if transformation.project else ""
@@ -98,7 +124,13 @@ class TransformationService:
                 for f in (canonical.key_facts or [])[:3]:
                     raw_text += f"- {f.get('text', '')}\n"
                 
-                fallback_struct: Dict[str, Any] = {"format": fmt, "error": str(e)}
+                fallback_struct: Dict[str, Any] = {
+                    "format": fmt,
+                    "error": str(e),
+                    "rag_sources": canonical_dict.get("rag_sources", []),
+                    "rag_context": canonical_dict.get("rag_context", []),
+                    "is_rag_grounded": len(canonical_dict.get("rag_sources", [])) > 0
+                }
                 if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
                     domain_name = transformation.project.domain if transformation.project else ""
                     http_img = resolve_domain_image_url(topic, canonical.executive_summary, domain_name)

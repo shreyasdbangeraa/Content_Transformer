@@ -43,6 +43,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return response.json()
 }
 
+function getSavedProvider(): string {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('contex_ai_settings')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.aiProvider) return parsed.aiProvider
+      }
+    } catch {}
+  }
+  return ''
+}
+
 export const api = {
   // Stats & Health
   getStats: () => request<DashboardStats>('/settings/stats'),
@@ -132,10 +145,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
-  analyzeSource: (sourceId: string, provider?: string) =>
-    request<CanonicalAnalysis>(`/sources/${sourceId}/analyze?provider=${provider || ''}`, {
+  analyzeSource: (sourceId: string, provider?: string) => {
+    const activeProvider = provider || getSavedProvider()
+    const query = activeProvider ? `?provider=${encodeURIComponent(activeProvider)}` : ''
+    return request<CanonicalAnalysis>(`/sources/${sourceId}/analyze${query}`, {
       method: 'POST',
-    }),
+    })
+  },
 
   // Transformations
   createTransformation: (
@@ -152,23 +168,30 @@ export const api = {
       brand_profile_id?: string
       custom_instructions?: string
       requested_formats: string[]
-    }
-  ) =>
-    request<{ transformation: Transformation; outputs_count: number; outputs: Output[] }>(
-      `/transformations/projects/${projectId}/transform`,
+    },
+    provider?: string
+  ) => {
+    const activeProvider = provider || getSavedProvider()
+    const query = activeProvider ? `?provider=${encodeURIComponent(activeProvider)}` : ''
+    return request<{ transformation: Transformation; outputs_count: number; outputs: Output[] }>(
+      `/transformations/projects/${projectId}/transform${query}`,
       {
         method: 'POST',
         body: JSON.stringify({ ...data, project_id: projectId }),
       }
-    ),
+    )
+  },
 
   // Outputs & Verification
   getOutput: (outputId: string) => request<Output>(`/outputs/${outputId}`),
-  conversationalEdit: (outputId: string, prompt: string, provider?: string) =>
-    request<Output>(`/outputs/${outputId}/conversational-edit?provider=${provider || ''}`, {
+  conversationalEdit: (outputId: string, prompt: string, provider?: string) => {
+    const activeProvider = provider || getSavedProvider()
+    const query = activeProvider ? `?provider=${encodeURIComponent(activeProvider)}` : ''
+    return request<Output>(`/outputs/${outputId}/conversational-edit${query}`, {
       method: 'POST',
       body: JSON.stringify({ prompt }),
-    }),
+    })
+  },
   directEdit: (outputId: string, content: string, changeReason?: string) =>
     request<Output>(`/outputs/${outputId}/direct-edit`, {
       method: 'POST',
@@ -218,6 +241,42 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  uploadKnowledgeFile: async (file: File, title?: string, docType?: string, tags?: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (title) formData.append('title', title)
+    if (docType) formData.append('doc_type', docType)
+    if (tags) formData.append('tags', tags)
+
+    const response = await fetch(`${API_BASE}/knowledge/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+    if (!response.ok) {
+      let errorDetail = 'File upload failed'
+      try {
+        const errJson = await response.json()
+        errorDetail = errJson.detail || errorDetail
+      } catch {
+        errorDetail = await response.text()
+      }
+      throw new Error(errorDetail)
+    }
+    return response.json()
+  },
+  searchKnowledge: (query: string, topK: number = 5, minSimilarity: number = 0.20, docType?: string) =>
+    request<{ query: string; total_matches: number; matches: any[] }>('/knowledge/search', {
+      method: 'POST',
+      body: JSON.stringify({ query, top_k: topK, min_similarity: minSimilarity, doc_type: docType }),
+    }),
+  seedKnowledge: () =>
+    request<{ message: string; seeded_count: number }>('/knowledge/seed', {
+      method: 'POST',
+    }),
+  getKnowledgeChunks: (docId: string) =>
+    request<{ document_id: string; title: string; doc_type: string; total_chunks: number; chunks: any[] }>(
+      `/knowledge/${docId}/chunks`
+    ),
   deleteKnowledge: (id: string) =>
     request<{ message: string }>(`/knowledge/${id}`, { method: 'DELETE' }),
 
@@ -252,5 +311,21 @@ export const api = {
         content_id: contentId,
         version_tag: versionTag,
       }),
+    }),
+
+  // Local AI / Ollama & AI Provider Settings
+  checkOllamaStatus: () =>
+    request<{
+      online: boolean
+      base_url: string
+      active_model: string
+      has_llama3: boolean
+      installed_models: string[]
+      message: string
+    }>('/settings/ollama-status'),
+  setActiveAIProvider: (provider: 'gemini' | 'ollama' | 'openai' | 'mock') =>
+    request<{ success: boolean; active_ai_provider: string; message: string }>('/settings/ai-provider', {
+      method: 'POST',
+      body: JSON.stringify({ provider }),
     }),
 }

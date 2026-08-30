@@ -32,11 +32,13 @@ interface FormatProgressItem {
 
 interface LiveGenerationProgressProps {
   selectedFormats: string[]
+  isBackendReady?: boolean
   onComplete: () => void
 }
 
 export default function LiveGenerationProgress({
   selectedFormats,
+  isBackendReady,
   onComplete,
 }: LiveGenerationProgressProps) {
   const formatIconMap: Record<string, { label: string; icon: any }> = {
@@ -120,7 +122,8 @@ export default function LiveGenerationProgress({
     }
   }, [])
 
-  const allReady = formatsState.every((f) => f.progress >= 100)
+  const isAllGenerated = formatsState.every((f) => f.progress >= 100)
+  const allReady = isBackendReady !== undefined ? (isBackendReady && isAllGenerated) : isAllGenerated
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -131,7 +134,7 @@ export default function LiveGenerationProgress({
             <div className="flex items-center gap-2.5">
               <span className="rounded-md bg-indigo-100 text-indigo-900 border border-indigo-200 px-3 py-1 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-mono">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-700" />
-                STAGE 5 • PARALLEL MULTI-FORMAT AI GENERATION & FACT-CHECKING
+                STAGE 5 • PARALLEL MULTI-FORMAT AI GENERATION &amp; FACT-CHECKING
               </span>
               <span className="rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2.5 py-0.5">
                 {formatsState.length} Parallel Formats
@@ -151,7 +154,7 @@ export default function LiveGenerationProgress({
             className={clsx(
               'flex items-center gap-2.5 rounded-2xl px-6 py-3 text-sm font-bold transition-all self-start sm:self-center shadow-md',
               allReady
-                ? 'bg-gradient-to-r from-emerald-600 to-sky-600 text-white hover:from-emerald-500 hover:to-sky-500 shadow-emerald-600/25'
+                ? 'bg-gradient-to-r from-emerald-600 to-sky-600 text-white hover:from-emerald-500 hover:to-sky-500 shadow-emerald-600/25 ring-4 ring-emerald-100 scale-105'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             )}
           >
@@ -160,6 +163,11 @@ export default function LiveGenerationProgress({
                 <Check className="h-4 w-4" />
                 <span>Enter Production Output Studio</span>
                 <ArrowRight className="h-4 w-4" />
+              </>
+            ) : isAllGenerated ? (
+              <>
+                <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
+                <span>Finalizing Deliverables...</span>
               </>
             ) : (
               <>

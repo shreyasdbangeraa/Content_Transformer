@@ -67,7 +67,7 @@ const workspaceNavItems = [
     border: 'border-emerald-200',
   },
   {
-    label: 'Publishing & n8n',
+    label: 'Published',
     href: '/dashboard/publishing',
     icon: Workflow,
     color: 'text-cyan-600',
@@ -75,7 +75,7 @@ const workspaceNavItems = [
     border: 'border-cyan-200',
   },
   {
-    label: 'Engine & Settings',
+    label: 'Settings',
     href: '/dashboard/settings',
     icon: Settings,
     color: 'text-rose-600',

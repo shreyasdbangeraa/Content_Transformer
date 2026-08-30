@@ -88,11 +88,11 @@ export default function PublishingPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
               <Workflow className="h-8 w-8 text-indigo-600" />
-              n8n Automation &amp; Social Publishing Hub
+              Published &amp; Social Distribution Hub
             </h1>
           </div>
           <p className="text-sm sm:text-base text-slate-600 font-medium">
-            Human-approved communication deliverables trigger certified automated n8n workflows for multi-channel distribution.
+            Human-approved communication deliverables ready and dispatched for multi-channel distribution.
           </p>
         </div>
 
@@ -115,12 +115,12 @@ export default function PublishingPage() {
             <div>
               <div className="flex items-center gap-2.5">
                 <h3 className="text-base sm:text-lg font-black text-slate-900">
-                  Social Media AI Publisher (n8n Workflow)
+                  Social Media Distribution Hub
                 </h3>
                 <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <p className="text-xs sm:text-sm text-slate-600 font-medium mt-0.5">
-                Workflow ID: <code className="text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200 font-mono font-bold">CwDM3Nx2ruQ7lKt0</code> • Evidence Grounding &amp; Approval Certified
+                Evidence Grounding &amp; Approval Certified Distribution
               </p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function PublishingPage() {
             <Workflow className="h-8 w-8 mx-auto text-slate-400" />
             <p className="font-bold text-slate-800">No publishing jobs executed yet.</p>
             <p className="text-xs text-slate-500">
-              Approve deliverables in the studio to dispatch them directly to n8n webhooks.
+              Approve deliverables in the studio to dispatch them directly to distribution channels.
             </p>
           </div>
         ) : (
@@ -227,7 +227,7 @@ export default function PublishingPage() {
 
                 {job.response_data?.message && (
                   <div className="rounded-xl bg-white border border-slate-200 p-3 text-xs text-slate-700 font-medium">
-                    <span className="font-bold text-slate-900 block text-[11px] uppercase">n8n Execution Status:</span>
+                    <span className="font-bold text-slate-900 block text-[11px] uppercase">Execution Status:</span>
                     {job.response_data.message}
                   </div>
                 )}

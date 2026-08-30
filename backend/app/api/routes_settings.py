@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
+import httpx
 from app.database.session import get_db
 from app.database.models import Project, Source, Output, PublishingJob, QualityScore
 from app.config import settings
@@ -9,7 +10,7 @@ from app.ai.huggingface_provider import HuggingFaceProvider
 router = APIRouter(prefix="/settings", tags=["Settings & Stats"])
 
 @router.get("/status")
-def get_system_status(db: Session = Depends(get_db)):
+async def get_system_status(db: Session = Depends(get_db)):
     is_supabase = "supabase" in settings.DATABASE_URL.lower() or bool(settings.SUPABASE_URL)
     db_connected = False
     try:
@@ -19,6 +20,19 @@ def get_system_status(db: Session = Depends(get_db)):
     except Exception:
         db_connected = False
 
+    # Check local Ollama status
+    ollama_online = False
+    ollama_models = []
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/tags")
+            if resp.status_code == 200:
+                ollama_online = True
+                data = resp.json()
+                ollama_models = [m.get("name", "") for m in data.get("models", [])]
+    except Exception:
+        ollama_online = False
+
     return {
         "status": "OPERATIONAL",
         "version": settings.VERSION,
@@ -27,11 +41,55 @@ def get_system_status(db: Session = Depends(get_db)):
         "database_connected": db_connected,
         "gemini_configured": bool(settings.GEMINI_API_KEY),
         "openai_configured": bool(settings.OPENAI_API_KEY),
+        "ollama_configured": True,
+        "ollama_online": ollama_online,
+        "ollama_model": settings.OLLAMA_MODEL,
+        "ollama_models_available": ollama_models,
         "huggingface_configured": bool(settings.HUGGINGFACE_API_KEY),
         "hf_model": settings.HF_IMAGE_MODEL,
         "supabase_configured": bool(settings.SUPABASE_URL and settings.SUPABASE_KEY),
         "n8n_configured": bool(settings.N8N_WEBHOOK_URL),
         "max_upload_size_mb": settings.MAX_UPLOAD_SIZE_MB
+    }
+
+@router.get("/ollama-status")
+async def check_ollama_status():
+    """Checks live connectivity to local Ollama server and lists installed local models."""
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/tags")
+            if resp.status_code == 200:
+                data = resp.json()
+                models = [m.get("name", "") for m in data.get("models", [])]
+                has_llama3 = any("llama3" in m.lower() for m in models)
+                return {
+                    "online": True,
+                    "base_url": settings.OLLAMA_BASE_URL,
+                    "active_model": settings.OLLAMA_MODEL,
+                    "has_llama3": has_llama3,
+                    "installed_models": models,
+                    "message": "Local Ollama server is running and ready for offline inference."
+                }
+    except Exception as e:
+        return {
+            "online": False,
+            "base_url": settings.OLLAMA_BASE_URL,
+            "active_model": settings.OLLAMA_MODEL,
+            "has_llama3": False,
+            "installed_models": [],
+            "message": f"Could not connect to Ollama at {settings.OLLAMA_BASE_URL}: {str(e)}"
+        }
+
+@router.post("/ai-provider")
+def set_active_ai_provider(payload: Dict[str, Any] = Body(...)):
+    provider = payload.get("provider", "gemini").lower()
+    if provider not in ["gemini", "ollama", "openai", "mock"]:
+        raise HTTPException(status_code=400, detail="Invalid provider. Choose 'gemini', 'ollama', 'openai', or 'mock'.")
+    settings.DEFAULT_AI_PROVIDER = provider
+    return {
+        "success": True,
+        "active_ai_provider": settings.DEFAULT_AI_PROVIDER,
+        "message": f"AI Engine provider successfully set to '{provider}'."
     }
 
 @router.get("/stats")

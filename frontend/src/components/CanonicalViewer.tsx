@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Check,
+  Database,
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -29,7 +30,7 @@ interface CanonicalViewerProps {
 
 export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
   const [activeTab, setActiveTab] = useState<
-    'facts' | 'sensitivity' | 'stats' | 'recs' | 'risks' | 'entities' | 'timeline' | 'research' | 'conflicts' | 'uncertainties' | 'summary'
+    'facts' | 'rag' | 'sensitivity' | 'stats' | 'recs' | 'risks' | 'entities' | 'timeline' | 'research' | 'conflicts' | 'uncertainties' | 'summary'
   >('facts')
   const [showRawSensitivity, setShowRawSensitivity] = useState(false)
 
@@ -95,6 +96,11 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
 
   const tabs = [
     { id: 'facts', label: `Key Facts (${canonical.key_facts?.length || 0})`, icon: CheckCircle2 },
+    {
+      id: 'rag',
+      label: `Knowledge Base (${canonical.rag_sources?.length || canonical.rag_context?.length || 0})`,
+      icon: Database
+    },
     {
       id: 'sensitivity',
       label: `Sensitive Data (${canonical.sensitivity?.detected_count || 0})`,
@@ -569,6 +575,58 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
                 {ent.context && <p className="text-xs text-slate-500 font-medium">{ent.context}</p>}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* RAG & ORGANIZATIONAL KNOWLEDGE TAB */}
+        {activeTab === 'rag' && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-indigo-950 font-bold text-sm">
+                  <Database className="h-4 w-4 text-indigo-600 animate-pulse" />
+                  <span>Organizational Knowledge Base (RAG) Grounding</span>
+                </div>
+                <span className="text-xs font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-mono">
+                  {canonical.rag_sources?.length || 0} Policies Referenced
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                The AI retrieved and applied organizational guidelines, communication standards, and security policies from your Knowledge Base to ground every synthesized deliverable.
+              </p>
+            </div>
+
+            {canonical.rag_context && canonical.rag_context.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {canonical.rag_context.map((chunk: any, idx: number) => (
+                  <div key={idx} className="rounded-2xl border border-indigo-200 bg-white p-5 space-y-2.5 shadow-2xs hover:border-indigo-400 transition-colors">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-black text-indigo-950 truncate max-w-[240px]">
+                        📚 {chunk.document_title || chunk.source_title || 'Enterprise Policy'}
+                      </span>
+                      {chunk.similarity !== undefined && (
+                        <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full font-mono shrink-0">
+                          {(chunk.similarity * 100).toFixed(0)}% Match
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 line-clamp-4 font-mono">
+                      {chunk.content}
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
+                      <span>Doc Type: {chunk.doc_type || 'Policy'}</span>
+                      <span>Chunk #{chunk.chunk_index !== undefined ? chunk.chunk_index + 1 : idx + 1}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-slate-500 text-sm font-medium bg-slate-50 rounded-2xl border border-slate-200 p-6 space-y-2">
+                <Database className="h-8 w-8 text-slate-400 mx-auto" />
+                <p>No organizational policies were matched for this specific topic.</p>
+                <p className="text-xs text-slate-400">Add documents to your Knowledge Base to enforce custom brand and compliance policies.</p>
+              </div>
+            )}
           </div>
         )}
 

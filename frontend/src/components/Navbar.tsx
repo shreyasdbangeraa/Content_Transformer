@@ -1,27 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import {
-  Sparkles,
   Settings,
   Layers,
   Plus,
   Menu,
   ShieldCheck,
-  Zap,
-  Activity,
 } from 'lucide-react'
-import { api } from '@/lib/api'
 import { useNav } from '@/context/NavContext'
 
 export default function Navbar() {
-  const [status, setStatus] = useState<any>(null)
   const { toggleMobileNav } = useNav()
-
-  useEffect(() => {
-    api.getStatus().then(setStatus).catch(() => {})
-  }, [])
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-xs transition-all duration-300">
@@ -61,18 +52,6 @@ export default function Navbar() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3.5">
-          {/* Live Engine Status Indicator */}
-          <div className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-            </span>
-            <span className="text-slate-500 font-medium">Engine:</span>
-            <span className="text-indigo-700 font-extrabold font-mono uppercase tracking-wider">
-              {status?.default_ai_provider ? status.default_ai_provider : 'ONLINE'}
-            </span>
-          </div>
-
           {/* New Transformation Button */}
           <Link
             href="/dashboard/new"

@@ -98,7 +98,16 @@ class CanonicalService:
             "public_safety_advisory": f"{len(merged_items)} sensitive identifier(s) detected (IPs, hostnames, PII, or credentials). Review and verify redactions before public distribution." if merged_items else "No sensitive identifiers detected. Content is safe for public distribution."
         }
 
-        # 4. Create CanonicalAnalysis in DB
+        # 4. RAG Retrieval from Organizational Knowledge Base
+        from app.services.rag_service import RAGService
+        rag_data = await RAGService.retrieve_context_for_topic(
+            db=db,
+            topic=analysis_data.get("topic", source.filename),
+            text_sample=source.raw_text[:2000],
+            top_k=4
+        )
+
+        # 5. Create CanonicalAnalysis in DB
         canonical = CanonicalAnalysis(
             project_id=project_id,
             source_id=source_id,
@@ -132,12 +141,16 @@ class CanonicalService:
             claims=analysis_data.get("claims", []),
             sensitivity=final_sens,
             source_references=analysis_data.get("source_references", []),
+            rag_context=rag_data.get("retrieved_chunks", []),
+            rag_sources=rag_data.get("sources_referenced", []),
             provenance_map={
                 "primary_source": source.filename,
                 "research_mode": active_mode,
                 "authoritative_sources_count": len(research_job.sources) if research_job else 0,
                 "evidence_count": len(research_findings),
-                "conflicts_flagged": len(conflicts)
+                "conflicts_flagged": len(conflicts),
+                "rag_guidelines_count": len(rag_data.get("retrieved_chunks", [])),
+                "rag_sources": rag_data.get("sources_referenced", [])
             },
             confidence_score=0.98
         )

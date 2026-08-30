@@ -19,11 +19,15 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./content_transformer.db")
     
     # AI Providers
-    DEFAULT_AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini") # "gemini", "openai", "mock"
+    DEFAULT_AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini") # "gemini", "openai", "ollama", "mock"
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", "")
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY", "")
     HUGGINGFACE_API_KEY: Optional[str] = os.getenv("HUGGINGFACE_API_KEY", "")
     HF_IMAGE_MODEL: str = os.getenv("HF_IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell")
+    
+    # Local Offline AI (Ollama)
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3")
     
     # n8n Integration
     N8N_WEBHOOK_URL: Optional[str] = os.getenv("N8N_WEBHOOK_URL", "")

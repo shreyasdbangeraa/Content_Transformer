@@ -17,6 +17,7 @@ import {
   Sliders,
   ExternalLink,
   Edit3,
+  Database,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Project, Output } from '@/types'
@@ -337,6 +338,40 @@ export default function ProjectDetailPage() {
                           </button>
                         </div>
                       </div>
+
+                      {/* RAG Knowledge Base Used Citation Banner */}
+                      {((activeOutput.structured_data?.rag_sources && activeOutput.structured_data.rag_sources.length > 0) ||
+                        (project.canonical_analysis?.rag_sources && project.canonical_analysis.rag_sources.length > 0)) && (
+                        <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-sky-50/80 p-4 space-y-2 shadow-2xs animate-fade-in">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <Database className="h-4 w-4 text-indigo-600 animate-pulse" />
+                              <span className="text-xs font-black uppercase text-indigo-950 font-mono">
+                                Knowledge Base (RAG) Data Applied
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-mono">
+                              Policy &amp; Brand Grounded
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-700 font-medium leading-relaxed">
+                            This deliverable was generated using organizational standards retrieved from your Knowledge Base:
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {(activeOutput.structured_data?.rag_sources || project.canonical_analysis?.rag_sources || []).map(
+                                (sourceName: string, idx: number) => (
+                                  <span
+                                    key={idx}
+                                    className="rounded-md bg-white border border-indigo-200 text-indigo-900 px-2.5 py-1 text-[11px] font-bold font-mono shadow-2xs flex items-center gap-1"
+                                  >
+                                    <span>📚</span>
+                                    <span>{sourceName}</span>
+                                  </span>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Content Renderer */}
                       {activeOutput.format_type === 'presentation' ? (

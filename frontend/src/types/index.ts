@@ -120,6 +120,8 @@ export interface CanonicalAnalysis {
   claims: Array<{ claim_id: string; text: string; source_page?: number; verified: boolean; provenance?: string }>
   sensitivity: SensitivityReport
   source_references: Array<{ title: string; page?: number; excerpt: string }>
+  rag_context?: any[]
+  rag_sources?: string[]
   provenance_map?: Record<string, any>
   confidence_score?: number
   created_at: string
