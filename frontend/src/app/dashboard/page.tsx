@@ -94,26 +94,7 @@ export default function DashboardOverview() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap relative z-10">
-          {/* 1-Click NovaTech Demo Button */}
-          <button
-            onClick={handleLaunchNovaTechDemo}
-            disabled={isLaunchingDemo}
-            className="flex items-center gap-2 rounded-2xl border border-indigo-300 bg-white/90 px-5 py-3 text-xs sm:text-sm font-bold text-indigo-900 hover:bg-white hover:border-indigo-400 hover:scale-105 active:scale-95 transition-all shadow-xs"
-          >
-            {isLaunchingDemo ? (
-              <>
-                <Sparkles className="h-4 w-4 animate-spin text-indigo-600" />
-                <span>Launching Demo...</span>
-              </>
-            ) : (
-              <>
-                <Zap className="h-4 w-4 text-indigo-600" />
-                <span>1-Click Demo Project</span>
-              </>
-            )}
-          </button>
-
+        <div className="flex items-center gap-3 relative z-10">
           {/* New Transformation */}
           <Link
             href="/dashboard/new"

@@ -103,34 +103,36 @@ export default function Sidebar() {
             href={item.href}
             onClick={closeMobileNav}
             className={clsx(
-              'group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all relative overflow-hidden',
+              'group flex items-center justify-between gap-3 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm font-bold transition-all relative',
               isActive
                 ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-sky-600 text-white shadow-md shadow-indigo-600/25 font-extrabold'
                 : 'text-slate-700 bg-white/70 hover:bg-white hover:text-slate-900 border border-slate-200/60 shadow-2xs hover:shadow-xs hover:border-indigo-300'
             )}
           >
-            <div
-              className={clsx(
-                'flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200 shrink-0 border',
-                isActive
-                  ? 'bg-white/20 text-white border-white/20'
-                  : clsx(item.bg, item.color, item.border)
-              )}
-            >
-              <Icon className="h-4 w-4" />
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={clsx(
+                  'flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200 shrink-0 border',
+                  isActive
+                    ? 'bg-white/20 text-white border-white/20'
+                    : clsx(item.bg, item.color, item.border)
+                )}
+              >
+                <Icon className="h-4 w-4" />
+              </div>
+              <span className="truncate">{item.label}</span>
             </div>
-            <span>{item.label}</span>
             {item.highlight && (
               <span
                 className={clsx(
-                  'ml-auto flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-2xs',
+                  'shrink-0 flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-2xs',
                   isActive
                     ? 'bg-white text-indigo-800'
                     : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white'
                 )}
               >
-                <Zap className="h-2.5 w-2.5" />
-                <span>AI Studio</span>
+                <Zap className="h-2.5 w-2.5 shrink-0" />
+                <span>AI</span>
               </span>
             )}
           </Link>
@@ -142,7 +144,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sticky Sidebar */}
-      <aside className="w-64 shrink-0 border-r border-indigo-100 bg-gradient-to-b from-indigo-50/50 via-slate-50/70 to-sky-50/40 backdrop-blur-xl p-5 hidden md:flex flex-col justify-between sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar z-30">
+      <aside className="w-72 shrink-0 border-r border-indigo-100 bg-gradient-to-b from-indigo-50/50 via-slate-50/70 to-sky-50/40 backdrop-blur-xl p-5 hidden md:flex flex-col justify-between sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar z-30">
         <div className="space-y-6">
           {/* Main Navigation */}
           <div>
@@ -195,7 +197,7 @@ export default function Sidebar() {
           />
 
           {/* Sliding Drawer */}
-          <div className="relative flex flex-col w-72 max-w-[85vw] bg-gradient-to-b from-indigo-50/90 via-slate-50 to-sky-50/80 h-full shadow-2xl p-5 justify-between z-10 animate-fade-in border-r border-indigo-200">
+          <div className="relative flex flex-col w-80 max-w-[85vw] bg-gradient-to-b from-indigo-50/90 via-slate-50 to-sky-50/80 h-full shadow-2xl p-5 justify-between z-10 animate-fade-in border-r border-indigo-200">
             <div className="space-y-6">
               {/* Drawer Header with Close Button */}
               <div className="flex items-center justify-between pb-3 border-b border-indigo-200/60">
