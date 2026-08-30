@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'AI Content Transformer — One Source. Every Communication Format.',
+  title: 'conteX AI — One Source. Every Communication Format.',
   description: 'Enterprise Generative AI platform that transforms documents, reports, and unstructured data into verified, multi-format communication artefacts.',
 }
 

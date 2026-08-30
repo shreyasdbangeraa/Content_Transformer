@@ -48,7 +48,7 @@ class PresentationGenerator:
         p0.font.name = 'Arial'
 
         p1 = tf.add_paragraph()
-        p1.text = "AI Content Transformer — Source-Grounded Executive Briefing"
+        p1.text = "conteX AI — Source-Grounded Executive Briefing"
         p1.font.size = Pt(18)
         p1.font.color.rgb = COLOR_ACCENT
         p1.font.name = 'Arial'

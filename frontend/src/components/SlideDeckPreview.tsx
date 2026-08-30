@@ -86,7 +86,7 @@ export default function SlideDeckPreview({ outputId, deckData }: SlideDeckPrevie
 
           {/* Slide Footer */}
           <div className="flex items-center justify-between pt-5 border-t border-slate-100 text-xs text-slate-400 font-semibold uppercase tracking-wider">
-            <span>AI Content Transformer • Executive Briefing</span>
+            <span>conteX AI • Executive Briefing</span>
             <span>CONFIDENTIAL / SOURCE-GROUNDED</span>
           </div>
         </div>

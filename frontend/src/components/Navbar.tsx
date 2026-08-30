@@ -45,7 +45,7 @@ export default function Navbar() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5 font-sans">
-                  <span>Content Transformer</span>
+                  <span>conteX AI</span>
                 </span>
                 <span className="hidden xs:inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-50 to-indigo-50 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-black text-sky-800 border border-sky-200 shadow-2xs font-mono">
                   <ShieldCheck className="h-3 w-3 text-sky-600" />

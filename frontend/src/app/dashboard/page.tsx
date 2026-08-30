@@ -87,7 +87,7 @@ export default function DashboardOverview() {
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Content Transformer Studio
+            conteX AI Studio
           </h1>
           <p className="text-sm sm:text-base text-slate-700 font-medium max-w-2xl leading-relaxed">
             Ingest, fact-check, and synthesize raw documents into certified multi-channel deliverables in parallel.

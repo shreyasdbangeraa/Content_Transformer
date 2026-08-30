@@ -1,4 +1,4 @@
-# 🛡️ AI Content Transformer
+# 🛡️ conteX AI
 
 > **One Source. Every Communication Format. AI-Powered.**
 > *Smart India Hackathon (SIH) 2026 Edition — Complete Full-Stack Implementation*
@@ -6,7 +6,7 @@
 ---
 
 ## 🌟 Overview & Product Vision
-**AI Content Transformer** is an enterprise-grade multimodal Generative AI platform that ingests unstructured sources (PDFs, DOCX, Plain Text, Images, and Web URLs), decomposes them once into a **Canonical Structured Knowledge Representation**, and synthesizes multiple high-impact communication deliverables simultaneously.
+**conteX AI** is an enterprise-grade multimodal Generative AI platform that ingests unstructured sources (PDFs, DOCX, Plain Text, Images, and Web URLs), decomposes them once into a **Canonical Structured Knowledge Representation**, and synthesizes multiple high-impact communication deliverables simultaneously.
 
 Every generated claim is verified with **Source Grounding** (page-level citations), **Fact Checking**, **PII / Sensitivity Redaction**, **Multi-dimensional Quality Scoring**, **Conversational AI Refinement**, **Human Approval**, and **n8n Automated Publishing**.
 

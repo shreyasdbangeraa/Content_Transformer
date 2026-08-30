@@ -146,22 +146,15 @@ export default function LandingPage() {
             Transform complex reports, research papers, and policy briefings into certified executive summaries, thought leadership posts, visual infographics, and presentation decks.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          {/* CTA Button */}
+          <div className="flex items-center justify-center pt-2">
             <Link
-              href="/dashboard/new"
+              href="/dashboard"
               className="w-full sm:w-auto flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-sky-600 via-indigo-600 to-cyan-600 px-8 py-4 text-base font-bold text-white shadow-xl shadow-indigo-600/25 hover:shadow-indigo-600/35 hover:scale-[1.02] active:scale-98 transition-all"
             >
               <Sparkles className="h-5 w-5" />
-              <span>Launch Transformation Studio</span>
+              <span>Launch Dashboard</span>
               <ArrowRight className="h-5 w-5" />
-            </Link>
-
-            <Link
-              href="/dashboard"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white px-8 py-4 text-base font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 active:scale-98 transition-all shadow-xs"
-            >
-              <span>Explore Dashboard</span>
             </Link>
           </div>
         </div>
@@ -324,7 +317,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
           <div className="flex items-center gap-2">
             <Layers className="h-4 w-4 text-indigo-600" />
-            <span className="font-bold text-slate-800">AI Content Transformer</span>
+            <span className="font-bold text-slate-800">conteX AI</span>
             <span>• Enterprise Multimodal Communications Engine</span>
           </div>
           <div>

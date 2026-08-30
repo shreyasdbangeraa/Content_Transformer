@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "AI Content Transformer"
+    PROJECT_NAME: str = "conteX AI"
     VERSION: str = "1.0.0"
     API_PREFIX: str = "/api"
     

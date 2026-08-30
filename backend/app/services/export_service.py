@@ -28,7 +28,7 @@ class ExportService:
                         "title": output.title or "Executive Brief",
                         "subtitle": "Generated Communication Artefact",
                         "bullets": [line.strip("- *• ") for line in output.raw_content.split("\n") if line.strip()][:5],
-                        "speaker_notes": "Presented via AI Content Transformer."
+                        "speaker_notes": "Presented via conteX AI."
                     }
                 ]
             }

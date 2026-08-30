@@ -205,7 +205,7 @@ export default function Sidebar() {
                   </div>
                   <div>
                     <span className="text-sm font-black text-slate-900 block font-sans">
-                      Content Transformer
+                      conteX AI
                     </span>
                     <span className="text-[10px] text-indigo-700 font-bold block uppercase font-mono">
                       Enterprise Suite
