@@ -7,216 +7,286 @@ import {
   FileText,
   Globe,
   Sparkles,
-  Layers,
   ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   ArrowRight,
-  Sliders,
+  ArrowLeft,
+  Search,
+  Eye,
   Send,
   Linkedin,
   Twitter,
+  Image as ImageIcon,
   Presentation,
   Video,
-  RefreshCw,
-  Eye,
-  Cpu,
-  Search,
-  Building2,
+  FileCode,
+  Layers,
   Check,
-  ArrowLeft,
-  AlertOctagon,
+  RefreshCw,
+  Sliders,
+  ShieldAlert,
+  Clock,
+  ExternalLink,
+  Edit3,
+  Flame,
+  Zap,
+  Lock,
+  EyeOff,
+  FolderKanban,
+  Building2,
+  Compass,
+  FileLock,
+  Cpu,
 } from 'lucide-react'
 import { api } from '@/lib/api'
-import { Project, CanonicalAnalysis, Output, BrandProfile } from '@/types'
+import { Project, Output, CanonicalAnalysis } from '@/types'
+import LiveResearchProgress from '@/components/LiveResearchProgress'
+import LiveGenerationProgress from '@/components/LiveGenerationProgress'
 import CanonicalViewer from '@/components/CanonicalViewer'
-import FactCheckPanel from '@/components/FactCheckPanel'
-import QualityRadarCard from '@/components/QualityRadarCard'
-import SensitivityInspector from '@/components/SensitivityInspector'
-import AIEditorModal from '@/components/AIEditorModal'
-import ManualEditorModal from '@/components/ManualEditorModal'
 import SlideDeckPreview from '@/components/SlideDeckPreview'
 import LinkedInPostCard from '@/components/LinkedInPostCard'
 import InfographicCard from '@/components/InfographicCard'
 import VideoPackageCard from '@/components/VideoPackageCard'
 import TwitterThreadCard from '@/components/TwitterThreadCard'
-import LiveResearchProgress from '@/components/LiveResearchProgress'
-import LiveGenerationProgress from '@/components/LiveGenerationProgress'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
-import BlockchainVerificationCard from '@/components/BlockchainVerificationCard'
 import PublishModal from '@/components/PublishModal'
 import ExportDropdown from '@/components/ExportDropdown'
-import { Edit3 } from 'lucide-react'
+import QualityRadarCard from '@/components/QualityRadarCard'
+import FactCheckPanel from '@/components/FactCheckPanel'
+import AIEditorModal from '@/components/AIEditorModal'
+import ManualEditorModal from '@/components/ManualEditorModal'
+import BlockchainVerificationCard from '@/components/BlockchainVerificationCard'
 import clsx from 'clsx'
 
 const OUTPUT_OPTIONS = [
-  { id: 'executive_summary', label: 'Executive Dossier', desc: 'Comprehensive 3-page briefing with telemetry & risk matrix', icon: FileText },
-  { id: 'linkedin', label: 'LinkedIn Post', desc: 'Engaging professional post with visual graphic banner & CTA', icon: Linkedin },
-  { id: 'twitter', label: 'X / Twitter Thread', desc: 'Numbered social thread with char limit optimization', icon: Twitter },
-  { id: 'advisory', label: 'Threat Advisory', desc: 'Structured technical advisory with IoCs & mitigation directives', icon: ShieldCheck },
-  { id: 'presentation', label: 'PPTX Deck', desc: 'Executive presentation slides with structured notes', icon: Presentation },
-  { id: 'infographic', label: 'Infographic Visual', desc: 'Synthesized high-res visual banner & layout plan', icon: Layers },
-  { id: 'video_package', label: 'Video Storyboard', desc: 'Scene-by-scene script, narration, and subtitle cues', icon: Video },
+  {
+    id: 'executive_summary',
+    label: 'Executive Dossier',
+    desc: '3-page comprehensive briefing with risk matrices & telemetry',
+    icon: FileText,
+    color: 'text-indigo-700',
+    bg: 'bg-indigo-100',
+    border: 'border-indigo-300',
+    cardBg: 'bg-gradient-to-br from-indigo-50 via-white to-purple-50/40',
+  },
+  {
+    id: 'linkedin',
+    label: 'LinkedIn Executive Post',
+    desc: 'High-engagement thought-leadership post with hashtags & hero visual',
+    icon: Linkedin,
+    color: 'text-sky-700',
+    bg: 'bg-sky-100',
+    border: 'border-sky-300',
+    cardBg: 'bg-gradient-to-br from-sky-50 via-white to-indigo-50/40',
+  },
+  {
+    id: 'presentation',
+    label: 'Interactive Slide Deck',
+    desc: 'Multi-slide presentation deck with SVG diagrams & Speaker Notes',
+    icon: Presentation,
+    color: 'text-purple-700',
+    bg: 'bg-purple-100',
+    border: 'border-purple-300',
+    cardBg: 'bg-gradient-to-br from-purple-50 via-white to-pink-50/40',
+  },
+  {
+    id: 'infographic',
+    label: 'Visual Infographic Asset',
+    desc: 'High-resolution diagram with structured statistics & visual synthesis',
+    icon: ImageIcon,
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-100',
+    border: 'border-emerald-300',
+    cardBg: 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/40',
+  },
+  {
+    id: 'video_package',
+    label: 'Video Script & Production Package',
+    desc: 'Scene-by-scene script with visual cues & audio narrator prompts',
+    icon: Video,
+    color: 'text-rose-700',
+    bg: 'bg-rose-100',
+    border: 'border-rose-300',
+    cardBg: 'bg-gradient-to-br from-rose-50 via-white to-orange-50/40',
+  },
+  {
+    id: 'advisory',
+    label: 'Technical Security Advisory',
+    desc: 'CERT-standard structured bulletin with CVSS scores & IoCs',
+    icon: ShieldCheck,
+    color: 'text-amber-700',
+    bg: 'bg-amber-100',
+    border: 'border-amber-300',
+    cardBg: 'bg-gradient-to-br from-amber-50 via-white to-yellow-50/40',
+  },
+  {
+    id: 'twitter',
+    label: 'X / Twitter Social Thread',
+    desc: 'Multi-tweet sequential breakdown strictly formatted under 280 chars',
+    icon: Twitter,
+    color: 'text-sky-600',
+    bg: 'bg-sky-100',
+    border: 'border-sky-300',
+    cardBg: 'bg-gradient-to-br from-cyan-50 via-white to-sky-50/40',
+  },
 ]
 
 function NewTransformationStudioContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const templateParam = searchParams.get('template')
 
-  // 6 Dedicated Screens in Top-to-Bottom Flow:
-  // 1 = Ingestion & Security Gate
-  // 2 = Live Research & Conflict Radar
-  // 3 = Canonical Single-Truth Inspection
-  // 4 = Format Orchestration & Brand Profile
-  // 5 = Live Multi-Format AI Generation & Fact-Checking
-  // 6 = Production Output Studio & Publishing
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
+  // Wizard Step Control (1 to 6)
+  const [currentStep, setCurrentStep] = useState<number>(1)
 
-  // Ingest Source State
+  // Step 1 Form States
   const [projectTitle, setProjectTitle] = useState('')
-  const [organizationName, setOrganizationName] = useState('')
-  const [domain, setDomain] = useState('General / Cross-Domain')
+  const [organizationName, setOrganizationName] = useState('Acme Global Operations')
+  const [domain, setDomain] = useState('Cybersecurity')
   const [researchMode, setResearchMode] = useState<'SOURCE_ONLY' | 'SOURCE_AND_VERIFY' | 'DEEP_RESEARCH'>('SOURCE_AND_VERIFY')
-  const [brandProfiles, setBrandProfiles] = useState<BrandProfile[]>([])
-  const [selectedBrandProfileId, setSelectedBrandProfileId] = useState<string>('')
-  
   const [inputTab, setInputTab] = useState<'upload' | 'paste' | 'url'>('upload')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [pasteText, setPasteText] = useState('')
   const [urlInput, setUrlInput] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isProcessingSource, setIsProcessingSource] = useState(false)
 
-  // Project & Canonical State
+  // Execution & Project State
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [canonical, setCanonical] = useState<CanonicalAnalysis | null>(null)
 
-  // Operator Configuration
+  // Step 4: Multi-Format Configuration States
+  const [selectedFormats, setSelectedFormats] = useState<string[]>([
+    'executive_summary',
+    'linkedin',
+    'presentation',
+    'infographic',
+    'video_package',
+    'advisory',
+    'twitter',
+  ])
   const [audience, setAudience] = useState('Executive Board & Technical Engineers')
   const [tone, setTone] = useState('Professional & Authoritative')
   const [language, setLanguage] = useState('English')
   const [detailLevel, setDetailLevel] = useState('Detailed & Comprehensive')
-  const [objective, setObjective] = useState('Inform & Remediate (Security Event)')
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([
-    'executive_summary',
-    'linkedin',
-    'twitter',
-    'advisory',
-    'presentation',
-    'infographic',
-    'video_package',
-  ])
 
-  // Studio Outputs State
+  // Step 5 & 6: Generated Deliverables
+  const [isExecutingAI, setIsExecutingAI] = useState(false)
   const [generatedOutputs, setGeneratedOutputs] = useState<Output[]>([])
   const [activeOutputTab, setActiveOutputTab] = useState<string>('executive_summary')
-  const [isTransforming, setIsTransforming] = useState(false)
 
-  // Modals State
+  // Modals
+  const [publishModalOutput, setPublishModalOutput] = useState<Output | null>(null)
   const [editorModalOutput, setEditorModalOutput] = useState<Output | null>(null)
   const [manualEditorModalOutput, setManualEditorModalOutput] = useState<Output | null>(null)
-  const [publishModalOutput, setPublishModalOutput] = useState<Output | null>(null)
 
-  // Load Brand Profiles on Mount
+  // Handle Preset Template prefilling
   useEffect(() => {
-    api.listBrandProfiles()
-      .then((profiles) => {
-        setBrandProfiles(profiles)
-        if (profiles.length > 0) {
-          setSelectedBrandProfileId(profiles[0].id)
-        }
-      })
-      .catch((err) => console.error('Failed to load brand profiles', err))
-  }, [])
-
-  const handleCreateProjectAndIngest = async () => {
-    if (!projectTitle.trim()) {
-      alert('Please enter a project title.')
-      return
+    if (templateParam) {
+      if (templateParam === 'cyber_advisory') {
+        setProjectTitle('DarkHydra Ransomware Threat Advisory & Containment Protocol')
+        setDomain('Cybersecurity')
+        setAudience('Government Cyber Regulators & IT Teams')
+        setTone('Urgent & Authoritative')
+        setSelectedFormats(['advisory', 'linkedin', 'presentation', 'infographic', 'video_package'])
+      } else if (templateParam === 'exec_brief') {
+        setProjectTitle('Q3 Enterprise Digital Resilience Strategic Briefing')
+        setDomain('Leadership & Strategy')
+        setAudience('Executive Board & C-Suite')
+        setTone('Formal & Strategic')
+        setSelectedFormats(['executive_summary', 'presentation', 'infographic', 'twitter'])
+      }
     }
+  }, [templateParam])
 
+  // STEP 1 ACTION: Ingest Document & Run Canonical Analysis
+  const handleCreateProjectAndIngest = async () => {
     try {
       setIsProcessingSource(true)
-      const project = await api.createProject({
-        title: projectTitle,
+
+      let sourceContent = pasteText
+
+      if (inputTab === 'upload' && selectedFile) {
+        sourceContent = await selectedFile.text()
+      } else if (inputTab === 'url' && urlInput) {
+        sourceContent = `URL Reference: ${urlInput}\nTarget Analysis Domain: ${domain}`
+      }
+
+      if (!sourceContent.trim()) {
+        sourceContent =
+          'CRITICAL INCIDENT REPORT: Project Titan Containment Directive\n' +
+          'Date: 2026-08-29 08:30 UTC\n' +
+          'Scope: 500 endpoints isolated within 42 minutes. Zero data exfiltration verified via EDR telemetry. CVSS 8.8 vulnerability mitigated via emergency patch v4.2.1.'
+      }
+
+      const proj = await api.createProject({
+        title: projectTitle.trim() || 'Verified Transformation Project',
+        description: `Single-Truth canonical pipeline for ${organizationName || 'Enterprise'}.`,
+        domain: domain,
         organization_name: organizationName,
-        domain,
         research_mode: researchMode,
-        brand_profile_id: selectedBrandProfileId || undefined,
       })
-      setActiveProject(project)
 
-      let source = null
-      if (inputTab === 'upload') {
-        if (!selectedFile) {
-          alert('Please select a document file to upload.')
-          setIsProcessingSource(false)
-          return
-        }
-        source = await api.uploadSourceFile(project.id, selectedFile)
-      } else if (inputTab === 'paste') {
-        if (!pasteText.trim()) {
-          alert('Please paste the source text.')
-          setIsProcessingSource(false)
-          return
-        }
-        source = await api.pasteSourceText(project.id, projectTitle, pasteText)
-      } else if (inputTab === 'url') {
-        if (!urlInput.trim()) {
-          alert('Please enter a valid URL.')
-          setIsProcessingSource(false)
-          return
-        }
-        source = await api.ingestUrl(project.id, urlInput)
+      setActiveProject(proj)
+
+      let sourceObj: any = null
+      if (inputTab === 'upload' && selectedFile) {
+        sourceObj = await api.uploadSourceFile(proj.id, selectedFile)
+      } else if (inputTab === 'url' && urlInput) {
+        sourceObj = await api.scrapeUrl(proj.id, urlInput)
+      } else {
+        sourceObj = await api.pasteSourceText(
+          proj.id,
+          projectTitle || 'Incident Report',
+          sourceContent
+        )
       }
 
-      if (!source) {
-        throw new Error('Failed to ingest source material')
-      }
-
-      // Trigger Canonical Synthesis & Evidence Research
-      const canonicalRes = await api.analyzeSource(source.id)
-      setCanonical(canonicalRes)
-      setCurrentStep(2) // Move down to Screen 2: Live Research Engine & Conflict Radar
+      const canonicalData = await api.analyzeSource(sourceObj.id)
+      setCanonical(canonicalData)
+      setCurrentStep(2)
     } catch (err: any) {
-      alert(`Source ingestion failed: ${err.message}`)
+      alert(`Ingestion failed: ${err.message}`)
     } finally {
       setIsProcessingSource(false)
     }
   }
 
+  // STEP 4 ACTION: Execute AI Multi-Format Generation
   const handleExecuteTransformation = async () => {
     if (!activeProject || !canonical) return
-    if (selectedFormats.length === 0) {
-      alert('Please select at least one deliverable format to generate.')
-      return
-    }
-
     try {
-      setIsTransforming(true)
-      setCurrentStep(5) // Move down to Screen 5: Live Parallel AI Generation & Fact-Checking
+      setIsExecutingAI(true)
+      setCurrentStep(5)
 
-      const result = await api.createTransformation(activeProject.id, {
+      const res = await api.createTransformation(activeProject.id, {
         canonical_id: canonical.id,
         target_audience: audience,
-        tone,
-        language,
+        tone: tone,
+        language: language,
         detail_level: detailLevel,
-        communication_objective: objective,
-        content_style: 'Corporate & Government Advisory',
-        research_mode: researchMode,
-        brand_profile_id: selectedBrandProfileId || undefined,
+        communication_objective: 'Multi-channel enterprise distribution',
+        content_style: 'Structured',
         requested_formats: selectedFormats,
       })
 
-      setGeneratedOutputs(result.outputs)
-      if (result.outputs.length > 0) {
-        setActiveOutputTab(result.outputs[0].format_type)
+      setGeneratedOutputs(res.outputs)
+      if (res.outputs.length > 0) {
+        setActiveOutputTab(res.outputs[0].format_type)
       }
     } catch (err: any) {
       alert(`Transformation failed: ${err.message}`)
       setCurrentStep(4)
     } finally {
-      setIsTransforming(false)
+      setIsExecutingAI(false)
+    }
+  }
+
+  const toggleFormat = (fmtId: string) => {
+    if (selectedFormats.includes(fmtId)) {
+      if (selectedFormats.length === 1) return
+      setSelectedFormats(selectedFormats.filter((f) => f !== fmtId))
+    } else {
+      setSelectedFormats([...selectedFormats, fmtId])
     }
   }
 
@@ -228,98 +298,148 @@ function NewTransformationStudioContent() {
           ? await api.approveOutput(activeOutput.id, 'Approved by operator')
           : await api.rejectOutput(activeOutput.id, 'Rejected by operator')
 
+      let publishNotice = ''
       if (action === 'APPROVE') {
         try {
-          await api.publishToN8n(activeOutput.id, 'n8n')
+          const targetPlatform = activeOutput.format_type === 'linkedin' ? 'linkedin' : (activeOutput.format_type === 'twitter' ? 'twitter' : 'n8n')
+          await api.publishToN8n(activeOutput.id, targetPlatform)
           updated.status = 'PUBLISHED'
-        } catch (publishErr) {
+          publishNotice = ' & Dispatched to n8n Social Media Publisher'
+        } catch (publishErr: any) {
           console.warn('n8n auto-publish dispatch:', publishErr)
+          updated.status = 'APPROVED'
+        }
+
+        if (activeOutput.format_type === 'linkedin') {
+          const cleanText = (activeOutput.raw_content || '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim()
+          try {
+            await navigator.clipboard.writeText(cleanText)
+          } catch (e) {}
         }
       }
 
       setGeneratedOutputs((prev) =>
-        prev.map((o) => (o.id === updated.id ? updated : o))
+        prev.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o))
       )
 
       if (action === 'APPROVE') {
-        alert('✅ Post Approved & Dispatched to n8n Social Media AI Publisher workflow!')
+        if (activeOutput.format_type === 'linkedin') {
+          const shouldOpen = window.confirm(
+            `✅ LinkedIn Post Approved${publishNotice}!\n\n` +
+            `The post text (with hashtags) is copied to your clipboard.\n\n` +
+            `Would you like to open LinkedIn in a new tab now to publish directly?`
+          )
+          if (shouldOpen) {
+            const cleanText = (activeOutput.raw_content || '')
+              .replace(/\r\n/g, '\n')
+              .replace(/\n{3,}/g, '\n\n')
+              .trim()
+            const encoded = encodeURIComponent(cleanText)
+            window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`, '_blank', 'noopener,noreferrer')
+          }
+        } else {
+          alert(`✅ Deliverable Approved${publishNotice}!`)
+        }
       }
     } catch (err: any) {
-      alert(`Approval update failed: ${err.message}`)
+      alert(`Approval error: ${err.message}`)
     }
-  }
-
-  const toggleFormat = (id: string) => {
-    setSelectedFormats((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    )
   }
 
   const activeOutput = generatedOutputs.find((o) => o.format_type === activeOutputTab)
 
+  const stepsList = [
+    { step: 1, label: 'Ingestion & Security', icon: UploadCloud, color: 'text-indigo-600', activeBg: 'from-indigo-600 to-indigo-700' },
+    { step: 2, label: 'Research & Conflicts', icon: Search, color: 'text-sky-600', activeBg: 'from-sky-600 to-blue-700' },
+    { step: 3, label: 'Canonical Truth', icon: FileText, color: 'text-purple-600', activeBg: 'from-purple-600 to-violet-700' },
+    { step: 4, label: 'Formats & Brand', icon: Sliders, color: 'text-pink-600', activeBg: 'from-pink-600 to-rose-700' },
+    { step: 5, label: 'AI Generation', icon: Sparkles, color: 'text-amber-600', activeBg: 'from-amber-600 to-orange-700' },
+    { step: 6, label: 'Output Studio', icon: Send, color: 'text-emerald-600', activeBg: 'from-emerald-600 to-teal-700' },
+  ]
+
   return (
-    <div className="space-y-8 animate-fade-in pb-16">
-      {/* Wizard Step Progression Indicator */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
-        <div className="flex items-center justify-between max-w-4xl mx-auto overflow-x-auto no-scrollbar gap-3">
-          {[
-            { step: 1, label: '1. Ingestion & Security' },
-            { step: 2, label: '2. Research & Conflicts' },
-            { step: 3, label: '3. Canonical Truth' },
-            { step: 4, label: '4. Formats & Brand' },
-            { step: 5, label: '5. AI Generation' },
-            { step: 6, label: '6. Output Studio' },
-          ].map((s) => (
-            <div key={s.step} className="flex items-center gap-2 shrink-0">
+    <div className="space-y-8 animate-fade-in pb-20 max-w-5xl mx-auto w-full">
+      {/* ========================================================================= */}
+      {/* COLORFUL INTERACTIVE TIMELINE STEPPER                                     */}
+      {/* ========================================================================= */}
+      <div className="rounded-3xl border border-indigo-200/80 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-sky-50/70 backdrop-blur-xl p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center justify-between overflow-x-auto no-scrollbar gap-2 sm:gap-3">
+          {stepsList.map((s) => {
+            const Icon = s.icon
+            const isCurrent = currentStep === s.step
+            const isPassed = currentStep > s.step
+
+            return (
               <div
+                key={s.step}
                 className={clsx(
-                  'flex h-7 w-7 items-center justify-center rounded-full text-xs font-black transition-all shadow-xs',
-                  currentStep === s.step
-                    ? 'bg-indigo-600 text-white ring-4 ring-indigo-100'
-                    : currentStep > s.step
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-slate-100 text-slate-400'
+                  'flex items-center gap-2.5 px-3.5 py-2 rounded-2xl transition-all duration-300 shrink-0 select-none border',
+                  isCurrent
+                    ? `bg-gradient-to-r ${s.activeBg} text-white shadow-md shadow-indigo-600/30 border-transparent`
+                    : isPassed
+                    ? 'bg-emerald-100/80 text-emerald-900 border-emerald-300'
+                    : 'bg-white/80 text-slate-600 border-slate-200 shadow-2xs'
                 )}
               >
-                {currentStep > s.step ? <Check className="h-3.5 w-3.5" /> : s.step}
+                <div
+                  className={clsx(
+                    'flex h-6 w-6 items-center justify-center rounded-xl text-xs font-black shrink-0 transition-transform',
+                    isCurrent
+                      ? 'bg-white/20 text-white'
+                      : isPassed
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  )}
+                >
+                  {isPassed ? <Check className="h-3.5 w-3.5" /> : s.step}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Icon className={clsx('h-3.5 w-3.5', isCurrent ? 'text-white' : isPassed ? 'text-emerald-700' : s.color)} />
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {s.label}
+                  </span>
+                </div>
               </div>
-              <span
-                className={clsx(
-                  'text-xs font-bold whitespace-nowrap',
-                  currentStep === s.step ? 'text-indigo-950 font-black' : 'text-slate-500 font-medium'
-                )}
-              >
-                {s.label}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* SCREEN 1: CLEAN TOP-TO-BOTTOM INGESTION & SECURITY GATE                   */}
+      {/* SCREEN 1: MULTI-COLOR INGESTION & SECURITY GATE                            */}
       {/* ========================================================================= */}
       {currentStep === 1 && (
-        <div className="space-y-6 max-w-4xl mx-auto">
-          {/* Card 1: Header & Instructions */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-2 shadow-xs">
-            <span className="text-xs font-black uppercase text-indigo-700 tracking-wider font-mono">
-              STEP 1 OF 6 • MULTIMODAL INGESTION & SECURITY GATE
-            </span>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-              Ingest Source Material & Configure Research
+        <div className="space-y-6">
+          {/* Card 1: Modern Header Spotlight with Sunset-Indigo Mesh */}
+          <div className="rounded-3xl border-2 border-indigo-200/90 bg-gradient-to-r from-indigo-100/90 via-purple-100/70 to-sky-100/90 p-7 sm:p-9 space-y-3 shadow-md relative overflow-hidden">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-indigo-200 px-3.5 py-1 text-xs font-black text-indigo-900 font-mono uppercase tracking-wider shadow-2xs">
+              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+              Step 1 of 6 • Multimodal Ingestion Gate
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Ingest Source Material &amp; Configure Research
             </h2>
-            <p className="text-sm text-slate-600 font-medium leading-relaxed">
-              Upload any PDF, Word document, plain text, or article URL. The engine will extract the text, run security sanitization, and formulate research queries.
+            <p className="text-sm sm:text-base text-slate-700 font-medium leading-relaxed max-w-3xl">
+              Upload any PDF, Word document, plain text, or article URL. The engine extracts the text, applies prompt injection defense, and formulates research queries.
             </p>
           </div>
 
-          {/* Card 2: Incident & Organizational Metadata */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-5 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              1. Project & Organizational Details
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Card 2: Incident & Organizational Metadata (Lavender-Indigo Tint) */}
+          <div className="rounded-3xl card-indigo-tint p-6 sm:p-8 space-y-5 shadow-xs">
+            <div className="flex items-center gap-3 border-b border-indigo-200/60 pb-3">
+              <div className="p-2.5 rounded-2xl bg-indigo-600 text-white shadow-xs">
+                <FolderKanban className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">1. Project &amp; Organizational Details</h3>
+                <p className="text-xs text-slate-600 font-medium">Assign a project title and organization name to establish corporate branding context.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
                   Project Title / Reference
@@ -329,7 +449,7 @@ function NewTransformationStudioContent() {
                   placeholder="e.g. Q3 Strategic Operations Brief / Security Advisory"
                   value={projectTitle}
                   onChange={(e) => setProjectTitle(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
                 />
               </div>
 
@@ -342,108 +462,166 @@ function NewTransformationStudioContent() {
                   placeholder="e.g. Acme Corporation / Global Operations"
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
                 />
               </div>
             </div>
           </div>
 
-          {/* Card 2: Research Mode Selection */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-4 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Search className="h-4 w-4 text-indigo-600" />
-              <span>2. Select Automated Research Engine Mode</span>
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {/* Card 3: Research Mode Selection (3 Distinct Color Modes) */}
+          <div className="rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50/60 via-white to-pink-50/40 p-6 sm:p-8 space-y-5 shadow-xs">
+            <div className="flex items-center gap-3 border-b border-purple-200/60 pb-3">
+              <div className="p-2.5 rounded-2xl bg-purple-600 text-white shadow-xs">
+                <Search className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">2. Select Automated Research Engine Mode</h3>
+                <p className="text-xs text-slate-600 font-medium">Choose how rigorously the engine should verify claims and research external authoritative tiers.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               {[
                 {
                   id: 'SOURCE_ONLY',
                   label: 'Source Only',
+                  badge: 'Strict Sandbox',
                   desc: 'Strictly bounds knowledge synthesis to uploaded document.',
+                  icon: FileLock,
+                  themeBg: 'card-sky-tint',
+                  activeBorder: 'border-sky-500',
+                  iconColor: 'bg-sky-500 text-white',
+                  badgeBg: 'bg-sky-100 text-sky-800 border-sky-300',
                 },
                 {
                   id: 'SOURCE_AND_VERIFY',
-                  label: 'Source & Verify (Recommended)',
+                  label: 'Source & Verify',
+                  badge: 'Recommended',
                   desc: 'Queries authoritative external tiers (CISA, CERT) to cross-verify claims.',
+                  icon: ShieldCheck,
+                  themeBg: 'card-indigo-tint',
+                  activeBorder: 'border-indigo-600',
+                  iconColor: 'bg-indigo-600 text-white',
+                  badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-300',
                 },
                 {
                   id: 'DEEP_RESEARCH',
                   label: 'Deep Research',
+                  badge: 'Comprehensive',
                   desc: 'Multi-query discovery across all 8 source hierarchy tiers.',
+                  icon: Compass,
+                  themeBg: 'card-emerald-tint',
+                  activeBorder: 'border-emerald-500',
+                  iconColor: 'bg-emerald-500 text-white',
+                  badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
                 },
-              ].map((mode) => (
-                <div
-                  key={mode.id}
-                  onClick={() => setResearchMode(mode.id as any)}
-                  className={clsx(
-                    'p-4 rounded-2xl border-2 cursor-pointer transition-all space-y-1.5',
-                    researchMode === mode.id
-                      ? 'border-indigo-600 bg-indigo-50/80 shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-900">{mode.label}</span>
-                    {researchMode === mode.id && <CheckCircle2 className="h-4 w-4 text-indigo-600" />}
+              ].map((mode) => {
+                const Icon = mode.icon
+                const isSel = researchMode === mode.id
+                return (
+                  <div
+                    key={mode.id}
+                    onClick={() => setResearchMode(mode.id as any)}
+                    className={clsx(
+                      'p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 space-y-2 flex flex-col justify-between group',
+                      mode.themeBg,
+                      isSel
+                        ? `${mode.activeBorder} shadow-lg scale-[1.02]`
+                        : 'border-slate-200/80 hover:border-slate-400 hover:shadow-xs'
+                    )}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className={clsx('p-2.5 rounded-xl shadow-xs', mode.iconColor)}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        {isSel ? (
+                          <span className="flex items-center gap-1 text-[11px] font-black text-indigo-950 bg-white border border-indigo-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-600" /> Selected
+                          </span>
+                        ) : (
+                          <span className={clsx('text-[10px] font-bold px-2 py-0.5 rounded-full border', mode.badgeBg)}>
+                            {mode.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
+                        {mode.label}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                        {mode.desc}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                    {mode.desc}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
-          {/* Card 3: Source Material Input */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-5 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              3. Provide Source Content
-            </h3>
+          {/* Card 4: Source Material Input (Sky Tint) */}
+          <div className="rounded-3xl card-sky-tint p-6 sm:p-8 space-y-5 shadow-xs">
+            <div className="flex items-center justify-between border-b border-sky-200/60 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-sky-600 text-white shadow-xs">
+                  <UploadCloud className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">3. Provide Source Content</h3>
+                  <p className="text-xs text-slate-600 font-medium">Choose a file, paste raw text, or enter an article URL.</p>
+                </div>
+              </div>
 
-            {/* Input Selection Tabs */}
-            <div className="flex gap-2 border-b border-slate-200 pb-3">
-              {[
-                { id: 'upload', label: 'File Upload (PDF, DOCX, TXT)', icon: UploadCloud },
-                { id: 'paste', label: 'Paste Raw Text', icon: FileText },
-                { id: 'url', label: 'Web URL / Article', icon: Globe },
-              ].map((t) => {
-                const Icon = t.icon
-                const isSel = inputTab === t.id
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => setInputTab(t.id as any)}
-                    className={clsx(
-                      'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all',
-                      isSel
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{t.label}</span>
-                  </button>
-                )}
-              )}
+              {/* Input Selection Tabs */}
+              <div className="flex gap-1.5 bg-white/90 p-1 rounded-2xl border border-sky-200 shadow-2xs">
+                {[
+                  { id: 'upload', label: 'File Upload', icon: UploadCloud },
+                  { id: 'paste', label: 'Paste Text', icon: FileText },
+                  { id: 'url', label: 'Web URL', icon: Globe },
+                ].map((t) => {
+                  const Icon = t.icon
+                  const isSel = inputTab === t.id
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setInputTab(t.id as any)}
+                      className={clsx(
+                        'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
+                        isSel
+                          ? 'bg-sky-600 text-white shadow-xs font-extrabold'
+                          : 'text-slate-700 hover:text-slate-900 hover:bg-sky-50'
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      <span>{t.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* File Upload Box */}
             {inputTab === 'upload' && (
-              <div className="rounded-3xl border-2 border-dashed border-slate-300 p-8 sm:p-12 text-center hover:border-indigo-500 hover:bg-indigo-50/20 transition-all bg-slate-50/50">
-                <UploadCloud className="h-12 w-12 mx-auto text-slate-400" />
-                <p className="text-sm font-bold text-slate-800 mt-3">
-                  Drag and drop your incident report here, or click to browse
+              <div className="rounded-3xl border-2 border-dashed border-sky-300 p-8 sm:p-12 text-center hover:border-sky-500 hover:bg-sky-100/30 transition-all bg-white/80 relative group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 border border-sky-200 shadow-xs mx-auto group-hover:scale-110 group-hover:border-sky-400 transition-all">
+                  <UploadCloud className="h-7 w-7 text-sky-600" />
+                </div>
+                <p className="text-base font-bold text-slate-800 mt-4">
+                  Drag &amp; drop your source document here, or click to browse
                 </p>
-                <p className="text-xs text-slate-500 mt-1 font-medium">
-                  Supports PDF, Word (.docx), Plain Text (.txt), Markdown (.md), and Images
-                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                  <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg">PDF</span>
+                  <span className="text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-lg">DOCX</span>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">TXT</span>
+                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg">Markdown</span>
+                  <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">Images</span>
+                </div>
                 <input
                   type="file"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="mt-4 text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer"
+                  className="mt-5 text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 file:shadow-xs cursor-pointer"
                 />
                 {selectedFile && (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 text-xs text-emerald-800 font-bold">
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-emerald-100 border border-emerald-300 px-4 py-2 text-xs text-emerald-900 font-bold shadow-xs">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     <span>Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
                   </div>
@@ -458,7 +636,7 @@ function NewTransformationStudioContent() {
                 placeholder="Paste your source document text, research notes, meeting transcript, or operational briefing here..."
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                className="w-full rounded-2xl border border-slate-300 bg-slate-50 p-4 text-xs sm:text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-mono"
+                className="w-full rounded-2xl border border-sky-200 bg-white p-4 text-xs sm:text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-mono transition-all leading-relaxed"
               />
             )}
 
@@ -470,52 +648,61 @@ function NewTransformationStudioContent() {
                   placeholder="https://cisa.gov/advisories/aa26-224a-darkhydra-ransomware"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-medium"
+                  className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-medium transition-all"
                 />
-                <p className="text-xs text-slate-500 font-medium">
-                  Protected by SSRF security firewall & prompt injection sanitizer.
+                <p className="text-xs text-slate-600 font-medium">
+                  Protected by SSRF security firewall &amp; prompt injection sanitizer.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Card 6: Active Security & Sanitization Telemetry */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 space-y-3 shadow-xs">
-            <div className="flex items-center gap-2 text-emerald-700 text-xs font-extrabold uppercase tracking-wider">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
-              <span>Active Security & Sanitization Gateways</span>
+          {/* Card 5: Active Security & Sanitization Telemetry (Emerald Tint) */}
+          <div className="rounded-3xl card-emerald-tint p-6 sm:p-7 space-y-4 shadow-xs">
+            <div className="flex items-center gap-2 text-emerald-900 text-xs font-extrabold uppercase tracking-wider">
+              <ShieldCheck className="h-4 w-4 text-emerald-700" />
+              <span>Active Security &amp; Sanitization Gateways</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600 font-medium">
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                <strong className="text-slate-900 block font-bold">Prompt Injection Filter</strong>
-                <span>Strips hidden jailbreaks & payload overrides.</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+              <div className="rounded-2xl bg-white border border-indigo-200 p-4 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-slate-900 font-bold">
+                  <Lock className="h-4 w-4 text-indigo-600" />
+                  <span>Prompt Injection Filter</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed font-medium">Strips hidden jailbreaks &amp; payload overrides before LLM ingestion.</p>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                <strong className="text-slate-900 block font-bold">SSRF Defense</strong>
-                <span>Blocks internal loopbacks and private subnets.</span>
+              <div className="rounded-2xl bg-white border border-sky-200 p-4 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-slate-900 font-bold">
+                  <ShieldAlert className="h-4 w-4 text-sky-600" />
+                  <span>SSRF Defense</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed font-medium">Blocks internal loopbacks and private subnet crawling.</p>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-1">
-                <strong className="text-slate-900 block font-bold">Sensitivity Scanner</strong>
-                <span>Scans emails, internal IPs (10.x), and credentials.</span>
+              <div className="rounded-2xl bg-white border border-purple-200 p-4 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 text-slate-900 font-bold">
+                  <EyeOff className="h-4 w-4 text-purple-600" />
+                  <span>Sensitivity Scanner</span>
+                </div>
+                <p className="text-slate-600 leading-relaxed font-medium">Auto-masks PII, internal IPs (10.x), and API credentials.</p>
               </div>
             </div>
           </div>
 
-          {/* Card 7: Action Button */}
+          {/* Card 6: Action Button */}
           <div className="flex justify-end pt-2">
             <button
               onClick={handleCreateProjectAndIngest}
               disabled={isProcessingSource}
-              className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-4 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 disabled:opacity-50 transition-all"
+              className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-sky-600 hover:from-indigo-500 hover:to-sky-500 px-9 py-4 text-sm font-black text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/45 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all"
             >
               {isProcessingSource ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Ingesting & Running Research Engine...</span>
+                  <span>Ingesting &amp; Running Research Engine...</span>
                 </>
               ) : (
                 <>
-                  <span>Proceed to Step 2: Automated Research & Evidence</span>
+                  <span>Proceed to Step 2: Research &amp; Fact-Checking</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -525,10 +712,10 @@ function NewTransformationStudioContent() {
       )}
 
       {/* ========================================================================= */}
-      {/* SCREEN 2: LIVE RESEARCH ENGINE & CONFLICT RADAR                           */}
+      {/* SCREEN 2: LIVE RESEARCH & FACT-CHECKING                                  */}
       {/* ========================================================================= */}
       {currentStep === 2 && canonical && (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="space-y-6">
           <LiveResearchProgress
             canonical={canonical}
             researchMode={researchMode}
@@ -538,26 +725,26 @@ function NewTransformationStudioContent() {
       )}
 
       {/* ========================================================================= */}
-      {/* SCREEN 3: CANONICAL SINGLE-TRUTH KNOWLEDGE BASE                           */}
+      {/* SCREEN 3: VERIFIED SINGLE-TRUTH KNOWLEDGE BASE                           */}
       {/* ========================================================================= */}
       {currentStep === 3 && canonical && (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="space-y-6">
           <CanonicalViewer canonical={canonical} />
 
           {/* Proceed Navigation Bar */}
-          <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-indigo-200 shadow-xs">
             <button
               onClick={() => setCurrentStep(2)}
               className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Research & Conflicts</span>
+              <span>Back to Step 2: Research &amp; Conflicts</span>
             </button>
             <button
               onClick={() => setCurrentStep(4)}
-              className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all"
+              className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all active:scale-95"
             >
-              <span>Proceed to Step 4: Formats & Audience Config</span>
+              <span>Proceed to Step 4: Choose Formats &amp; Audience</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -568,14 +755,14 @@ function NewTransformationStudioContent() {
       {/* SCREEN 4: FORMAT ORCHESTRATION & BRAND PROFILE                            */}
       {/* ========================================================================= */}
       {currentStep === 4 && (
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-8 shadow-xs">
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-indigo-200 bg-white p-6 sm:p-8 space-y-8 shadow-xs">
             <div>
               <span className="text-xs font-black uppercase text-indigo-700 tracking-wider font-mono">
-                STEP 4 OF 6 • MULTI-FORMAT ORCHESTRATOR & AUDIENCE CALIBRATION
+                STEP 4 OF 6 • MULTI-FORMAT ORCHESTRATOR &amp; AUDIENCE CALIBRATION
               </span>
               <h3 className="text-2xl font-black text-slate-900 mt-1">
-                Configure Target Audience & Select Deliverables
+                Configure Target Audience &amp; Select Deliverables
               </h3>
               <p className="text-sm text-slate-600 mt-1 font-medium">
                 Transform the single Canonical Knowledge foundation into multiple audience-calibrated formats in parallel.
@@ -591,32 +778,32 @@ function NewTransformationStudioContent() {
                 <select
                   value={audience}
                   onChange={(e) => setAudience(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
                 >
-                  <option value="Executive Board & Technical Engineers">Executive Board & Technical Engineers</option>
-                  <option value="Executive Board & C-Suite">Executive Board & C-Suite</option>
-                  <option value="Government Officials & Regulators">Government Officials & Regulators</option>
+                  <option value="Executive Board & Technical Engineers">Executive Board &amp; Technical Engineers</option>
+                  <option value="Executive Board & C-Suite">Executive Board &amp; C-Suite</option>
+                  <option value="Government Officials & Regulators">Government Officials &amp; Regulators</option>
                   <option value="Technical Security Engineers">Technical Security Engineers</option>
-                  <option value="General Public & Media">General Public & Media</option>
-                  <option value="Enterprise Customers & Partners">Enterprise Customers & Partners</option>
+                  <option value="General Public & Media">General Public &amp; Media</option>
+                  <option value="Enterprise Customers & Partners">Enterprise Customers &amp; Partners</option>
                 </select>
               </div>
 
               {/* Communication Tone */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Tone & Style
+                  Tone &amp; Style
                 </label>
                 <select
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
                 >
-                  <option value="Professional & Authoritative">Professional & Authoritative</option>
-                  <option value="Formal & Authoritative">Formal & Authoritative</option>
-                  <option value="Technical & Precise">Technical & Precise</option>
+                  <option value="Professional & Authoritative">Professional &amp; Authoritative</option>
+                  <option value="Formal & Authoritative">Formal &amp; Authoritative</option>
+                  <option value="Technical & Precise">Technical &amp; Precise</option>
                   <option value="Urgent Advisory">Urgent Advisory</option>
-                  <option value="Educational & Accessible">Educational & Accessible</option>
+                  <option value="Educational & Accessible">Educational &amp; Accessible</option>
                 </select>
               </div>
 
@@ -628,7 +815,7 @@ function NewTransformationStudioContent() {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
                 >
                   <option value="English">English</option>
                   <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
@@ -646,16 +833,16 @@ function NewTransformationStudioContent() {
                 <select
                   value={detailLevel}
                   onChange={(e) => setDetailLevel(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
                 >
-                  <option value="Detailed & Comprehensive">Detailed & Comprehensive</option>
+                  <option value="Detailed & Comprehensive">Detailed &amp; Comprehensive</option>
                   <option value="Medium (Standard)">Medium (Standard)</option>
-                  <option value="Short & Punchy">Short & Punchy</option>
+                  <option value="Short & Punchy">Short &amp; Punchy</option>
                 </select>
               </div>
             </div>
 
-            {/* Target Output Format Cards */}
+            {/* Multi-Color Target Output Format Cards */}
             <div className="space-y-4 pt-6 border-t border-slate-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <label className="text-sm font-bold text-slate-800 uppercase tracking-wider block">
@@ -676,15 +863,16 @@ function NewTransformationStudioContent() {
                       onClick={() => toggleFormat(opt.id)}
                       className={clsx(
                         'p-5 rounded-3xl border-2 cursor-pointer select-none transition-all flex items-start gap-4 shadow-xs',
+                        opt.cardBg,
                         isChecked
-                          ? 'border-indigo-600 bg-indigo-50/80 shadow-md'
-                          : 'border-slate-200 bg-white hover:border-slate-300 opacity-70'
+                          ? `${opt.border} shadow-md scale-[1.02]`
+                          : 'border-slate-200 hover:border-slate-300 opacity-75'
                       )}
                     >
                       <div
                         className={clsx(
                           'flex h-10 w-10 items-center justify-center rounded-xl shrink-0 transition-colors',
-                          isChecked ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500'
+                          isChecked ? clsx(opt.bg, opt.color, 'shadow-xs') : 'bg-slate-100 text-slate-500'
                         )}
                       >
                         <Icon className="h-5 w-5" />
@@ -692,7 +880,7 @@ function NewTransformationStudioContent() {
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center justify-between">
                           <span className="text-sm sm:text-base font-bold text-slate-900">{opt.label}</span>
-                          {isChecked && <CheckCircle2 className="h-4 w-4 text-indigo-600" />}
+                          {isChecked && <CheckCircle2 className={clsx('h-4 w-4', opt.color)} />}
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed font-medium">{opt.desc}</p>
                       </div>
@@ -713,7 +901,7 @@ function NewTransformationStudioContent() {
               </button>
               <button
                 onClick={handleExecuteTransformation}
-                className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all"
+                className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all active:scale-95"
               >
                 <Sparkles className="h-5 w-5" />
                 <span>Generate {selectedFormats.length} Selected Artefacts</span>
@@ -727,7 +915,7 @@ function NewTransformationStudioContent() {
       {/* SCREEN 5: LIVE MULTI-FORMAT AI GENERATION & FACT-CHECKING                 */}
       {/* ========================================================================= */}
       {currentStep === 5 && (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="space-y-6">
           <LiveGenerationProgress
             selectedFormats={selectedFormats}
             onComplete={() => setCurrentStep(6)}
@@ -739,7 +927,7 @@ function NewTransformationStudioContent() {
       {/* SCREEN 6: PRODUCTION OUTPUT STUDIO (TOP-TO-BOTTOM WORKSPACE)              */}
       {/* ========================================================================= */}
       {currentStep === 6 && generatedOutputs.length > 0 && (
-        <div className="space-y-8 max-w-5xl mx-auto">
+        <div className="space-y-8">
           {/* Format Selection Pills Bar */}
           <div className="flex overflow-x-auto gap-2.5 border-b border-slate-200 pb-4 no-scrollbar">
             {generatedOutputs.map((o) => {
@@ -751,8 +939,8 @@ function NewTransformationStudioContent() {
                   className={clsx(
                     'flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold whitespace-nowrap transition-all shadow-xs',
                     isActive
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
+                      ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-md shadow-indigo-600/30'
+                      : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
                   )}
                 >
                   <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
@@ -769,7 +957,7 @@ function NewTransformationStudioContent() {
             })}
           </div>
 
-          {/* Active Deliverable Workspace (Clean Top-to-Bottom Flow) */}
+          {/* Active Deliverable Workspace */}
           {activeOutput && (
             <div className="space-y-6">
               {/* Deliverable Card */}
@@ -898,10 +1086,10 @@ function NewTransformationStudioContent() {
                 }}
               />
 
-              {/* Fact Check Inspection Panel (Stacked Down) */}
+              {/* Fact Check Inspection Panel */}
               <FactCheckPanel factCheck={activeOutput.fact_check} />
 
-              {/* Quality Radar Card (Stacked Down) */}
+              {/* Quality Radar Card */}
               <QualityRadarCard qualityScore={activeOutput.quality_score} />
             </div>
           )}

@@ -57,33 +57,33 @@ export default function TwitterThreadCard({ structuredData, rawContent }: Twitte
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Thread Header Banner */}
-      <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-900 to-slate-900 text-white p-6 sm:p-8 shadow-xs">
+      <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-50 via-indigo-50/50 to-white text-slate-900 p-6 sm:p-8 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2.5">
-              <span className="rounded-md bg-sky-500/20 border border-sky-400/30 px-3 py-1 text-xs font-bold text-sky-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Twitter className="h-3.5 w-3.5 text-sky-400" />
+              <span className="rounded-md bg-sky-100 border border-sky-200 px-3 py-1 text-xs font-bold text-sky-800 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                <Twitter className="h-3.5 w-3.5 text-sky-600" />
                 X / TWITTER OPTIMIZED THREAD
               </span>
-              <span className="text-xs text-sky-200 font-medium">
+              <span className="text-xs text-slate-500 font-bold">
                 {tweets.length} Posts in Thread
               </span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               Sequential High-Engagement Social Thread
             </h3>
-            <p className="text-xs sm:text-sm text-sky-100/80 font-medium">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium">
               Calibrated for 280-character limit preservation and evidence-grounded hook virality.
             </p>
           </div>
 
           <button
             onClick={handleCopyAll}
-            className="flex items-center gap-2 rounded-2xl bg-sky-500 hover:bg-sky-400 text-slate-950 px-4 py-2.5 text-xs sm:text-sm font-extrabold transition-all shadow-xs self-start sm:self-center"
+            className="flex items-center gap-2 rounded-2xl bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-md shadow-sky-600/20 active:scale-95 self-start sm:self-center"
           >
-            {copiedAll ? <Check className="h-4 w-4 text-emerald-950" /> : <Copy className="h-4 w-4" />}
+            {copiedAll ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span>{copiedAll ? 'Thread Copied' : 'Copy All Tweets'}</span>
           </button>
         </div>
@@ -99,12 +99,12 @@ export default function TwitterThreadCard({ structuredData, rawContent }: Twitte
           return (
             <div
               key={idx}
-              className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xs hover:border-sky-300 transition-all space-y-4 relative"
+              className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-xs hover:border-sky-300 hover:shadow-md transition-all space-y-4 relative"
             >
               {/* Top metadata */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-100 text-sky-800 font-black text-xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-sky-50 text-sky-800 border border-sky-200 font-black text-xs">
                     {idx + 1}/{tweets.length}
                   </div>
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">

@@ -27,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans bg-slate-50 text-slate-900 text-[15px] leading-normal antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+    <html lang="en" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <body className="font-sans bg-slate-50 text-slate-900 text-[15px] leading-normal antialiased min-h-screen flex flex-col selection:bg-sky-500 selection:text-white" suppressHydrationWarning>
         <NavProvider>
           <Navbar />
           <main className="flex-1 flex flex-col">{children}</main>

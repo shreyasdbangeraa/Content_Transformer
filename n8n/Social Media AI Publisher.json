@@ -5,16 +5,15 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "social-publish",
-        "responseMode": "onReceived",
         "options": {}
       },
-      "id": "webhook-trigger-001",
+      "id": "96d43002-13d9-49bf-b59b-d66fb83e3d2f",
       "name": "01 - Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        100,
-        200
+        -544,
+        128
       ],
       "webhookId": "social-publish-webhook"
     },
@@ -86,13 +85,46 @@
         },
         "options": {}
       },
-      "id": "set-approved-post-002",
+      "id": "7d975081-8534-4619-b396-1a5ab91b907f",
       "name": "02 - Set Approved Post Data",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        360,
-        200
+        -288,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has_image",
+              "leftValue": "={{ $('02 - Set Approved Post Data').item.json.image_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1126d02a-7c8f-4989-9412-a4d2d99a52b6",
+      "name": "03A - Has Image URL?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        192
       ]
     },
     {
@@ -106,13 +138,13 @@
           }
         }
       },
-      "id": "download-image-003",
+      "id": "43e7c18e-2525-44a9-852c-0581f08f3b6a",
       "name": "03 - Download Image for LinkedIn",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        640,
-        80
+        0,
+        -32
       ],
       "onError": "continueRegularOutput"
     },
@@ -126,34 +158,58 @@
           "visibility": "PUBLIC"
         }
       },
-      "id": "publish-linkedin-004",
-      "name": "04 - Publish LinkedIn",
+      "id": "76760b07-57fb-428d-83ec-a7209d8a4e60",
+      "name": "04 - Publish LinkedIn (Image)",
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        900,
-        80
+        336,
+        -32
       ],
-      "onError": "continueRegularOutput",
       "credentials": {
         "linkedInOAuth2Api": {
           "id": "6hVc51x6mWfQStUV",
           "name": "LinkedIn account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('02 - Set Approved Post Data').first().json || {};\nconst isSuccess = !!(item.urn && !item.error && !item.message);\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(item.urn || '') : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn published or simulated'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
+        "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('02 - Set Approved Post Data').first().json || {};\nconst isSuccess = !!(( item.urn || item.id || item.activity ) && !item.error && !item.message);\nconst postUrn = item.urn || item.id || item.activity || '';\nreturn [{ json: {\n  platform: 'linkedin',\n  status: isSuccess ? 'PUBLISHED' : 'FAILED',\n  platform_post_id: isSuccess ? String(postUrn) : '',\n  error: isSuccess ? '' : String(item.error || item.message || 'LinkedIn publishing failed'),\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
-      "id": "normalize-linkedin-005",
+      "id": "845a63c2-2ffc-4748-93ab-e697c2407dff",
       "name": "05 - Normalize LinkedIn Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1160,
+        544,
         80
       ]
+    },
+    {
+      "parameters": {
+        "person": "J5LgfaRQIx",
+        "text": "={{ $('02 - Set Approved Post Data').item.json.linkedin_caption }}",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "id": "43cc0cc6-d3c0-45d7-a9ce-3b1421bce053",
+      "name": "04B - Publish LinkedIn (Text)",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        336,
+        208
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "6hVc51x6mWfQStUV",
+          "name": "LinkedIn account"
+        }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -170,7 +226,7 @@
             },
             {
               "name": "caption",
-              "value": "={{ $('02 - Set Approved Post Data').item.json.instagram_caption + \" \" + $('02 - Set Approved Post Data').item.json.hashtags }}"
+              "value": "={{ $(\"02 - Set Approved Post Data\").item.json.instagram_caption + \" \" + $(\"02 - Set Approved Post Data\").item.json.hashtags }}"
             }
           ]
         },
@@ -182,14 +238,15 @@
           }
         }
       },
-      "id": "create-ig-container-006",
+      "id": "605e7496-2ee0-4546-afee-eb33e975d920",
       "name": "06 - Create Instagram Container",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        780,
-        340
+        144,
+        272
       ],
+      "disabled": true,
       "onError": "continueRegularOutput"
     },
     {
@@ -215,52 +272,54 @@
           }
         }
       },
-      "id": "publish-ig-007",
+      "id": "0f06c9e9-ec38-462f-88e9-cbef92644ccd",
       "name": "07 - Publish Instagram",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        1020,
-        340
+        384,
+        272
       ],
+      "disabled": true,
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
         "jsCode": "const items = $input.all();\nconst item = items.length > 0 ? items[0].json : {};\nconst src = $('02 - Set Approved Post Data').first().json || {};\nconst hasApiError = item.error && (item.error.message || item.error.type);\nconst isSuccess = !!(item.id && !hasApiError);\nlet errMsg = '';\nif (!isSuccess) {\n  if (hasApiError) { errMsg = 'Instagram API error: ' + (item.error.message || JSON.stringify(item.error)); }\n  else if (!item.id) { errMsg = 'Instagram not configured or skipped'; }\n  else { errMsg = 'Instagram publishing failed'; }\n}\nreturn [{ json: {\n  platform: 'instagram',\n  status: isSuccess ? 'PUBLISHED' : 'SKIPPED',\n  platform_post_id: isSuccess ? String(item.id || '') : '',\n  error: errMsg,\n  post_id: String(src.post_id || ''),\n  topic: String(src.topic || ''),\n} }];"
       },
-      "id": "normalize-ig-008",
+      "id": "a76f886d-dba4-493e-9aca-83fe90083b90",
       "name": "08 - Normalize Instagram Result",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1260,
-        340
+        624,
+        272
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "disabled": true
     },
     {
       "parameters": {},
-      "id": "merge-results-009",
+      "id": "b0cbbe2e-65af-4935-b9aa-2fbf941552af",
       "name": "09 - Merge Publish Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1500,
-        200
+        864,
+        80
       ]
     },
     {
       "parameters": {
         "jsCode": "const items = $input.all().map(function(i) { return i.json; });\nconst li = items.find(function(i) { return i.platform === 'linkedin'; }) || {};\nconst ig = items.find(function(i) { return i.platform === 'instagram'; }) || {};\nconst liOk = li.status === 'PUBLISHED';\nconst igOk = ig.status === 'PUBLISHED';\nlet finalStatus;\nif (liOk && igOk) finalStatus = 'PUBLISHED';\nelse if (liOk || igOk) finalStatus = 'PARTIALLY_PUBLISHED';\nelse finalStatus = 'PUBLISHED';\nconst now = new Date().toISOString();\nconst errParts = [];\nif (!liOk && li.error) errParts.push('LinkedIn: ' + li.error);\nif (!igOk && ig.error) errParts.push('Instagram: ' + ig.error);\nreturn [{ json: {\n  post_id: li.post_id || ig.post_id || '',\n  topic: li.topic || ig.topic || '',\n  final_status: finalStatus,\n  linkedin_status: liOk ? 'PUBLISHED' : (li.status || 'READY'),\n  instagram_status: igOk ? 'PUBLISHED' : (ig.status || 'READY'),\n  linkedin_post_id: liOk ? (li.platform_post_id || '') : '',\n  instagram_post_id: igOk ? (ig.platform_post_id || '') : '',\n  error_message: errParts.join(' | '),\n  published_at: now,\n  any_failed: (!liOk && !igOk)\n} }];"
       },
-      "id": "determine-status-010",
+      "id": "f97e4182-355e-4aba-89a1-ec429017d7b3",
       "name": "10 - Determine Final Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1740,
-        200
+        1104,
+        80
       ]
     },
     {
@@ -287,33 +346,33 @@
         },
         "options": {}
       },
-      "id": "check-failed-011",
+      "id": "ea2be600-ce75-4c5e-8203-5611e56dd6a5",
       "name": "11 - Check Any Failed",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1980,
-        200
+        1344,
+        80
       ]
     },
     {
       "parameters": {
         "chatId": "6441680644",
-        "text": "={{ \"⚠️ Social Media Publishing Notice\\n\\n📌 Post: \" + $('10 - Determine Final Status').item.json.topic + \"\\n\\n💼 LinkedIn: \" + ($('10 - Determine Final Status').item.json.linkedin_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n📸 Instagram: \" + ($('10 - Determine Final Status').item.json.instagram_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n\\n❗ Detail: \" + $('10 - Determine Final Status').item.json.error_message + \"\\n\\n🔧 Post ID: \" + $('10 - Determine Final Status').item.json.post_id }}",
+        "text": "={{ \"⚠️ Social Media Publishing Notice\\n\\n📌 Post: \" + $(\"10 - Determine Final Status\").item.json.topic + \"\\n\\n💼 LinkedIn: \" + ($(\"10 - Determine Final Status\").item.json.linkedin_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n📸 Instagram: \" + ($(\"10 - Determine Final Status\").item.json.instagram_status === \"PUBLISHED\" ? \"✅ Published\" : \"❌ FAILED\") + \"\\n\\n❗ Detail: \" + $(\"10 - Determine Final Status\").item.json.error_message + \"\\n\\n🔧 Post ID: \" + $(\"10 - Determine Final Status\").item.json.post_id }}",
         "additionalFields": {
           "appendAttribution": false
         }
       },
-      "id": "telegram-error-012",
+      "id": "bfd3cdc7-c032-4b1a-8014-c017d49c5e3d",
       "name": "12 - Send Error Notification",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
-        100
+        1600,
+        -16
       ],
-      "webhookId": "2af19f11-cba8-4514-bb83-abab9b88d806",
       "executeOnce": true,
+      "webhookId": "a54f809e-6579-47f4-a666-3c1bfcb4b7f3",
       "credentials": {
         "telegramApi": {
           "id": "ipy2WMd9hfne3IPz",
@@ -335,13 +394,13 @@
         },
         "options": {}
       },
-      "id": "all-published-013",
+      "id": "a175fa67-29ea-4518-9a73-18b5ed3bd727",
       "name": "13 - All Published",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        2240,
-        300
+        1600,
+        176
       ]
     }
   ],
@@ -362,7 +421,7 @@
       "main": [
         [
           {
-            "node": "03 - Download Image for LinkedIn",
+            "node": "03A - Has Image URL?",
             "type": "main",
             "index": 0
           },
@@ -374,18 +433,36 @@
         ]
       ]
     },
-    "03 - Download Image for LinkedIn": {
+    "03A - Has Image URL?": {
       "main": [
         [
           {
-            "node": "04 - Publish LinkedIn",
+            "node": "03 - Download Image for LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "04B - Publish LinkedIn (Text)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "04 - Publish LinkedIn": {
+    "03 - Download Image for LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "04 - Publish LinkedIn (Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 - Publish LinkedIn (Image)": {
       "main": [
         [
           {
@@ -401,6 +478,17 @@
         [
           {
             "node": "09 - Merge Publish Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04B - Publish LinkedIn (Text)": {
+      "main": [
+        [
+          {
+            "node": "05 - Normalize LinkedIn Result",
             "type": "main",
             "index": 0
           }
@@ -486,53 +574,46 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "82eb563a-165b-49b6-8216-05d3ecc692b9",
+  "versionId": "5e9bf013-62e1-40ca-b7db-4e5ae5d71f26",
   "meta": {
     "instanceId": "66a8a33a3c63da60147f90a19ac34a67e33834e494d249ee8a79f249ac3c522c"
   },
   "nodeGroups": [
     {
-      "id": "g1",
-      "name": "Webhook Ingestion",
-      "nodeIds": [
-        "webhook-trigger-001",
-        "set-approved-post-002"
-      ],
-      "description": "Receives the exact approved content, image, and hashtags from the AI Content Transformer web app"
-    },
-    {
-      "id": "g2",
+      "id": "e943af5b-3951-4e1a-b14c-7401ec096064",
       "name": "LinkedIn Publishing",
       "nodeIds": [
-        "download-image-003",
-        "publish-linkedin-004",
-        "normalize-linkedin-005"
+        "1126d02a-7c8f-4989-9412-a4d2d99a52b6",
+        "43e7c18e-2525-44a9-852c-0581f08f3b6a",
+        "76760b07-57fb-428d-83ec-a7209d8a4e60",
+        "43cc0cc6-d3c0-45d7-a9ce-3b1421bce053",
+        "845a63c2-2ffc-4748-93ab-e697c2407dff"
       ],
-      "description": "Publishes approved text & image directly to LinkedIn"
+      "description": "Publishes approved content to LinkedIn — image post when image_url is provided, text-only otherwise"
     },
     {
-      "id": "g3",
+      "id": "a7efe5ef-d95b-4959-9c37-2e203a864141",
       "name": "Instagram Publishing",
       "nodeIds": [
-        "create-ig-container-006",
-        "publish-ig-007",
-        "normalize-ig-008"
+        "605e7496-2ee0-4546-afee-eb33e975d920",
+        "0f06c9e9-ec38-462f-88e9-cbef92644ccd",
+        "a76f886d-dba4-493e-9aca-83fe90083b90"
       ],
       "description": "Publishes approved image & caption directly to Instagram via Meta Graph API"
     },
     {
-      "id": "g4",
+      "id": "ac85d77e-5b8b-43c6-9128-0e65ebeee1b1",
       "name": "Status Aggregation & Alerting",
       "nodeIds": [
-        "merge-results-009",
-        "determine-status-010",
-        "check-failed-011",
-        "telegram-error-012",
-        "all-published-013"
+        "b0cbbe2e-65af-4935-b9aa-2fbf941552af",
+        "f97e4182-355e-4aba-89a1-ec429017d7b3",
+        "ea2be600-ce75-4c5e-8203-5611e56dd6a5",
+        "bfd3cdc7-c032-4b1a-8014-c017d49c5e3d",
+        "a175fa67-29ea-4518-9a73-18b5ed3bd727"
       ],
       "description": "Aggregates multi-channel status and notifies via Telegram if any channel fails"
     }
   ],
-  "id": "CwDM3Nx2ruQ7lKt0",
+  "id": "ZRUqoOOLtt8XxYL7",
   "tags": []
 }

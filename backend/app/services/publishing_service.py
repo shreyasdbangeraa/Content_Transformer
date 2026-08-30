@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from app.database.models import Output, PublishingJob, Transformation, FactCheck, QualityScore, AuditLog
 from app.config import settings
 from app.utils.text_sanitizer import sanitize_linkedin_content
+from app.utils.image_resolver import resolve_domain_image_url
 from app.services.blockchain_service import BlockchainService
 
 class PublishingService:
@@ -26,7 +27,7 @@ class PublishingService:
             raise ValueError(f"Output {output_id} not found")
 
         # Strict Human-in-the-loop Security Gate
-        if output.status != "APPROVED":
+        if output.status not in ["APPROVED", "PUBLISHED"]:
             raise ValueError(
                 f"Security Enforcement: Cannot publish unapproved output (current status: '{output.status}'). "
                 f"Human approval is strictly mandatory before social publishing to n8n."
@@ -40,6 +41,12 @@ class PublishingService:
 
         struct_data = output.structured_data or {}
         image_url = struct_data.get("image_url", "")
+        # If image_url is missing or a data URI (which n8n cannot download via HTTP), resolve a verified high-res HTTP image
+        if not image_url or not str(image_url).startswith("http"):
+            domain_name = transformation.project.domain if (transformation and transformation.project) else ""
+            image_url = resolve_domain_image_url(output.title or "", output.raw_content[:200], domain_name)
+            struct_data["image_url"] = image_url
+
         raw_hashtags = struct_data.get("hashtags", [])
         if isinstance(raw_hashtags, list):
             hashtags_str = " ".join([h if h.startswith("#") else f"#{h}" for h in raw_hashtags])

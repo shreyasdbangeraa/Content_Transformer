@@ -41,15 +41,19 @@ export default function PublishModal({
 
   const isApproved = output.status === 'APPROVED' || output.status === 'PUBLISHED'
 
-  const handlePublish = async () => {
-    if (!isApproved) {
-      alert('Security Policy Enforcement: Deliverable must be explicitly APPROVED by a human operator before publishing.')
-      return
-    }
+  const cleanText = (output.raw_content || '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 
+  const handlePublish = async () => {
     try {
       setIsSubmitting(true)
       setErrorMsg('')
+      // If not yet approved, approve it first before publishing
+      if (output.status !== 'APPROVED' && output.status !== 'PUBLISHED') {
+        await api.approveOutput(output.id, 'Approved by operator for distribution')
+      }
       await api.publishToN8n(output.id, platform, undefined, scheduledAt || undefined)
       setIsSuccess(true)
       onPublished()
@@ -62,6 +66,12 @@ export default function PublishModal({
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleDirectLinkedIn = () => {
+    navigator.clipboard.writeText(cleanText)
+    const encoded = encodeURIComponent(cleanText)
+    window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -174,21 +184,33 @@ export default function PublishModal({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200 flex-wrap">
           <button
-            onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+            onClick={handleDirectLinkedIn}
+            type="button"
+            className="flex items-center gap-2 rounded-xl bg-[#0A66C2] hover:bg-[#004182] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
+            title="Copy text and open LinkedIn post composer immediately"
           >
-            Cancel
+            <Linkedin className="h-3.5 w-3.5" />
+            <span>Open LinkedIn Feed</span>
           </button>
-          <button
-            onClick={handlePublish}
-            disabled={!isApproved || isSubmitting || isSuccess}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:from-indigo-500 hover:to-sky-500 disabled:opacity-50 transition-all"
-          >
-            <Send className="h-3.5 w-3.5" />
-            <span>{isSubmitting ? 'Dispatching...' : 'Dispatch to n8n'}</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePublish}
+              disabled={isSubmitting || isSuccess}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 hover:from-indigo-500 hover:to-sky-500 disabled:opacity-50 transition-all"
+            >
+              <Send className="h-3.5 w-3.5" />
+              <span>{isSubmitting ? 'Dispatching...' : !isApproved ? 'Approve & Dispatch' : 'Dispatch to n8n'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -16,6 +16,8 @@ import {
   Edit2,
   CheckCircle2,
   Sliders,
+  Check,
+  Zap,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { BrandProfile } from '@/types'
@@ -38,7 +40,7 @@ const TEMPLATES = [
     id: 'exec_brief',
     title: 'Executive Decision-Maker Briefing Dossier',
     domain: 'Leadership & Strategy',
-    desc: 'Distills complex documents into a comprehensive 3-page situational dossier with telemetry tables and risk matrices.',
+    desc: 'Distills complex documents into a comprehensive situational dossier with telemetry tables and risk matrices.',
     formats: ['Executive Dossier', 'PPTX Slides', 'Infographic', 'X Thread'],
     audience: 'Executive Board & C-Suite',
     tone: 'Formal & Strategic',
@@ -137,7 +139,7 @@ export default function TemplatesPage() {
         <div className="space-y-1.5">
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
             <FileStack className="h-8 w-8 text-indigo-600" />
-            Communication Templates & Brand Profiles
+            Communication Templates &amp; Brand Profiles
           </h1>
           <p className="text-sm sm:text-base text-slate-600 font-medium">
             Pre-configured transformation recipes and organizational style guides for certified enterprise outputs.
@@ -149,7 +151,7 @@ export default function TemplatesPage() {
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-black text-slate-900">Transformation Templates</h2>
-          <span className="text-xs text-slate-500 font-medium">{TEMPLATES.length} pre-configured presets</span>
+          <span className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 font-bold px-3 py-1 rounded-full">{TEMPLATES.length} presets ready</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -159,25 +161,25 @@ export default function TemplatesPage() {
               <div
                 key={tmpl.id}
                 onClick={() => router.push(`/dashboard/new?template=${tmpl.id}`)}
-                className={`rounded-3xl border-2 ${tmpl.borderColor} bg-white p-7 space-y-5 hover:shadow-xl cursor-pointer transition-all flex flex-col justify-between shadow-xs`}
+                className={`rounded-3xl border ${tmpl.borderColor} bg-white p-7 space-y-5 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-xs group`}
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className={`rounded-2xl ${tmpl.bgColor} p-2.5 border border-slate-100`}>
+                      <div className={`rounded-2xl ${tmpl.bgColor} p-2.5 border border-slate-100 shadow-2xs group-hover:scale-110 transition-transform`}>
                         <Icon className={`h-5 w-5 ${tmpl.color}`} />
                       </div>
                       <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
                         {tmpl.domain}
                       </span>
                     </div>
-                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                    <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
                       {tmpl.tone}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">{tmpl.title}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{tmpl.title}</h3>
                     <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed font-medium">
                       {tmpl.desc}
                     </p>
@@ -187,7 +189,7 @@ export default function TemplatesPage() {
                     {tmpl.formats.map((fmt, i) => (
                       <span
                         key={i}
-                        className="rounded-xl bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700"
+                        className="rounded-xl bg-slate-50 border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-700"
                       >
                         {fmt}
                       </span>
@@ -195,9 +197,9 @@ export default function TemplatesPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs font-bold text-sky-600">
-                  <span>Audience: {tmpl.audience}</span>
-                  <div className="flex items-center gap-1 hover:text-sky-700">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs font-bold text-indigo-600">
+                  <span className="text-slate-500">Audience: <strong className="text-slate-800">{tmpl.audience}</strong></span>
+                  <div className="flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     <span>Use Template</span>
                     <ArrowRight className="h-4 w-4" />
                   </div>
@@ -214,7 +216,7 @@ export default function TemplatesPage() {
           <div className="space-y-1">
             <h2 className="text-xl font-black text-slate-900 flex items-center gap-2.5">
               <Building2 className="h-6 w-6 text-indigo-600" />
-              Organizational Brand Profiles & Terminology Guides
+              Organizational Brand Profiles &amp; Terminology Guides
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 font-medium">
               Configure organizational tone, forbidden words, and required communication rules to enforce compliance across all generated deliverables.
@@ -223,7 +225,7 @@ export default function TemplatesPage() {
 
           <button
             onClick={() => setIsCreatingProfile(!isCreatingProfile)}
-            className="flex items-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-xs self-start sm:self-center"
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white px-5 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-md shadow-indigo-600/20 active:scale-95 self-start sm:self-center"
           >
             <Plus className="h-4 w-4" />
             <span>{isCreatingProfile ? 'Close Form' : 'New Brand Profile'}</span>
@@ -232,7 +234,7 @@ export default function TemplatesPage() {
 
         {/* Create Profile Form */}
         {isCreatingProfile && (
-          <form onSubmit={handleCreateProfile} className="rounded-3xl border border-indigo-200 bg-white p-6 sm:p-8 space-y-5 shadow-sm">
+          <form onSubmit={handleCreateProfile} className="rounded-3xl border border-indigo-200 bg-white p-6 sm:p-8 space-y-5 shadow-md animate-fade-in">
             <h3 className="text-base font-black text-slate-900">Add Brand Profile</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -285,7 +287,7 @@ export default function TemplatesPage() {
             </div>
             <button
               type="submit"
-              className="rounded-xl bg-indigo-600 text-white px-5 py-2.5 text-xs font-bold hover:bg-indigo-500 transition-all shadow-xs"
+              className="rounded-xl bg-indigo-600 text-white px-6 py-2.5 text-xs font-bold hover:bg-indigo-500 transition-all shadow-xs"
             >
               Save Profile
             </button>
@@ -297,11 +299,11 @@ export default function TemplatesPage() {
           {profiles.map((p) => (
             <div
               key={p.id}
-              className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 space-y-4 shadow-xs"
+              className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 space-y-4 shadow-xs hover:border-indigo-300 hover:shadow-md transition-all"
             >
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="rounded-xl bg-indigo-100 text-indigo-700 p-2 font-bold">
+                  <div className="rounded-xl bg-indigo-50 text-indigo-700 p-2 font-bold border border-indigo-100">
                     <Building2 className="h-5 w-5" />
                   </div>
                   <div>
@@ -317,7 +319,7 @@ export default function TemplatesPage() {
               {p.forbidden_terms && p.forbidden_terms.length > 0 && (
                 <div className="space-y-1.5">
                   <span className="text-xs font-bold text-rose-700 uppercase tracking-wider block">
-                    Forbidden Words & Phrases Filter:
+                    Forbidden Words &amp; Phrases Filter:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {p.forbidden_terms.map((term, i) => (

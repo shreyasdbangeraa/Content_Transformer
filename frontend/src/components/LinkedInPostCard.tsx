@@ -45,6 +45,22 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
     .join('\n')
     .trim()
 
+  const [postedToLinkedIn, setPostedToLinkedIn] = useState(false)
+
+  const handleDirectPostToLinkedIn = () => {
+    navigator.clipboard.writeText(cleanText)
+    setCopied(true)
+    setPostedToLinkedIn(true)
+    const encoded = encodeURIComponent(cleanText)
+    // Open LinkedIn web post creator with pre-filled text
+    const linkedInUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`
+    window.open(linkedInUrl, '_blank', 'noopener,noreferrer')
+    setTimeout(() => {
+      setCopied(false)
+      setPostedToLinkedIn(false)
+    }, 4000)
+  }
+
   const handleCopy = () => {
     navigator.clipboard.writeText(cleanText)
     setCopied(true)
@@ -112,6 +128,15 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleDirectPostToLinkedIn}
+              className="flex items-center gap-2 text-xs sm:text-sm font-bold text-white bg-[#0A66C2] hover:bg-[#004182] px-3.5 py-2 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-98"
+              title="Copy text & open LinkedIn to publish"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>{postedToLinkedIn ? 'Opening LinkedIn...' : 'Post to LinkedIn'}</span>
+            </button>
+
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl transition-colors shadow-2xs"
@@ -211,10 +236,11 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
           </button>
 
           <button
-            onClick={handleCopy}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            onClick={handleDirectPostToLinkedIn}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-700 transition-colors"
+            title="Post directly to LinkedIn"
           >
-            <Send className="h-4 w-4" />
+            <Share2 className="h-4 w-4 text-[#0A66C2]" />
             <span>Share</span>
           </button>
         </div>

@@ -6,6 +6,7 @@ from app.ai.factory import AIFactory
 from app.ai.huggingface_provider import HuggingFaceProvider
 from app.services.quality_service import QualityService
 from app.services.blockchain_service import BlockchainService
+from app.utils.image_resolver import resolve_domain_image_url
 
 class TransformationService:
     """Transforms Canonical Structured Knowledge into multiple target communication artefacts concurrently."""
@@ -77,13 +78,16 @@ class TransformationService:
                 title = gen_result.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
                 structured_data = gen_result.get("structured_data", {})
                 
-                # Dedicated Visual Infographic Asset Blueprint (SVG 1200x1200) ONLY for infographic
-                if fmt == "infographic":
+                # Attach Verified Domain Image URL and Crisp Vector SVG Visual Asset
+                if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
+                    domain_name = transformation.project.domain if transformation.project else ""
+                    http_img = resolve_domain_image_url(canonical.title, canonical.executive_summary, domain_name)
+                    
                     image_prompt = f"Professional enterprise banner for {canonical.title}: {canonical.executive_summary[:80]}"
                     image_uri = await hf_provider.generate_flux_image(image_prompt, canonical_dict)
-                    if image_uri:
-                        structured_data["image_url"] = image_uri
-                        structured_data["image_uri"] = image_uri
+                    
+                    structured_data["image_url"] = http_img
+                    structured_data["image_uri"] = image_uri or http_img
 
                 return fmt, raw_text, title, structured_data
             except Exception as e:
@@ -95,10 +99,12 @@ class TransformationService:
                     raw_text += f"- {f.get('text', '')}\n"
                 
                 fallback_struct: Dict[str, Any] = {"format": fmt, "error": str(e)}
-                if fmt == "infographic":
+                if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
+                    domain_name = transformation.project.domain if transformation.project else ""
+                    http_img = resolve_domain_image_url(topic, canonical.executive_summary, domain_name)
                     image_uri = await hf_provider.generate_flux_image(topic, canonical_dict)
-                    fallback_struct["image_url"] = image_uri
-                    fallback_struct["image_uri"] = image_uri
+                    fallback_struct["image_url"] = http_img
+                    fallback_struct["image_uri"] = image_uri or http_img
 
                 return fmt, raw_text, title, fallback_struct
 

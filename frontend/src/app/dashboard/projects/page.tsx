@@ -10,6 +10,9 @@ import {
   Trash2,
   ArrowRight,
   Layers,
+  Sparkles,
+  Calendar,
+  Building,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Project } from '@/types'
@@ -57,8 +60,8 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border-b border-slate-200 pb-6">
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-extrabold text-slate-900 flex items-center gap-3 tracking-tight">
-            <FolderKanban className="h-8 w-8 text-sky-600" />
+          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+            <FolderKanban className="h-8 w-8 text-indigo-600" />
             Transformation Projects
           </h1>
           <p className="text-sm sm:text-base text-slate-600 font-medium">
@@ -68,7 +71,7 @@ export default function ProjectsPage() {
 
         <Link
           href="/dashboard/new"
-          className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-sky-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white hover:from-sky-500 hover:to-indigo-500 transition-all shadow-md shadow-sky-600/25 active:scale-95"
+          className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-sky-600 via-indigo-600 to-cyan-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/20 hover:shadow-lg hover:shadow-indigo-600/30 hover:scale-[1.02] active:scale-95 transition-all self-start sm:self-center"
         >
           <Plus className="h-5 w-5" />
           <span>New Transformation</span>
@@ -83,7 +86,7 @@ export default function ProjectsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search projects by title, domain, or keywords..."
-          className="w-full rounded-2xl border border-slate-300 bg-white pl-12 pr-5 py-3.5 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:border-sky-500 focus:outline-none shadow-xs font-medium"
+          className="w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-5 py-3.5 text-sm sm:text-base text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none shadow-xs font-medium focus:ring-4 focus:ring-indigo-50 transition-all"
         />
       </div>
 
@@ -101,11 +104,11 @@ export default function ProjectsPage() {
             <div
               key={p.id}
               onClick={() => router.push(`/dashboard/projects/${p.id}`)}
-              className="rounded-3xl border border-slate-200/80 bg-white p-6 space-y-5 hover:border-sky-400 hover:shadow-lg cursor-pointer transition-all flex flex-col justify-between shadow-xs"
+              className="rounded-3xl border border-slate-200 bg-white p-6 space-y-5 hover:border-indigo-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all duration-300 flex flex-col justify-between shadow-xs group"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs rounded-md bg-sky-50 text-sky-800 font-mono font-bold px-2.5 py-1 border border-sky-200">
+                  <span className="text-xs rounded-md bg-indigo-50 text-indigo-800 font-mono font-bold px-2.5 py-1 border border-indigo-200">
                     {p.domain}
                   </span>
                   <button
@@ -116,7 +119,7 @@ export default function ProjectsPage() {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 hover:text-sky-700 transition-colors leading-snug">
+                <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-snug">
                   {p.title}
                 </h3>
                 <p className="text-sm text-slate-600 line-clamp-2 font-medium leading-relaxed">
@@ -126,10 +129,10 @@ export default function ProjectsPage() {
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Layers className="h-4 w-4 text-sky-600" />
-                  <span>{p.outputs_count || 0} Artefacts</span>
+                  <Layers className="h-4 w-4 text-indigo-600" />
+                  <span>{p.outputs?.length || 0} Artefacts</span>
                 </div>
-                <span className="flex items-center gap-1.5 text-sky-700 font-bold text-sm">
+                <span className="flex items-center gap-1.5 text-indigo-700 font-bold text-sm group-hover:translate-x-1 transition-transform">
                   <span>Open Studio</span>
                   <ArrowRight className="h-4 w-4" />
                 </span>
