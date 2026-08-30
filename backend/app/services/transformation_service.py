@@ -105,15 +105,20 @@ class TransformationService:
                 structured_data["is_rag_grounded"] = len(canonical_dict.get("rag_sources", [])) > 0
                 
                 # Attach Verified Domain Image URL and Crisp Vector SVG Visual Asset
-                if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
-                    domain_name = transformation.project.domain if transformation.project else ""
-                    http_img = resolve_domain_image_url(canonical.title, canonical.executive_summary, domain_name)
-                    
-                    image_prompt = f"Professional enterprise banner for {canonical.title}: {canonical.executive_summary[:80]}"
-                    image_uri = await hf_provider.generate_flux_image(image_prompt, canonical_dict)
-                    
-                    structured_data["image_url"] = http_img
-                    structured_data["image_uri"] = image_uri or http_img
+                if fmt == "linkedin":
+                    linkedin_banner_uri = await hf_provider.generate_linkedin_banner(canonical_dict)
+                    structured_data["image_uri"] = linkedin_banner_uri
+                    structured_data["image_url"] = linkedin_banner_uri
+                    structured_data["banner_type"] = "linkedin_hero_banner"
+                elif fmt == "infographic":
+                    infographic_uri = await hf_provider.generate_flux_image(canonical.title, canonical_dict)
+                    structured_data["image_uri"] = infographic_uri
+                    structured_data["image_url"] = infographic_uri
+                    structured_data["banner_type"] = "infographic_data_grid"
+                elif fmt in ["instagram", "twitter"]:
+                    social_banner_uri = await hf_provider.generate_linkedin_banner(canonical_dict)
+                    structured_data["image_uri"] = social_banner_uri
+                    structured_data["image_url"] = social_banner_uri
 
                 return fmt, raw_text, title, structured_data
             except Exception as e:
@@ -131,12 +136,20 @@ class TransformationService:
                     "rag_context": canonical_dict.get("rag_context", []),
                     "is_rag_grounded": len(canonical_dict.get("rag_sources", [])) > 0
                 }
-                if fmt in ["linkedin", "infographic", "instagram", "twitter"]:
-                    domain_name = transformation.project.domain if transformation.project else ""
-                    http_img = resolve_domain_image_url(topic, canonical.executive_summary, domain_name)
-                    image_uri = await hf_provider.generate_flux_image(topic, canonical_dict)
-                    fallback_struct["image_url"] = http_img
-                    fallback_struct["image_uri"] = image_uri or http_img
+                if fmt == "linkedin":
+                    linkedin_banner_uri = await hf_provider.generate_linkedin_banner(canonical_dict)
+                    fallback_struct["image_uri"] = linkedin_banner_uri
+                    fallback_struct["image_url"] = linkedin_banner_uri
+                    fallback_struct["banner_type"] = "linkedin_hero_banner"
+                elif fmt == "infographic":
+                    infographic_uri = await hf_provider.generate_flux_image(topic, canonical_dict)
+                    fallback_struct["image_uri"] = infographic_uri
+                    fallback_struct["image_url"] = infographic_uri
+                    fallback_struct["banner_type"] = "infographic_data_grid"
+                elif fmt in ["instagram", "twitter"]:
+                    social_banner_uri = await hf_provider.generate_linkedin_banner(canonical_dict)
+                    fallback_struct["image_uri"] = social_banner_uri
+                    fallback_struct["image_url"] = social_banner_uri
 
                 return fmt, raw_text, title, fallback_struct
 

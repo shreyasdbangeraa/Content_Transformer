@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from app.database.session import get_db
 from app.database.models import ResearchJob, ResearchSource, ResearchEvidence, ConflictRecord
-from app.schemas.research import ResearchJobResponse, ConflictRecordResponse
+from app.schemas.research import ResearchJobResponse, ConflictRecordResponse, ConflictResolveRequest
+from typing import Optional
 
 router = APIRouter(prefix="/research", tags=["Research Engine"])
 
@@ -25,13 +26,26 @@ def list_project_conflicts(project_id: str, db: Session = Depends(get_db)):
     return conflicts
 
 @router.post("/conflicts/{conflict_id}/resolve")
-def resolve_conflict(conflict_id: str, resolution_notes: str = "Resolved by operator", db: Session = Depends(get_db)):
+def resolve_conflict(
+    conflict_id: str,
+    payload: Optional[ConflictResolveRequest] = None,
+    resolution_notes: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     conflict = db.query(ConflictRecord).filter(ConflictRecord.id == conflict_id).first()
     if not conflict:
         raise HTTPException(status_code=404, detail="Conflict record not found")
+    
+    choice = (payload.selected_choice if payload else None) or "CLAIM_A"
+    notes = (payload.resolution_notes if payload else None) or resolution_notes or "Resolved by operator"
+    
     conflict.resolution_status = "RESOLVED"
     conflict.human_flag = False
-    conflict.possible_explanation = resolution_notes
+    conflict.possible_explanation = f"Selected: {choice} | {notes}"
     db.commit()
     db.refresh(conflict)
-    return {"message": "Conflict resolved successfully", "conflict": conflict}
+    return {
+        "message": "Conflict resolved successfully",
+        "conflict": conflict,
+        "selected_choice": choice
+    }

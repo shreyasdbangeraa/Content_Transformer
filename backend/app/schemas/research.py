@@ -71,6 +71,10 @@ class ResearchEvidenceResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ConflictResolveRequest(BaseModel):
+    selected_choice: Optional[str] = "CLAIM_A" # "CLAIM_A", "CLAIM_B", "BOTH"
+    resolution_notes: Optional[str] = "Resolved by operator"
+
 class ConflictRecordResponse(BaseModel):
     id: str
     research_job_id: str

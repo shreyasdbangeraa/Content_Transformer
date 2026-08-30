@@ -156,8 +156,15 @@ async def ingest_url(
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
 
+    crawl_subpages = bool(payload.get("crawl_subpages", False))
+    max_pages = int(payload.get("max_pages", 8))
+
     try:
-        parsed = await URLParser.extract_url(url)
+        parsed = await URLParser.extract_url(
+            url=url,
+            crawl_subpages=crawl_subpages,
+            max_pages=max_pages
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -177,7 +184,12 @@ async def ingest_url(
         project_id=project_id,
         action="SOURCE_URL_INGESTED",
         actor="Operator",
-        details={"url": url, "char_count": parsed["char_count"]}
+        details={
+            "url": url,
+            "char_count": parsed["char_count"],
+            "is_multi_page": parsed.get("metadata", {}).get("is_multi_page", False),
+            "crawled_pages_count": parsed.get("metadata", {}).get("crawled_pages_count", 1)
+        }
     )
     db.add(audit)
 
@@ -189,6 +201,7 @@ async def ingest_url(
 async def analyze_source(
     source_id: str,
     provider: Optional[str] = None,
+    research_mode: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     source = db.query(Source).filter(Source.id == source_id).first()
@@ -200,7 +213,8 @@ async def analyze_source(
             db=db,
             project_id=source.project_id,
             source_id=source.id,
-            provider_name=provider
+            provider_name=provider,
+            research_mode=research_mode
         )
         return canonical
     except Exception as e:

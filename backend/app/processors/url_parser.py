@@ -1,9 +1,10 @@
 import re
+import asyncio
 import ipaddress
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin, urldefrag
 import httpx
 from bs4 import BeautifulSoup
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List, Set, Optional
 from app.processors.sanitizer import sanitize_untrusted_text
 
 BLOCKED_IP_RANGES = [
@@ -19,7 +20,7 @@ BLOCKED_IP_RANGES = [
 
 # Multiple client profiles to maximize compatibility across CDN & WAF policies
 REQUEST_PROFILES = [
-    # Profile 1: Compliant informative agent (satisfies Wikipedia, ArXiv, Wikimedia & API requirements)
+    # Profile 1: Compliant informative agent
     {
         "User-Agent": "ContentTransformer/1.0 (Windows NT 10.0; Win64; x64; +https://github.com/ContentTransformer; content-reader@transformer.ai) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -46,6 +47,20 @@ REQUEST_PROFILES = [
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
     }
+]
+
+IGNORED_EXTENSIONS = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ico",
+    ".pdf", ".zip", ".tar", ".gz", ".rar", ".7z", ".exe", ".dmg", ".apk",
+    ".mp3", ".mp4", ".wav", ".avi", ".mov", ".mkv", ".webm",
+    ".css", ".js", ".json", ".xml", ".woff", ".woff2", ".ttf", ".eot"
+}
+
+PRIORITY_KEYWORDS = [
+    "about", "service", "product", "feature", "solution", "company", "team",
+    "overview", "pricing", "plan", "contact", "faq", "help", "doc", "guide",
+    "security", "compliance", "policy", "term", "privacy", "mission", "vision",
+    "case-stud", "customer", "technology", "architecture", "research", "news", "blog"
 ]
 
 
@@ -79,7 +94,11 @@ def is_safe_url(url: str) -> Tuple[bool, str]:
 
 
 class URLParser:
-    """Safe URL content extractor with SSRF defense, anti-bot bypass, and markdown fallback."""
+    """
+    Enterprise URL & Multi-Page Deep Website Crawler.
+    Supports single-page extraction and automated multi-page domain crawling (/about, /services, etc.)
+    with SSRF defense, bot-bypass fallbacks, and structured knowledge synthesis.
+    """
 
     @classmethod
     async def _fetch_direct(cls, url: str) -> Dict[str, Any]:
@@ -98,6 +117,9 @@ class URLParser:
                     if resp.status_code == 200 and len(resp.text.strip()) > 50:
                         html_content = resp.text
                         soup = BeautifulSoup(html_content, "html.parser")
+
+                        # Clone soup for link extraction before decomposing tags
+                        raw_soup = BeautifulSoup(html_content, "html.parser")
 
                         # Remove non-content elements
                         for tag in soup(["script", "style", "nav", "footer", "header", "aside", "form", "svg", "noscript", "iframe"]):
@@ -134,8 +156,10 @@ class URLParser:
 
                         if len(text.strip()) >= 50:
                             return {
+                                "url": url,
                                 "title": title,
                                 "text": text,
+                                "soup": raw_soup,
                                 "extraction_method": "direct_html"
                             }
                 except Exception:
@@ -159,19 +183,16 @@ class URLParser:
             raw_text = resp.text
             title = None
 
-            # Extract title from Jina markdown metadata (e.g. 'Title: XYZ')
             title_match = re.search(r"^Title:\s*(.+)$", raw_text, re.MULTILINE)
             if title_match:
                 title = title_match.group(1).strip()
 
-            # Clean markdown header metadata
             clean_body = re.sub(r"^Title:.*?\n", "", raw_text, flags=re.MULTILINE)
             clean_body = re.sub(r"^URL Source:.*?\n", "", clean_body, flags=re.MULTILINE)
             clean_body = re.sub(r"^Published Time:.*?\n", "", clean_body, flags=re.MULTILINE)
             clean_body = re.sub(r"^Markdown Content:\s*\n", "", clean_body, flags=re.MULTILINE)
 
             if not title:
-                # Try finding first markdown heading
                 h1_match = re.search(r"^#\s+(.+)$", clean_body, re.MULTILINE)
                 if h1_match:
                     title = h1_match.group(1).strip()
@@ -179,40 +200,176 @@ class URLParser:
                     title = url
 
             return {
+                "url": url,
                 "title": title,
                 "text": clean_body.strip(),
+                "soup": None,
                 "extraction_method": "reader_proxy"
             }
 
     @classmethod
-    async def extract_url(cls, url: str) -> Dict[str, Any]:
+    async def _fetch_page(cls, url: str) -> Optional[Dict[str, Any]]:
+        """Fetches a single page safely with direct and reader-proxy fallbacks."""
+        safe, reason = is_safe_url(url)
+        if not safe:
+            return None
+
+        try:
+            return await cls._fetch_direct(url)
+        except Exception:
+            try:
+                return await cls._fetch_via_reader(url)
+            except Exception:
+                return None
+
+    @classmethod
+    def _extract_and_rank_internal_links(cls, soup: BeautifulSoup, base_url: str) -> List[str]:
+        """Discovers, normalizes, and prioritizes internal links matching the same domain."""
+        if not soup:
+            return []
+
+        parsed_base = urlparse(base_url)
+        base_host = (parsed_base.netloc or "").lower()
+        if base_host.startswith("www."):
+            base_host = base_host[4:]
+
+        discovered: Set[str] = set()
+        ranked_links: List[Tuple[int, str]] = []
+
+        for a_tag in soup.find_all("a", href=True):
+            href = a_tag["href"].strip()
+            if not href or href.startswith(("#", "javascript:", "mailto:", "tel:")):
+                continue
+
+            absolute_url = urljoin(base_url, href)
+            clean_url, _ = urldefrag(absolute_url)
+            clean_url = clean_url.rstrip("/")
+
+            parsed = urlparse(clean_url)
+            link_host = (parsed.netloc or "").lower()
+            if link_host.startswith("www."):
+                link_host = link_host[4:]
+
+            # Keep strictly same base domain
+            if link_host != base_host:
+                continue
+
+            # Skip binary and static media files
+            path_lower = parsed.path.lower()
+            if any(path_lower.endswith(ext) for ext in IGNORED_EXTENSIONS):
+                continue
+
+            if clean_url in discovered or clean_url == base_url.rstrip("/"):
+                continue
+
+            discovered.add(clean_url)
+
+            # Score priority based on high-value keywords in URL path or link text
+            anchor_text = a_tag.get_text(strip=True).lower()
+            link_combined = f"{path_lower} {anchor_text}"
+
+            score = 0
+            for idx, kw in enumerate(PRIORITY_KEYWORDS):
+                if kw in link_combined:
+                    score += max(10, 50 - idx * 2)
+
+            ranked_links.append((score, clean_url))
+
+        # Sort highest scoring links first
+        ranked_links.sort(key=lambda x: x[0], reverse=True)
+        return [url for _, url in ranked_links]
+
+    @classmethod
+    async def extract_url(
+        cls,
+        url: str,
+        crawl_subpages: bool = False,
+        max_pages: int = 8
+    ) -> Dict[str, Any]:
+        """
+        Extracts content from a URL, with optional multi-page internal crawling (e.g. /about, /services, /pricing).
+        """
         is_safe, reason = is_safe_url(url)
         if not is_safe:
             raise ValueError(f"Security Alert: {reason}")
 
-        extracted = None
-        last_error = None
+        # 1. Fetch Root / Primary URL
+        root_data = await cls._fetch_page(url)
+        if not root_data or not root_data.get("text", "").strip():
+            raise ValueError(
+                f"Unable to access {url}. The target site returned an error or anti-bot challenge. "
+                f"You can copy and paste the website text directly into the 'Paste Text' tab."
+            )
 
-        # Attempt 1: Direct multi-profile fetch
-        try:
-            extracted = await cls._fetch_direct(url)
-        except Exception as direct_err:
-            last_error = direct_err
+        crawled_pages: List[Dict[str, Any]] = [
+            {
+                "url": url,
+                "title": root_data.get("title", url),
+                "text": root_data.get("text", ""),
+                "char_count": len(root_data.get("text", "")),
+                "is_root": True
+            }
+        ]
 
-        # Attempt 2: If direct fetch failed (403, 401, 503, anti-bot), use reader proxy
-        if not extracted or not extracted.get("text", "").strip():
-            try:
-                extracted = await cls._fetch_via_reader(url)
-            except Exception as reader_err:
-                raise ValueError(
-                    f"Unable to access {url}. The target site returned 403 Forbidden or is protected by anti-bot verification. "
-                    f"You can copy and paste the article text directly into the 'Paste Text' tab."
+        # 2. Multi-Page Crawl if requested or if root URL with subpages enabled
+        if crawl_subpages and max_pages > 1:
+            candidate_links = cls._extract_and_rank_internal_links(root_data.get("soup"), url)
+            to_crawl = candidate_links[: max(1, max_pages - 1)]
+
+            if to_crawl:
+                # Crawl subpages concurrently with bounded semaphore
+                sem = asyncio.Semaphore(4)
+
+                async def _crawl_subpage(sub_url: str):
+                    async with sem:
+                        try:
+                            sub_res = await cls._fetch_page(sub_url)
+                            if sub_res and len(sub_res.get("text", "").strip()) >= 50:
+                                return {
+                                    "url": sub_url,
+                                    "title": sub_res.get("title", sub_url),
+                                    "text": sub_res.get("text", ""),
+                                    "char_count": len(sub_res.get("text", "")),
+                                    "is_root": False
+                                }
+                        except Exception:
+                            pass
+                        return None
+
+                subpage_tasks = [_crawl_subpage(u) for u in to_crawl]
+                subpage_results = await asyncio.gather(*subpage_tasks)
+                for res in subpage_results:
+                    if res:
+                        crawled_pages.append(res)
+
+        # 3. Assemble Consolidated Document Text
+        if len(crawled_pages) == 1:
+            raw_text = crawled_pages[0]["text"]
+            title = crawled_pages[0]["title"]
+        else:
+            base_parsed = urlparse(url)
+            domain_name = base_parsed.netloc
+            title = f"{root_data.get('title', domain_name)} (Full Website Crawl: {len(crawled_pages)} Pages)"
+
+            doc_sections = [
+                f"# Full Website Ingestion: {title}",
+                f"**Domain:** {domain_name} | **Total Ingested Pages:** {len(crawled_pages)}",
+                f"**Crawled Pages:**\n" + "\n".join([f"- [{p['title']}]({p['url']}) ({p['char_count']} chars)" for p in crawled_pages]),
+                "\n" + "=" * 80 + "\n"
+            ]
+
+            for idx, p in enumerate(crawled_pages, 1):
+                page_label = "ROOT LANDING PAGE" if p.get("is_root") else f"SUBPAGE {idx}"
+                doc_sections.append(
+                    f"## [{idx}/{len(crawled_pages)}] {page_label}: {p['title']}\n"
+                    f"**URL:** {p['url']}\n\n"
+                    f"{p['text']}\n\n"
+                    + "-" * 60 + "\n"
                 )
 
-        raw_text = extracted.get("text", "")
-        title = extracted.get("title") or url
-        clean_text, threats = sanitize_untrusted_text(raw_text)
+            raw_text = "\n".join(doc_sections)
 
+        clean_text, threats = sanitize_untrusted_text(raw_text)
         estimated_pages = max(1, len(clean_text) // 2500)
 
         return {
@@ -223,7 +380,14 @@ class URLParser:
             "metadata": {
                 "source_url": url,
                 "title": title,
+                "is_multi_page": len(crawled_pages) > 1,
+                "crawled_pages_count": len(crawled_pages),
+                "crawled_pages": [
+                    {"url": p["url"], "title": p["title"], "char_count": p["char_count"]}
+                    for p in crawled_pages
+                ],
                 "threats_detected": threats,
-                "extraction_method": extracted.get("extraction_method", "direct_html")
+                "extraction_method": root_data.get("extraction_method", "direct_html")
             }
         }
+

@@ -9,6 +9,7 @@ export interface SourceCitation {
 export type ProvenanceTag =
   | 'PRIMARY_SOURCE_FACT'
   | 'VERIFIED_EXTERNAL_FACT'
+  | 'DEEP_RESEARCH_SYNTHESIS'
   | 'USER_CONTEXT'
   | 'INFERENCE'
   | 'RECOMMENDATION'
@@ -65,6 +66,7 @@ export interface SensitivityReport {
 }
 
 export interface ConflictItem {
+  id?: string
   conflict_id?: string
   claim_a: string
   claim_b: string

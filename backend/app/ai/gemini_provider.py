@@ -60,7 +60,8 @@ class GeminiProvider(AIProvider):
     async def analyze_document(self, text: str, filename: str = "document.pdf") -> Dict[str, Any]:
         system_instruction = """You are an elite intelligence analyst and canonical knowledge synthesizer.
 Extract strictly factual, source-grounded information from the provided document into a structured JSON schema.
-IMPORTANT RULE: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
+IMPORTANT RULE 1: Extract an exhaustive catalog of 10 to 15+ granular key facts covering root cause, systems, telemetry metrics, timelines, impacts, and directives with exact page and section source attribution.
+IMPORTANT RULE 2: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
 Never fabricate statistics, dates, names, or numbers.
 Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
 
@@ -72,7 +73,7 @@ Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
   "topic": "Main topic of the document",
   "executive_summary": "**Topic: [Exact Topic Name]**\\n\\nThorough 2-3 paragraph strategic summary strictly based on the provided text, outlining core findings, telemetry, and directives",
   "key_facts": [
-    {{"fact_id": "f1", "text": "Specific factual claim directly from the text", "source": {{"file": "{filename}", "page": 1, "section": "Section"}}, "confidence": 0.98, "provenance": "PRIMARY_SOURCE_FACT", "verified": true}}
+    {{"fact_id": "fact_001", "text": "Specific factual assertion from text", "source": {{"file": "{filename}", "page": 1, "section": "Executive Summary", "paragraph": 1}}, "confidence": 0.98, "provenance": "PRIMARY_SOURCE_FACT", "verified": true}}
   ],
   "entities": [{{"name": "Name", "type": "ORGANIZATION/PERSON/SYSTEM/MALWARE_GROUP", "context": "Role"}}],
   "dates": [{{"date": "Date string", "event": "Description"}}],
@@ -105,9 +106,11 @@ SOURCE CONTENT:
         audience = config.get("target_audience", "Executive Board & Regulators")
         tone = config.get("tone", "Professional & Authoritative")
         lang = config.get("language", "English")
+        research_mode = config.get("research_mode", "SOURCE_AND_VERIFY")
 
         prompt = f"""You are an elite communication transformer.
 Transform the following canonical facts into format: '{format_type}'.
+Operating Mode: '{research_mode}' ({'Strictly bounded to primary document without external claims' if research_mode == 'SOURCE_ONLY' else ('Deep multi-tier research synthesis & cross-source telemetry' if research_mode == 'DEEP_RESEARCH' else 'Targeted primary ground truth with verified citations')})
 Target Audience: {audience} | Tone: {tone} | Language: {lang}
 Anti-hallucination rule: ONLY use facts and information from the provided canonical data.
 
@@ -115,7 +118,7 @@ Return valid JSON with:
 {{
   "title": "Title of the output",
   "raw_content": "Full formatted markdown text of the output tailored to the format",
-  "structured_data": {{ "format": "{format_type}" }}
+  "structured_data": {{ "format": "{format_type}", "research_mode": "{research_mode}" }}
 }}
 
 If format_type is 'executive_summary', raw_content MUST be an extensive, multi-page (minimum 3 pages / sections) comprehensive Executive Dossier containing:
@@ -138,7 +141,8 @@ If format_type is 'presentation', structured_data MUST contain:
   ]
 }}
 
-If format_type is 'linkedin', structured_data SHOULD contain:
+If format_type is 'linkedin', raw_content MUST be a deep, detailed thought leadership post containing: (1) Bold opening hook, (2) Deep situational context and operational reality, (3) 4-6 detailed factual findings with bold headers and page citations, (4) Quantified metrics/telemetry section, (5) Monitored operational risks, (6) 3-phase strategic action directives roadmap with numbers, (7) Executive bottom-line takeaway principle, (8) Community discussion question, (9) 5-7 hashtags.
+structured_data SHOULD contain:
 {{
   "format": "linkedin",
   "hook": "Opening hook line",

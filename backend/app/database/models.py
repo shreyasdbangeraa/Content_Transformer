@@ -14,8 +14,8 @@ class Project(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    organization_name = Column(String(255), default="NovaTech Systems")
-    domain = Column(String(100), default="Cybersecurity") # Cybersecurity, Government, Enterprise, Leadership, Public Sector
+    organization_name = Column(String(255), default="Acme Operations")
+    domain = Column(String(100), default="General Enterprise") # Media & Podcast, Business & Strategy, Cybersecurity, Education, Healthcare, Finance, Legal, Energy, General Enterprise
     research_mode = Column(String(50), default="SOURCE_AND_VERIFY") # SOURCE_ONLY, SOURCE_AND_VERIFY, DEEP_RESEARCH
     brand_profile_id = Column(String(36), nullable=True)
     status = Column(String(50), default="ACTIVE") # ACTIVE, ARCHIVED, COMPLETED

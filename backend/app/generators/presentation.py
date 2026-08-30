@@ -1,4 +1,5 @@
 import os
+import re
 import pptx
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -85,18 +86,50 @@ class PresentationGenerator:
             ctf = content_box.text_frame
             ctf.word_wrap = True
 
+            def _add_bullet_runs(paragraph, bullet_text: str):
+                # Add bullet symbol
+                bullet_symbol_run = paragraph.add_run()
+                bullet_symbol_run.text = "•   "
+                bullet_symbol_run.font.size = Pt(18)
+                bullet_symbol_run.font.color.rgb = COLOR_ACCENT
+                bullet_symbol_run.font.bold = True
+                bullet_symbol_run.font.name = 'Arial'
+
+                parts = re.split(r'(\*\*.*?\*\*|__.*?__|\*.*?\*|`.*?`)', bullet_text)
+                for part in parts:
+                    if not part:
+                        continue
+                    if (part.startswith('**') and part.endswith('**') and len(part) >= 4) or \
+                       (part.startswith('__') and part.endswith('__') and len(part) >= 4):
+                        run = paragraph.add_run()
+                        run.text = part[2:-2]
+                        run.font.bold = True
+                        run.font.size = Pt(18)
+                        run.font.color.rgb = COLOR_TEXT_PRIMARY
+                        run.font.name = 'Arial'
+                    elif part.startswith('*') and part.endswith('*') and len(part) >= 2:
+                        run = paragraph.add_run()
+                        run.text = part[1:-1]
+                        run.font.italic = True
+                        run.font.size = Pt(18)
+                        run.font.color.rgb = COLOR_TEXT_PRIMARY
+                        run.font.name = 'Arial'
+                    else:
+                        run = paragraph.add_run()
+                        run.text = part
+                        run.font.size = Pt(18)
+                        run.font.color.rgb = COLOR_TEXT_PRIMARY
+                        run.font.name = 'Arial'
+
             for idx, bullet in enumerate(bullets):
                 bp = ctf.paragraphs[0] if idx == 0 else ctf.add_paragraph()
-                bp.text = f"•   {bullet}"
-                bp.font.size = Pt(18)
-                bp.font.color.rgb = COLOR_TEXT_PRIMARY
-                bp.font.name = 'Arial'
+                _add_bullet_runs(bp, bullet)
                 bp.space_before = Pt(12)
 
             # Speaker Notes
             notes_slide = slide.notes_slide
             notes_tf = notes_slide.notes_text_frame
-            notes_tf.text = s.get("speaker_notes", "")
+            notes_tf.text = s.get("speaker_notes", "").replace("**", "")
 
         out_path = os.path.join(settings.EXPORT_DIR, output_filename)
         prs.save(out_path)

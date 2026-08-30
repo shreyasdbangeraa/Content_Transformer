@@ -7,6 +7,31 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from typing import Dict, Any, List
 from app.config import settings
 
+def _add_formatted_runs(p, text: str, is_quote: bool = False):
+    """Parses **bold**, *italic*, and `code` in text and adds formatted runs to Word paragraph."""
+    parts = re.split(r'(\*\*.*?\*\*|__.*?__|\*.*?\*|`.*?`)', text)
+    for part in parts:
+        if not part:
+            continue
+        if (part.startswith('**') and part.endswith('**') and len(part) >= 4) or \
+           (part.startswith('__') and part.endswith('__') and len(part) >= 4):
+            run = p.add_run(part[2:-2])
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(15, 23, 42)
+        elif part.startswith('*') and part.endswith('*') and len(part) >= 2:
+            run = p.add_run(part[1:-1])
+            run.font.italic = True
+        elif part.startswith('`') and part.endswith('`') and len(part) >= 2:
+            run = p.add_run(part[1:-1])
+            run.font.name = 'Consolas'
+            run.font.color.rgb = RGBColor(2, 132, 199)
+        else:
+            run = p.add_run(part)
+            if is_quote:
+                run.font.italic = True
+                run.font.color.rgb = RGBColor(71, 85, 105)
+
+
 class DocxExportGenerator:
     """Generates professional styled Word (.docx) multi-page documents from generated artefacts."""
 
@@ -23,7 +48,7 @@ class DocxExportGenerator:
 
         # Header Title
         title_p = doc.add_paragraph()
-        title_run = title_p.add_run(title)
+        title_run = title_p.add_run(title.replace("**", "").replace("`", ""))
         title_run.font.size = Pt(22)
         title_run.font.bold = True
         title_run.font.color.rgb = RGBColor(15, 23, 42)
@@ -117,25 +142,23 @@ class DocxExportGenerator:
                 h.paragraph_format.space_after = Pt(2)
             elif line_str.startswith("- ") or line_str.startswith("* "):
                 p = doc.add_paragraph(style='List Bullet')
-                p.add_run(line_str[2:].replace("**", "").replace("`", ""))
+                _add_formatted_runs(p, line_str[2:])
                 p.paragraph_format.space_after = Pt(3)
             elif re.match(r"^\d+\.\s", line_str):
                 p = doc.add_paragraph(style='List Number')
-                clean_text = re.sub(r"^\d+\.\s*", "", line_str).replace("**", "").replace("`", "")
-                p.add_run(clean_text)
+                clean_text = re.sub(r"^\d+\.\s*", "", line_str)
+                _add_formatted_runs(p, clean_text)
                 p.paragraph_format.space_after = Pt(3)
             elif line_str.startswith("> "):
                 p = doc.add_paragraph()
-                run = p.add_run(line_str[2:].replace("**", "").replace("`", ""))
-                run.font.italic = True
-                run.font.color.rgb = RGBColor(71, 85, 105)
+                _add_formatted_runs(p, line_str[2:], is_quote=True)
                 p.paragraph_format.left_indent = Inches(0.4)
                 p.paragraph_format.space_after = Pt(6)
             elif line_str.startswith("---"):
                 continue
             else:
                 p = doc.add_paragraph()
-                p.add_run(line_str.replace("**", "").replace("`", ""))
+                _add_formatted_runs(p, line_str)
                 p.paragraph_format.space_after = Pt(6)
 
         if in_table:

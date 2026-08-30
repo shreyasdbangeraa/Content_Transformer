@@ -5,8 +5,8 @@ from datetime import datetime
 class ProjectBase(BaseModel):
     title: str = Field(..., description="Project title")
     description: Optional[str] = None
-    organization_name: Optional[str] = "NovaTech Systems"
-    domain: Optional[str] = "Cybersecurity"
+    organization_name: Optional[str] = "Acme Operations"
+    domain: Optional[str] = "Auto-Detect"
     research_mode: Optional[str] = "SOURCE_AND_VERIFY" # SOURCE_ONLY, SOURCE_AND_VERIFY, DEEP_RESEARCH
     brand_profile_id: Optional[str] = None
 

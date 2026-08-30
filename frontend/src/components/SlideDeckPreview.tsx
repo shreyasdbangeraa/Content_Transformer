@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Presentation, ChevronLeft, ChevronRight, Download, MessageSquare } from 'lucide-react'
 import { api } from '@/lib/api'
+import FormattedText from '@/components/FormattedText'
 
 interface SlideDeckPreviewProps {
   outputId: string
@@ -63,11 +64,11 @@ export default function SlideDeckPreview({ outputId, deckData }: SlideDeckPrevie
               SLIDE 0{curSlide.slide_number || currentSlideIdx + 1}
             </span>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {curSlide.title}
+              <FormattedText text={curSlide.title} />
             </h3>
             {curSlide.subtitle && (
               <p className="text-sm sm:text-base text-slate-600 mt-1.5 font-semibold">
-                {curSlide.subtitle}
+                <FormattedText text={curSlide.subtitle} />
               </p>
             )}
           </div>
@@ -77,9 +78,9 @@ export default function SlideDeckPreview({ outputId, deckData }: SlideDeckPrevie
             {curSlide.bullets?.map((b: string, idx: number) => (
               <div key={idx} className="flex items-start gap-3.5">
                 <div className="h-2.5 w-2.5 rounded-full bg-sky-600 mt-2 shrink-0 shadow-xs" />
-                <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-semibold">
-                  {b}
-                </p>
+                <div className="text-sm sm:text-base text-slate-800 leading-relaxed font-semibold">
+                  <FormattedText text={b} />
+                </div>
               </div>
             ))}
           </div>
@@ -100,7 +101,7 @@ export default function SlideDeckPreview({ outputId, deckData }: SlideDeckPrevie
             <span>Speaker Notes:</span>
           </div>
           <p className="text-slate-700 leading-relaxed italic text-xs sm:text-sm font-medium">
-            &ldquo;{curSlide.speaker_notes}&rdquo;
+            &ldquo;<FormattedText text={curSlide.speaker_notes} />&rdquo;
           </p>
         </div>
       )}

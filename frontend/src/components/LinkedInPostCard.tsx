@@ -34,7 +34,7 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
   const [showFullImageModal, setShowFullImageModal] = useState(false)
 
   const structured = output.structured_data || {}
-  const imageUri = structured.image_url || structured.image_uri
+  const imageUri = structured.image_uri || structured.image_url
   const modelName = structured.model || 'Hugging Face (Llama-3.3-70B / Mistral)'
 
   const cleanText = (output.raw_content || '')
@@ -173,6 +173,14 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
               />
             </div>
             <div className="absolute top-4 right-4 flex items-center gap-2 opacity-95 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={handleDownloadImage}
+                className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition-all"
+                title="Download Social Hero Asset"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Download .SVG</span>
+              </button>
               <button
                 onClick={() => setShowFullImageModal(true)}
                 className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition-all"

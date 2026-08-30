@@ -143,11 +143,13 @@ function NewTransformationStudioContent() {
   // Step 1 Form States
   const [projectTitle, setProjectTitle] = useState('')
   const [organizationName, setOrganizationName] = useState('Acme Global Operations')
-  const [domain, setDomain] = useState('Cybersecurity')
+  const [domain, setDomain] = useState('Auto-Detect')
   const [researchMode, setResearchMode] = useState<'SOURCE_ONLY' | 'SOURCE_AND_VERIFY' | 'DEEP_RESEARCH'>('SOURCE_AND_VERIFY')
   const [inputTab, setInputTab] = useState<'upload' | 'paste' | 'url'>('upload')
   const [pasteText, setPasteText] = useState('')
   const [urlInput, setUrlInput] = useState('')
+  const [crawlSubpages, setCrawlSubpages] = useState<boolean>(true)
+  const [maxCrawlPages, setMaxCrawlPages] = useState<number>(8)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isProcessingSource, setIsProcessingSource] = useState(false)
 
@@ -249,7 +251,10 @@ function NewTransformationStudioContent() {
       if (inputTab === 'upload' && selectedFile) {
         sourceObj = await api.uploadSourceFile(proj.id, selectedFile)
       } else if (inputTab === 'url' && urlInput) {
-        sourceObj = await api.scrapeUrl(proj.id, urlInput)
+        sourceObj = await api.scrapeUrl(proj.id, urlInput, {
+          crawl_subpages: crawlSubpages,
+          max_pages: maxCrawlPages,
+        })
       } else {
         sourceObj = await api.pasteSourceText(
           proj.id,
@@ -258,7 +263,7 @@ function NewTransformationStudioContent() {
         )
       }
 
-      const canonicalData = await api.analyzeSource(sourceObj.id)
+      const canonicalData = await api.analyzeSource(sourceObj.id, undefined, researchMode)
       setCanonical(canonicalData)
       setCurrentStep(2)
     } catch (err: any) {
@@ -283,6 +288,7 @@ function NewTransformationStudioContent() {
         detail_level: detailLevel,
         communication_objective: 'Multi-channel enterprise distribution',
         content_style: 'Structured',
+        research_mode: researchMode,
         requested_formats: selectedFormats,
       })
 
@@ -456,14 +462,14 @@ function NewTransformationStudioContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
                   Project Title / Reference
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Q3 Strategic Operations Brief / Security Advisory"
+                  placeholder="e.g. Mic On Campus / Strategic Brief"
                   value={projectTitle}
                   onChange={(e) => setProjectTitle(e.target.value)}
                   className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
@@ -476,11 +482,33 @@ function NewTransformationStudioContent() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Acme Corporation / Global Operations"
+                  placeholder="e.g. Media / Acme Corporation"
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.target.value)}
                   className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                  Industry Domain
+                </label>
+                <select
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all cursor-pointer"
+                >
+                  <option value="Auto-Detect">✨ Auto-Detect (From Document)</option>
+                  <option value="Media & Podcast">🎙️ Media &amp; Podcast</option>
+                  <option value="Business & Strategy">💼 Business &amp; Strategy</option>
+                  <option value="Cybersecurity">🛡️ Cybersecurity</option>
+                  <option value="Education & Academia">🎓 Education &amp; Academia</option>
+                  <option value="Healthcare & Medicine">🏥 Healthcare &amp; Medicine</option>
+                  <option value="Finance & Banking">📈 Finance &amp; Banking</option>
+                  <option value="Legal & Compliance">⚖️ Legal &amp; Compliance</option>
+                  <option value="Energy & Technology">⚡ Energy &amp; Technology</option>
+                  <option value="General Enterprise">🏢 General Enterprise</option>
+                </select>
               </div>
             </div>
           </div>
@@ -659,17 +687,76 @@ function NewTransformationStudioContent() {
 
             {/* URL Input Box */}
             {inputTab === 'url' && (
-              <div className="space-y-2">
-                <input
-                  type="url"
-                  placeholder="https://cisa.gov/advisories/aa26-224a-darkhydra-ransomware"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-medium transition-all"
-                />
-                <p className="text-xs text-slate-600 font-medium">
-                  Protected by SSRF security firewall &amp; prompt injection sanitizer.
-                </p>
+              <div className="space-y-3.5">
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    placeholder="https://example.in or https://company.com"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3.5 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-medium transition-all"
+                  />
+                  <p className="text-xs text-slate-600 font-medium">
+                    Protected by SSRF security firewall &amp; prompt injection sanitizer.
+                  </p>
+                </div>
+
+                {/* Multi-Page Deep Crawling Options */}
+                <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50/70 via-indigo-50/30 to-purple-50/30 p-4 sm:p-4.5 space-y-3 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-600 text-white shadow-2xs">
+                        <Globe className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-extrabold text-slate-900">Deep Website Crawl (Root + Subpages)</span>
+                        <span className="ml-2 text-[10px] font-bold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-full border border-sky-200">
+                          Auto-Discovery
+                        </span>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={crawlSubpages}
+                        onChange={(e) => setCrawlSubpages(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
+                    </label>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                    When enabled, the crawler automatically discovers and aggregates content from all internal subpages (e.g.{' '}
+                    <span className="font-mono text-sky-800 font-semibold">/about</span>,{' '}
+                    <span className="font-mono text-sky-800 font-semibold">/services</span>,{' '}
+                    <span className="font-mono text-sky-800 font-semibold">/pricing</span>,{' '}
+                    <span className="font-mono text-sky-800 font-semibold">/team</span>,{' '}
+                    <span className="font-mono text-sky-800 font-semibold">/docs</span>) within the same domain.
+                  </p>
+
+                  {crawlSubpages && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-sky-200/60 text-xs">
+                      <span className="text-slate-700 font-bold">Max Subpages to Ingest:</span>
+                      <div className="flex items-center gap-1.5">
+                        {[4, 8, 12, 16].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setMaxCrawlPages(num)}
+                            className={clsx(
+                              'px-3 py-1 rounded-xl text-xs font-bold transition-all',
+                              maxCrawlPages === num
+                                ? 'bg-sky-600 text-white shadow-2xs font-extrabold'
+                                : 'bg-white border border-sky-200 text-slate-700 hover:bg-sky-100/50'
+                            )}
+                          >
+                            {num} pgs
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

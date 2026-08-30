@@ -59,7 +59,8 @@ class OllamaProvider(AIProvider):
     async def analyze_document(self, text: str, filename: str = "document.pdf") -> Dict[str, Any]:
         system_instruction = """You are an elite intelligence analyst and canonical knowledge synthesizer running completely offline and locally.
 Extract strictly factual, source-grounded information from the provided document into a structured JSON schema.
-IMPORTANT RULE: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
+IMPORTANT RULE 1: Extract an exhaustive catalog of 10 to 15+ granular key facts covering root cause, systems, telemetry metrics, timelines, impacts, and directives with exact page and section source attribution.
+IMPORTANT RULE 2: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
 Never fabricate statistics, dates, names, or numbers.
 Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
 
@@ -71,7 +72,7 @@ Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
   "topic": "Main topic of the document",
   "executive_summary": "**Topic: [Exact Topic Name]**\\n\\nThorough 2-3 paragraph strategic summary strictly based on the provided text, outlining core findings, telemetry, and directives",
   "key_facts": [
-    {{"fact_id": "f1", "text": "Specific factual claim directly from the text", "source": {{"file": "{filename}", "page": 1, "section": "Section"}}, "confidence": 0.98, "provenance": "PRIMARY_SOURCE_FACT", "verified": true}}
+    {{"fact_id": "fact_001", "text": "Specific factual claim directly from the text", "source": {{"file": "{filename}", "page": 1, "section": "Executive Summary", "paragraph": 1}}, "confidence": 0.98, "provenance": "PRIMARY_SOURCE_FACT", "verified": true}}
   ],
   "entities": [{{"name": "Name", "type": "ORGANIZATION/PERSON/SYSTEM/MALWARE_GROUP", "context": "Role"}}],
   "dates": [{{"date": "Date string", "event": "Description"}}],
@@ -132,7 +133,7 @@ RAG Organizational Context: {canonical_data.get('rag_prompt_block', '')}
 {"slides": [{"slide_number": 1, "title": "Slide Title", "bullets": ["Point 1", "Point 2"], "speaker_notes": "Notes"}]}"""
 
         elif format_type == "linkedin":
-            prompt += """\nFormat with engaging professional post hook, bullet points with emojis, hashtag block, and FLUX visual banner prompt in 'structured_data.image_prompt'."""
+            prompt += """\nFormat as a comprehensive, high-value LinkedIn Thought Leadership Post. Include: (1) Bold opening hook, (2) Detailed situational context paragraphs, (3) 4-6 deep verified factual findings with bold headers and page citations, (4) Quantified metrics/telemetry section, (5) Monitored operational risks, (6) 3-phase strategic action directives roadmap with numbers, (7) Executive bottom-line takeaway principle, (8) Community discussion question, (9) 5-7 hashtags."""
 
         elif format_type == "twitter":
             prompt += """\nFormat as a sequential X/Twitter thread. The 'structured_data' MUST have a 'tweets' array of strings:

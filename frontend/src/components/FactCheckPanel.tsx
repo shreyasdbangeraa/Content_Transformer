@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import clsx from 'clsx'
+import FormattedText from '@/components/FormattedText'
 
 interface FactCheckPanelProps {
   factCheck?: FactCheck
@@ -147,16 +148,18 @@ export default function FactCheckPanel({ factCheck }: FactCheckPanelProps) {
                 {getStatusBadge(claim.status)}
               </div>
 
-              <p className="text-sm text-slate-900 font-bold leading-relaxed">
-                &ldquo;{claim.text}&rdquo;
-              </p>
+              <div className="text-sm text-slate-900 font-bold leading-relaxed">
+                &ldquo;<FormattedText text={claim.text} />&rdquo;
+              </div>
 
               {claim.source_match && (
                 <div className="rounded-xl bg-white p-2.5 text-xs text-slate-700 border border-slate-200 space-y-1">
                   <span className="font-bold text-slate-900 block text-[11px] uppercase tracking-wide">
                     Canonical Match Citation:
                   </span>
-                  <p className="italic font-medium">&ldquo;{claim.source_match}&rdquo;</p>
+                  <div className="italic font-medium text-slate-700">
+                    &ldquo;<FormattedText text={claim.source_match} />&rdquo;
+                  </div>
                 </div>
               )}
 

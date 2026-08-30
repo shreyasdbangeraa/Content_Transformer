@@ -43,7 +43,8 @@ class OpenAIProvider(AIProvider):
         return json.loads(raw)
 
     async def generate_artefact(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
-        sys = f"You are a communication specialist. Generate format '{format_type}' using strictly canonical facts. Output JSON with title, raw_content, structured_data."
+        mode = config.get("research_mode", "SOURCE_AND_VERIFY")
+        sys = f"You are a communication specialist. Generate format '{format_type}' operating strictly under Research Mode '{mode}'. If SOURCE_ONLY: strictly use only primary source document facts with zero outside claims. If SOURCE_AND_VERIFY: use primary document as ground truth with verified external citations. If DEEP_RESEARCH: synthesize 8-tier research, cross-source comparative telemetry, and deep benchmarks. Output JSON with title, raw_content, structured_data."
         user = f"Config: {json.dumps(config)}\nData: {json.dumps(canonical_data)[:15000]}"
         raw = await self._call_openai(sys, user)
         return json.loads(raw)

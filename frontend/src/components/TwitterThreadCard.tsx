@@ -13,6 +13,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import clsx from 'clsx'
+import FormattedText from '@/components/FormattedText'
 
 interface TweetItem {
   index: number
@@ -135,9 +136,9 @@ export default function TwitterThreadCard({ structuredData, rawContent }: Twitte
               </div>
 
               {/* Tweet Body */}
-              <p className="text-sm sm:text-base text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
-                {tweet.text}
-              </p>
+              <div className="text-sm sm:text-base text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
+                <FormattedText text={tweet.text} />
+              </div>
 
               {/* Social Action Bar Mock */}
               <div className="flex items-center gap-6 pt-3 border-t border-slate-100 text-slate-400 text-xs font-medium">

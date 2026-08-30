@@ -32,6 +32,7 @@ async def create_and_run_transformation(
         detail_level=payload.detail_level,
         communication_objective=payload.communication_objective,
         content_style=payload.content_style,
+        research_mode=payload.research_mode or (project.research_mode if project else "SOURCE_AND_VERIFY"),
         custom_instructions=payload.custom_instructions,
         requested_formats=payload.requested_formats or ["executive_summary", "linkedin", "advisory", "presentation"],
         status="PROCESSING"

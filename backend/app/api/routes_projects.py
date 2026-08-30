@@ -50,8 +50,8 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     project = Project(
         title=payload.title,
         description=payload.description,
-        organization_name=payload.organization_name or "NovaTech Systems",
-        domain=payload.domain or "Cybersecurity",
+        organization_name=payload.organization_name or "Acme Operations",
+        domain=payload.domain or "Auto-Detect",
         research_mode=payload.research_mode or "SOURCE_AND_VERIFY",
         brand_profile_id=payload.brand_profile_id
     )
@@ -70,6 +70,29 @@ def create_project(payload: ProjectCreate, db: Session = Depends(get_db)):
     )
     db.add(audit)
     
+    db.commit()
+    db.refresh(project)
+    return project
+
+@router.patch("/{project_id}", response_model=ProjectResponse)
+def update_project(project_id: str, payload: ProjectUpdate, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    if payload.title is not None:
+        project.title = payload.title
+    if payload.description is not None:
+        project.description = payload.description
+    if payload.organization_name is not None:
+        project.organization_name = payload.organization_name
+    if payload.domain is not None:
+        project.domain = payload.domain
+    if payload.research_mode is not None:
+        project.research_mode = payload.research_mode
+    if payload.status is not None:
+        project.status = payload.status
+
     db.commit()
     db.refresh(project)
     return project

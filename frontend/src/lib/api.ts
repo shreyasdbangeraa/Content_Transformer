@@ -111,10 +111,20 @@ export const api = {
     request<ResearchJob[]>(`/research/project/${projectId}`),
   listProjectConflicts: (projectId: string) =>
     request<ConflictRecord[]>(`/research/conflicts/${projectId}`),
-  resolveConflict: (conflictId: string, notes?: string) =>
-    request<{ message: string; conflict: ConflictRecord }>(
-      `/research/conflicts/${conflictId}/resolve?resolution_notes=${encodeURIComponent(notes || 'Resolved by operator')}`,
-      { method: 'POST' }
+  resolveConflict: (
+    conflictId: string,
+    selectedChoice: string = 'CLAIM_A',
+    notes: string = 'Resolved by operator'
+  ) =>
+    request<{ message: string; conflict: ConflictRecord; selected_choice: string }>(
+      `/research/conflicts/${conflictId}/resolve`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          selected_choice: selectedChoice,
+          resolution_notes: notes,
+        }),
+      }
     ),
 
   // Sources
@@ -140,14 +150,25 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
-  scrapeUrl: (projectId: string, url: string) =>
+  scrapeUrl: (
+    projectId: string,
+    url: string,
+    options?: { crawl_subpages?: boolean; max_pages?: number }
+  ) =>
     request<Source>(`/sources/projects/${projectId}/url`, {
       method: 'POST',
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({
+        url,
+        crawl_subpages: options?.crawl_subpages ?? false,
+        max_pages: options?.max_pages ?? 8,
+      }),
     }),
-  analyzeSource: (sourceId: string, provider?: string) => {
+  analyzeSource: (sourceId: string, provider?: string, researchMode?: string) => {
     const activeProvider = provider || getSavedProvider()
-    const query = activeProvider ? `?provider=${encodeURIComponent(activeProvider)}` : ''
+    const params = new URLSearchParams()
+    if (activeProvider) params.append('provider', activeProvider)
+    if (researchMode) params.append('research_mode', researchMode)
+    const query = params.toString() ? `?${params.toString()}` : ''
     return request<CanonicalAnalysis>(`/sources/${sourceId}/analyze${query}`, {
       method: 'POST',
     })

@@ -17,53 +17,101 @@ class MockProvider(AIProvider):
                 "document_type": "Cybersecurity Incident Report",
                 "detected_language": "English",
                 "topic": "Critical Ransomware Attack & Infrastructure Remediation",
-                "executive_summary": "On August 12, 2026, NovaTech Systems detected a critical ransomware attack conducted by the 'DarkHydra' threat group exploiting an unpatched legacy VPN gateway (host: vpn-edge02.novatech-internal.net, IP: 10.240.12.88). Approximately 500 server systems were encrypted. Rapid network containment isolated affected subnets within 42 minutes, successfully protecting core financial vaults from confirmed exfiltration. Full air-gapped backup restoration and enterprise-wide MFA enforcement are actively underway.",
+                "executive_summary": "**Topic: Critical Ransomware Attack & Infrastructure Remediation**\n\nThis comprehensive executive intelligence briefing synthesizes the verified operational telemetry, forensic findings, and infrastructure remediation directives established in the aftermath of Incident IR-2026-0812 at NovaTech Systems.\n\n### 1. Strategic Context & Threat Landscape\nOn August 12, 2026 at 03:14 UTC, NovaTech Systems' Security Operations Center (SOC) detected unauthorized lateral movement and high-velocity encryption initiated by the 'DarkHydra' advanced ransomware group. The adversary exploited an unpatched perimeter vulnerability on a legacy gateway appliance (`vpn-edge02.novatech-internal.net`, internal IP `10.240.12.88`), utilizing compromised administrative credentials that lacked mandatory FIDO2 hardware MFA enforcement.\n\n### 2. Core Operational Telemetry & Containment Metrics\n• **Affected Scope:** Approximately 500 production server systems and virtualized endpoints were encrypted within Region US-East.\n• **Containment Velocity:** Automated micro-segmentation protocols and manual firewall failovers achieved complete subnet containment within **42 minutes** of initial alert detection.\n• **Data Integrity Protection:** Customer financial records and core banking database vaults were successfully shielded in air-gapped cryptographic enclaves, with zero unauthorized data exfiltration confirmed.\n• **Egress Neutralization:** Perimeter egress filtering intercepted and blocked **120 GB** of staged diagnostic telemetry destined for external C2 node `198.51.100.42`.\n\n### 3. Business Impact & Restoration Milestones\nCore client billing, telemetry feeds, and customer support portals experienced **18 hours** of degraded operational latency during initial triage. Forensic certification verified that immutable offline backup snapshots remained uncompromised and fully intact, enabling zero-loss image restoration across all impacted subnets.\n\n### 4. Prioritized Directives & Governance Roadmap\n1. **Immediate Revocation (0-24h):** Revoke all active enterprise Kerberos authentication tokens and force enterprise-wide IAM password resets.\n2. **Hardware Security Keys (24-72h):** Mandate hardware-backed FIDO2 MFA tokens for all administrative, engineering, and support staff, deprecating SMS/push verifications.\n3. **Zero-Trust Migration (7-30d):** Accelerate decommissioning of legacy perimeter VPN appliances and transition all ingress gateways to micro-segmented Zero-Trust Network Access (ZTNA).",
                 "key_facts": [
                     {
                         "fact_id": "fact_001",
-                        "text": "Initial ransomware intrusion detected on August 12, 2026 at 03:14 UTC.",
-                        "source": {"file": filename, "page": 1, "section": "Executive Summary"},
+                        "text": "Incident IR-2026-0812 occurred on August 12, 2026 at 03:14 UTC, initiated by unauthorized perimeter intrusion.",
+                        "source": {"file": filename, "page": 1, "section": "Executive Summary", "paragraph": 1},
                         "confidence": 0.99,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     },
                     {
                         "fact_id": "fact_002",
-                        "text": "Approximately 500 server systems and virtualized endpoints were affected and encrypted.",
-                        "source": {"file": filename, "page": 1, "section": "Executive Summary"},
+                        "text": "Exactly 500 server systems and virtualized endpoints were affected and encrypted across Region US-East.",
+                        "source": {"file": filename, "page": 1, "section": "Scope of Incident", "paragraph": 2},
                         "confidence": 0.98,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     },
                     {
                         "fact_id": "fact_003",
-                        "text": "Threat group identified as 'DarkHydra' exploiting legacy VPN gateway (IP 10.240.12.88).",
-                        "source": {"file": filename, "page": 1, "section": "Executive Summary"},
+                        "text": "Threat actor identified as 'DarkHydra' exploiting legacy VPN gateway (IP 10.240.12.88).",
+                        "source": {"file": filename, "page": 1, "section": "Threat Actor & Ingress", "paragraph": 3},
                         "confidence": 0.97,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     },
                     {
                         "fact_id": "fact_004",
-                        "text": "Subnet containment achieved in 42 minutes, preventing customer financial vault exfiltration.",
-                        "source": {"file": filename, "page": 1, "section": "Executive Summary"},
-                        "confidence": 0.96,
+                        "text": "Automated network micro-segmentation achieved complete subnet containment within 42 minutes of alert detection.",
+                        "source": {"file": filename, "page": 1, "section": "Containment Timeline", "paragraph": 4},
+                        "confidence": 0.98,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     },
                     {
                         "fact_id": "fact_005",
-                        "text": "Billing and internal support operations experienced 18 hours of degraded service.",
-                        "source": {"file": filename, "page": 2, "section": "Impact Analysis"},
-                        "confidence": 0.95,
+                        "text": "Customer financial records vault remained air-gapped with zero unauthorized data exfiltration.",
+                        "source": {"file": filename, "page": 2, "section": "Data Vault Status", "paragraph": 1},
+                        "confidence": 0.99,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     },
                     {
                         "fact_id": "fact_006",
-                        "text": "Egress firewall rules successfully blocked 120GB of staged diagnostic telemetry.",
-                        "source": {"file": filename, "page": 2, "section": "Impact Analysis"},
+                        "text": "Perimeter firewall egress filters blocked 120 GB of staged diagnostic telemetry exfiltration.",
+                        "source": {"file": filename, "page": 2, "section": "Egress Telemetry", "paragraph": 2},
+                        "confidence": 0.96,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_007",
+                        "text": "Core billing and customer support operations experienced 18 hours of degraded operational latency.",
+                        "source": {"file": filename, "page": 2, "section": "Impact Analysis", "paragraph": 3},
                         "confidence": 0.95,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_008",
+                        "text": "Primary ingress vector traced to compromised administrative credentials without mandatory hardware MFA.",
+                        "source": {"file": filename, "page": 2, "section": "Root Cause Analysis", "paragraph": 4},
+                        "confidence": 0.97,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_009",
+                        "text": "Air-gapped immutable backup snapshots verified uncorrupted and certified ready for node re-imaging.",
+                        "source": {"file": filename, "page": 3, "section": "Recovery Operations", "paragraph": 1},
+                        "confidence": 0.99,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_010",
+                        "text": "Security Operations Center revoked all active enterprise Kerberos tokens and enforced global IAM password resets.",
+                        "source": {"file": filename, "page": 3, "section": "Immediate Directives", "paragraph": 2},
+                        "confidence": 0.98,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_011",
+                        "text": "Exploited gateway vulnerability assigned CVSS 9.4 Critical severity rating by internal threat intelligence.",
+                        "source": {"file": filename, "page": 3, "section": "Threat Scoring", "paragraph": 3},
+                        "confidence": 0.96,
+                        "provenance": "PRIMARY_SOURCE_FACT",
+                        "verified": True
+                    },
+                    {
+                        "fact_id": "fact_012",
+                        "text": "FIDO2 hardware security keys mandated for all administrative access to replace legacy SMS/Push MFA.",
+                        "source": {"file": filename, "page": 3, "section": "Strategic Remediation", "paragraph": 4},
+                        "confidence": 0.97,
                         "provenance": "PRIMARY_SOURCE_FACT",
                         "verified": True
                     }
@@ -146,15 +194,17 @@ class MockProvider(AIProvider):
         words = list(set(re.findall(r'\b[A-Z][a-z]{3,}\b', text)))[:6]
         numbers = list(set(re.findall(r'\b\d+(?:[\.,]\d+)?%?\b', text)))[:4]
         
-        raw_sentences = [s.strip() for s in re.split(r'[.!?]+', text) if len(s.strip()) > 20]
+        raw_sentences = [s.strip() for s in re.split(r'[.!?\n]+', text) if len(s.strip()) > 18]
         extracted_facts = []
-        for i, s in enumerate(raw_sentences[:6]):
+        for i, s in enumerate(raw_sentences[:14]):
+            page_num = max(1, (i // 3) + 1)
+            section_name = f"Section {page_num}" if i > 2 else "Executive Summary"
             extracted_facts.append({
                 "fact_id": f"fact_{i+1:03d}",
-                "text": s[:180],
-                "source": {"file": filename, "page": max(1, (i // 3) + 1), "section": "Source Content"},
-                "confidence": 0.98,
-                "provenance": "PRIMARY_SOURCE_FACT",
+                "text": s[:200],
+                "source": {"file": filename, "page": page_num, "section": section_name, "paragraph": (i % 3) + 1},
+                "confidence": round(0.95 + (0.04 * ((i % 3) / 3)), 2),
+                "provenance": "PRIMARY_SOURCE_FACT" if i < 8 else "VERIFIED_EXTERNAL_FACT",
                 "verified": True
             })
             
@@ -168,16 +218,37 @@ class MockProvider(AIProvider):
                 "verified": True
             }]
 
-        metric_labels = ["Operational Scope", "Containment / Processing Latency", "Verified Data Volume", "Audit Conformance Index"]
+        # Smart Contextual Number & Statistic Extraction
         stats_list = []
-        for idx, num in enumerate(numbers[:4]):
-            label = metric_labels[idx] if idx < len(metric_labels) else f"Telemetry Indicator {idx+1}"
-            stats_list.append({
-                "metric": label,
-                "value": num,
-                "context": f"Verified numerical telemetry extracted from source material: {num}",
-                "source_citation": f"Page {max(1, (idx // 2) + 1)}, Section 1"
-            })
+        # Find number matches with their surrounding context: e.g. "500 servers", "42 minutes", "10 episodes", "100%", etc.
+        stat_patterns = re.findall(r'(\b[A-Za-z\s]{2,25})\b\s*[:\-–]?\s*(\b\d+(?:[\.,]\d+)?%?(?:\s*[A-Za-z]{1,15})?)\b', text)
+        
+        seen_vals = set()
+        for phrase, num_val in stat_patterns[:5]:
+            clean_metric = phrase.strip().title()
+            clean_metric = re.sub(r'^(And|Or|The|In|On|At|For|With|By|To|From|Of|About|Approximately|Total)\s+', '', clean_metric, flags=re.IGNORECASE).strip()
+            if len(clean_metric) >= 3 and len(clean_metric) <= 35 and num_val not in seen_vals:
+                seen_vals.add(num_val)
+                stats_list.append({
+                    "metric": clean_metric,
+                    "value": num_val.strip(),
+                    "context": f"Document data point: {clean_metric} ({num_val.strip()})",
+                    "source_citation": f"Page {max(1, (len(stats_list) // 2) + 1)}, Section 1"
+                })
+
+        # Fallback if specific phrases not matched
+        if not stats_list:
+            numbers = list(dict.fromkeys(re.findall(r'\b\d+(?:[\.,]\d+)?%?\b', text)))[:4]
+            default_labels = ["Key Quantified Metric", "Milestone / Scope", "Volume / Units", "Benchmark Indicator"]
+            for idx, num in enumerate(numbers):
+                matching_sentence = next((s for s in raw_sentences if num in s), f"Verified metric: {num}")
+                label = default_labels[idx] if idx < len(default_labels) else f"Metric {idx+1}"
+                stats_list.append({
+                    "metric": label,
+                    "value": num,
+                    "context": matching_sentence[:100],
+                    "source_citation": f"Page {max(1, (idx // 2) + 1)}, Section 1"
+                })
             
         if not stats_list:
             stats_list = [
@@ -185,12 +256,51 @@ class MockProvider(AIProvider):
                 {"metric": "Synthesized Key Claims", "value": f"{len(extracted_facts)} verified points", "context": "Factual foundation size", "source_citation": "Page 1"}
             ]
 
+        # Construct rich, multi-paragraph, multi-section Executive Synthesis Narrative
+        summary_paragraphs = [
+            f"**Topic: {first_line}**",
+            f"This comprehensive executive intelligence briefing synthesizes the operational architecture, key verified findings, and actionable execution directives established within **{first_line}**. Drawing upon {char_count:,} characters of primary source intelligence and multi-source research grounding, this synthesis establishes an authoritative, evidence-grounded baseline for leadership, technical operators, and external stakeholders."
+        ]
+        
+        # Section 1: Strategic Context & Operational Background
+        if len(raw_sentences) >= 2:
+            s_block1 = ". ".join(raw_sentences[:min(3, len(raw_sentences))]) + "."
+            summary_paragraphs.append(f"### 1. Strategic Context & Operational Background\n\n{s_block1}")
+        
+        if len(raw_sentences) > 3:
+            s_block2 = ". ".join(raw_sentences[3:min(7, len(raw_sentences))]) + "."
+            summary_paragraphs.append(f"### 2. Core Verified Findings & Operational Intelligence\n\n{s_block2}")
+
+        # Section 3: Quantified Telemetry
+        if stats_list:
+            stat_lines = []
+            for st in stats_list[:3]:
+                stat_lines.append(f"• **{st.get('metric', 'Metric')}:** `{st.get('value', 'Value')}` — {st.get('context', '')}")
+            summary_paragraphs.append(f"### 3. Key Telemetry & Quantified Indicators\n\n" + "\n".join(stat_lines))
+
+        # Section 4: Risk Profile
+        summary_paragraphs.append(
+            "### 4. Monitored Operational Risks & Exposure\n\n"
+            "• **Primary Operational Risk:** Operational friction and delayed cross-channel execution without structured governance controls.\n"
+            "• **Stakeholder Alignment Risk:** Potential dissemination of unverified claims if communication channels bypass certified canonical telemetry."
+        )
+
+        # Section 5: Strategic Roadmap
+        summary_paragraphs.append(
+            "### 5. Prioritized Action Directives & Implementation Roadmap\n\n"
+            "1. **Immediate Execution (Priority 1):** Deploy unified multi-channel messaging aligned strictly to certified source facts.\n"
+            "2. **Operational Safeguards (Priority 2):** Enforce real-time audit logging and operator sign-offs prior to public distribution.\n"
+            "3. **Long-Term Governance (Priority 3):** Maintain an unassailable Single Source of Truth to eliminate hallucination across enterprise touchpoints."
+        )
+
+        full_exec_summary = "\n\n".join(summary_paragraphs)
+
         return {
             "title": first_line,
             "document_type": "Executive Briefing & Strategic Report",
             "detected_language": "English",
             "topic": first_line,
-            "executive_summary": f"**Topic: {first_line}**\n\nThis strategic intelligence briefing synthesizes verified operational findings, quantifiable metrics, and prioritized stakeholder directives derived directly from {first_line}. The document establishes a certified factual baseline across {char_count:,} characters of primary source material.",
+            "executive_summary": full_exec_summary,
             "key_facts": extracted_facts,
             "entities": [{"name": w, "type": "OPERATIONAL_ENTITY", "context": "Extracted from source intelligence"} for w in words] or [{"name": "Enterprise Operations", "type": "ORGANIZATION", "context": "Primary Organizational Unit"}],
             "dates": [{"date": "August 2026", "event": "Source document extraction and verified multi-channel transformation"}],
@@ -224,13 +334,27 @@ class MockProvider(AIProvider):
         audience = config.get("target_audience", "Executive Board & Technical Engineers")
         tone = config.get("tone", "Professional & Authoritative")
         lang = config.get("language", "English")
+        research_mode = config.get("research_mode", "SOURCE_AND_VERIFY")
+
         title = canonical_data.get("title", "Strategic Analysis")
         topic = canonical_data.get("topic", title)
         exec_sum = canonical_data.get("executive_summary", "")
         facts = canonical_data.get("key_facts", [])
         recs = canonical_data.get("recommendations", [])
         stats = canonical_data.get("statistics", [])
+        research_findings = canonical_data.get("research_findings", [])
         is_novatech = "novatech" in title.lower() or "novatech" in topic.lower() or "darkhydra" in topic.lower()
+
+        # Mode label & banner tag
+        if research_mode == "SOURCE_ONLY":
+            mode_tag = "🔒 [Mode 1: Source Only • Strictly Grounded in Primary Document]"
+            mode_footer = "🔍 *Synthesized strictly from primary source document (Confidential Air-Gapped Sandbox Mode • External Web Queries Disabled).*"
+        elif research_mode == "DEEP_RESEARCH":
+            mode_tag = "🌐 [Mode 3: Deep Research • Multi-Tier 8-Source Intelligence Synthesis]"
+            mode_footer = "🔍 *Synthesized across 8-tier authoritative research portals with cross-source comparative benchmarks and contradiction radar.*"
+        else: # SOURCE_AND_VERIFY
+            mode_tag = "🛡️ [Mode 2: Source & Verify • Authoritative Ground Truth]"
+            mode_footer = "🔍 *Primary document ground truth verified against Tier 1/2 official domain portals.*"
 
         # 1. Executive Summary (3-page multi-page comprehensive brief)
         if format_type == "executive_summary":
@@ -238,29 +362,91 @@ class MockProvider(AIProvider):
 
         # 2. LinkedIn Post
         elif format_type == "linkedin":
-            hook = "🛡️ Resilient Response & Executive Briefing: NovaTech Incident IR-2026-0812" if is_novatech else f"🚀 Key Strategic Insights: {title}"
-            body_parts = [
-                hook,
-                "Navigating complex operational events demands rapid cross-functional alignment, decisive containment, and rigorous factual grounding.",
-                f"Here are the key verified takeaways from our official analysis on {topic}:"
-            ]
+            hook = f"🛡️ Decisive Incident Response & Operational Telemetry: {topic}" if is_novatech else f"🚀 Strategic Executive Briefing: {topic}"
+            paragraphs = [f"{mode_tag}\n\n{hook}"]
             
-            bullet_lines = []
-            for f in facts[:4]:
+            # Context & Background
+            if exec_sum:
+                clean_summary = exec_sum.replace("**Topic:", "").strip()
+                summary_sentences = [s.strip() for s in clean_summary.split(". ") if s.strip()]
+                if len(summary_sentences) >= 2:
+                    paragraphs.append(". ".join(summary_sentences[:2]) + ".")
+                    if len(summary_sentences) > 2:
+                        paragraphs.append(". ".join(summary_sentences[2:4]) + ".")
+                else:
+                    paragraphs.append(clean_summary)
+            else:
+                paragraphs.append(
+                    "When complex operational events unfold, executive leadership requires rapid clarity, verified ground truth, and decisive action plans."
+                )
+                paragraphs.append(
+                    f"Our structured intelligence synthesis provides an unassailable Single Source of Truth regarding {topic} to ensure strategic alignment across all stakeholder channels."
+                )
+
+            paragraphs.append(f"Here is what our verified source intelligence confirms regarding **{topic}**:")
+
+            # Findings with Citations & Provenance
+            bullet_findings = []
+            for i, f in enumerate(facts[:5]):
                 f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-                bullet_lines.append(f"🔹 {f_text}")
-            body_parts.append("\n".join(bullet_lines))
+                f_src = f.get("source", {}) if isinstance(f, dict) else {}
+                p_num = f_src.get("page", 1) if isinstance(f_src, dict) else 1
+                prov = f.get("provenance", "PRIMARY_SOURCE_FACT")
+                tag_label = " (Primary Source)" if prov == "PRIMARY_SOURCE_FACT" else (" [External Verified]" if prov == "VERIFIED_EXTERNAL_FACT" else " [Deep Research Synthesis]")
+                bullet_findings.append(f"📌 **Key Finding #{i+1}:** {f_text} *(Page {p_num}){tag_label}*")
+            paragraphs.append("\n".join(bullet_findings))
 
-            rec_text = recs[0].get("recommendation", "") if (recs and isinstance(recs[0], dict)) else "Maintain continuous air-gapped monitoring."
-            body_parts.append(f"Key Directive: {rec_text}")
-            
-            cta = "How is your organization hardening perimeter appliances and incident response protocols? Let's discuss in the comments below."
-            body_parts.append(cta)
-            
-            hashtags = ["#Cybersecurity", "#IncidentResponse", "#Leadership", "#EnterpriseSecurity", "#ZeroTrust"] if is_novatech else ["#Leadership", "#Innovation", "#StrategicInsights", "#BusinessGrowth", "#Transformation"]
-            body_parts.append(" ".join(hashtags))
+            # Quantified Telemetry
+            if stats:
+                metric_lines = ["📊 **Quantified Telemetry & Operational Metrics:**"]
+                for s in stats[:3]:
+                    if isinstance(s, dict):
+                        m_name = s.get('metric', 'Metric')
+                        m_val = s.get('value', 'Value')
+                        m_ctx = s.get('context', 'Verified Telemetry')
+                        metric_lines.append(f"• **{m_name}:** `{m_val}` — {m_ctx}")
+                paragraphs.append("\n".join(metric_lines))
 
-            full_text = sanitize_linkedin_content("\n\n".join(body_parts))
+            # Extra Deep Research Benchmarks for Mode 3
+            if research_mode == "DEEP_RESEARCH" and research_findings:
+                deep_lines = ["🌐 **Multi-Tier Authoritative Corroboration (8-Tier Discovery):**"]
+                for rf in research_findings[:3]:
+                    t_num = rf.get("source_tier", 1)
+                    s_title = rf.get("source_title", "Authoritative Portal")
+                    snip = rf.get("evidence_snippet", "")[:90]
+                    deep_lines.append(f"• **[Tier {t_num} • {s_title}]:** {snip}...")
+                paragraphs.append("\n".join(deep_lines))
+
+            # Strategic Action Plan
+            if recs:
+                rec_lines = ["🎯 **Strategic Action Directives & Implementation Roadmap:**"]
+                phase_labels = ["Immediate Priority (0-24h)", "Operational Hardening (24-72h)", "Long-Term Governance & Policy (7-30d)"]
+                for idx, r in enumerate(recs[:3]):
+                    if isinstance(r, dict):
+                        r_text = r.get("recommendation", "")
+                        r_det = r.get("details", "")
+                        phase = phase_labels[idx] if idx < len(phase_labels) else f"Phase {idx+1}"
+                        detail_str = f" — {r_det}" if r_det else ""
+                        rec_lines.append(f"{idx+1}️⃣ **{phase}:** {r_text}{detail_str}")
+                    else:
+                        rec_lines.append(f"{idx+1}️⃣ **Directive #{idx+1}:** {str(r)}")
+                paragraphs.append("\n".join(rec_lines))
+
+            # Executive Takeaway & Mode Footer
+            paragraphs.append(
+                "💡 **The Executive Takeaway:** Operational resilience is never an accident—it is built on an unassailable, verified Single Source of Truth that leadership, engineers, and regulators can trust without ambiguity."
+            )
+            paragraphs.append(mode_footer)
+
+            # CTA
+            cta = f"👇 **Join the Conversation:** How is your organization navigating {topic.lower()[:40]} and building structured operational safeguards? I’d welcome your insights and lessons learned in the comments below."
+            paragraphs.append(cta)
+
+            # Hashtags
+            hashtags = ["#Cybersecurity", "#IncidentResponse", "#ExecutiveLeadership", "#EnterpriseSecurity", "#ZeroTrust", "#RiskManagement"] if is_novatech else ["#Leadership", "#StrategicInsights", "#BusinessGrowth", "#EnterpriseAI", "#Transformation", "#Innovation"]
+            paragraphs.append(" ".join(hashtags))
+
+            full_text = sanitize_linkedin_content("\n\n".join(paragraphs))
             return {
                 "title": f"LinkedIn Brief - {title[:40]}",
                 "raw_content": full_text,
@@ -269,6 +455,7 @@ class MockProvider(AIProvider):
                     "body": full_text,
                     "call_to_action": cta,
                     "hashtags": hashtags,
+                    "research_mode": research_mode,
                     "character_count": len(full_text),
                     "image_prompt": f"Professional executive banner showing cybersecurity infrastructure resiliency for {topic[:60]}"
                 }
@@ -282,10 +469,10 @@ class MockProvider(AIProvider):
             stat_str = f"\n\nMetrics: {stats[0].get('metric', 'Metric')} = {stats[0].get('value', 'Value')}" if (stats and isinstance(stats[0], dict)) else ""
 
             thread = [
-                f"🧵 KEY BRIEFING: {title[:50]} [1/4]\n\nAn evidence-grounded breakdown of verified findings, containment telemetry, and strategic directives on {topic[:70]}. 👇",
+                f"🧵 KEY BRIEFING [{research_mode}]: {title[:45]} [1/4]\n\nAn evidence-grounded breakdown of verified findings, containment telemetry, and strategic directives on {topic[:65]}. 👇",
                 f"2/4 📊 Quantified Telemetry & Facts:\n" + "\n".join([f"• {snip}" for snip in f_snippets]) + stat_str,
                 f"3/4 🛡️ Strategic Directives:\n1. {rec1}\n2. {rec2}",
-                f"4/4 🎯 Governance & Sign-off:\nAll telemetry cross-referenced across primary incident logs & certified source artifacts.\n\n#Cybersecurity #IncidentResponse #ZeroTrust" if is_novatech else f"4/4 🎯 Governance & Execution:\nSource-grounded intelligence ensures verified operational alignment.\n\n#Insights #Leadership"
+                f"4/4 🎯 Mode [{research_mode}]:\nAll telemetry cross-referenced across primary incident logs & certified source artifacts.\n\n#Cybersecurity #IncidentResponse #ZeroTrust" if is_novatech else f"4/4 🎯 Mode [{research_mode}]:\nSource-grounded intelligence ensures verified operational alignment.\n\n#Insights #Leadership"
             ]
             full_text = "\n\n---\n\n".join(thread)
             return {
@@ -293,6 +480,7 @@ class MockProvider(AIProvider):
                 "raw_content": full_text,
                 "structured_data": {
                     "mode": "thread",
+                    "research_mode": research_mode,
                     "tweet_count": len(thread),
                     "tweets": [{"index": i + 1, "text": t, "char_count": len(t)} for i, t in enumerate(thread)]
                 }
@@ -303,7 +491,9 @@ class MockProvider(AIProvider):
             adv_id = "ADV-2026-0814-HYDRA" if is_novatech else f"ADV-{title[:15].replace(' ', '-').upper()}"
             content = f"""# OPERATIONAL & TECHNICAL ADVISORY ({adv_id})
 **Reference:** `{adv_id}` | **Classification:** HIGH IMPORTANCE / MANDATORY REMEDIATION
-**Target Audience:** {audience} | **Language:** {lang}
+**Target Audience:** {audience} | **Language:** {lang} | **Research Mode:** `{research_mode}`
+
+{mode_tag}
 
 ---
 
@@ -316,9 +506,15 @@ class MockProvider(AIProvider):
                 f_text = f.get("text", "") if isinstance(f, dict) else str(f)
                 f_src = f.get("source") or {} if isinstance(f, dict) else {}
                 p_num = f_src.get("page", 1) if isinstance(f_src, dict) else 1
-                content += f"- **{f_text}** *(Source: Page {p_num})*\n"
+                prov = f.get("provenance", "PRIMARY_SOURCE_FACT")
+                content += f"- **{f_text}** *(Source: Page {p_num} • Provenance: {prov})*\n"
 
-            content += "\n## 3. MANDATORY ACTIONS & IMMEDIATE DIRECTIVES\n"
+            if research_mode == "DEEP_RESEARCH" and research_findings:
+                content += "\n## 3. MULTI-TIER EXTERNAL CORROBORATION & THREAT INTELLIGENCE\n"
+                for rf in research_findings[:4]:
+                    content += f"- **[Tier {rf.get('source_tier', 1)} • {rf.get('source_title', 'Advisory Portal')}]:** {rf.get('evidence_snippet', '')}\n"
+
+            content += f"\n## {'4' if research_mode == 'DEEP_RESEARCH' and research_findings else '3'}. MANDATORY ACTIONS & IMMEDIATE DIRECTIVES\n"
             for idx, r in enumerate(recs[:4]):
                 if isinstance(r, dict):
                     content += f"{idx+1}. **[{r.get('priority', 'CRITICAL')}] {r.get('recommendation', '')}:** {r.get('details', '')}\n"
@@ -326,7 +522,7 @@ class MockProvider(AIProvider):
                     content += f"{idx+1}. **[CRITICAL] {str(r)}**\n"
 
             content += f"""
-## 4. MITIGATION ROADMAP & GOVERNANCE
+## {'5' if research_mode == 'DEEP_RESEARCH' and research_findings else '4'}. MITIGATION ROADMAP & GOVERNANCE
 - **Phase 1 (Immediate / 0-24h):** Revoke all active administrator sessions and enforce hardware MFA.
 - **Phase 2 (Medium / 24-72h):** Perform full air-gapped restore of all encrypted nodes.
 - **Phase 3 (Strategic / 7-30d):** Complete perimeter micro-segmentation and decommission vulnerable endpoints.
@@ -339,6 +535,7 @@ class MockProvider(AIProvider):
                 "structured_data": {
                     "severity": "CRITICAL" if is_novatech else "HIGH",
                     "advisory_id": adv_id,
+                    "research_mode": research_mode,
                     "target_audience": audience
                 }
             }
@@ -347,19 +544,34 @@ class MockProvider(AIProvider):
         elif format_type == "presentation":
             f_bullets = [f.get("text", "")[:90] if isinstance(f, dict) else str(f)[:90] for f in facts[:4]] or ["Comprehensive evidence base established"]
             r_bullets = [r.get("recommendation", "")[:90] if isinstance(r, dict) else str(r)[:90] for r in recs[:3]] or ["Execute coordinated rollout"]
+            
+            # Slide 4 is mode-calibrated
+            if research_mode == "DEEP_RESEARCH":
+                slide_4_title = "Multi-Source Benchmark Analysis & 8-Tier Discovery"
+                slide_4_sub = "Cross-Source Comparative Telemetry"
+                slide_4_bullets = [rf.get("evidence_snippet", "")[:80] + "..." for rf in research_findings[:3]] or r_bullets
+            elif research_mode == "SOURCE_ONLY":
+                slide_4_title = "Confidential Boundary Audit & Source-Only Lineage"
+                slide_4_sub = "Air-Gapped Confidential Sandbox Mode"
+                slide_4_bullets = ["100% Primary Document Grounding", "External Search Disabled (Air-Gapped)", "Zero Data Leakage / Confidential Containment", "Page & Paragraph Provenance Anchored"]
+            else:
+                slide_4_title = "Enterprise Risk Matrix & Remediation"
+                slide_4_sub = "Mitigating Systemic Vulnerabilities"
+                slide_4_bullets = r_bullets
+
             slides = [
                 {
                     "slide_number": 1,
                     "title": title[:50],
-                    "subtitle": f"Strategic Analysis & Action Roadmap for {audience}",
-                    "bullets": [f"Topic: {topic[:60]}", f"Audience: {audience}", "Executive Decision Deck", "Source-Grounded Telemetry"],
-                    "speaker_notes": f"Welcome everyone. Today we are presenting our strategic briefing on {topic}."
+                    "subtitle": f"Strategic Analysis for {audience} • {engine_mode_label if 'engine_mode_label' in locals() else research_mode}",
+                    "bullets": [f"Topic: {topic[:60]}", f"Audience: {audience}", f"Mode: {research_mode}", "Source-Grounded Telemetry"],
+                    "speaker_notes": f"Welcome everyone. Today we are presenting our strategic briefing on {topic} under {research_mode} mode."
                 },
                 {
                     "slide_number": 2,
-                    "title": "Situation Overview & Incident Context",
+                    "title": "Situation Overview & Operational Context",
                     "subtitle": "Current Operational Baseline",
-                    "bullets": [exec_sum[:120] + "...", f"Targeted Domain: {topic[:60]}", "Source data verified with zero hallucination", "Containment confirmed"],
+                    "bullets": [exec_sum[:120] + "...", f"Targeted Domain: {topic[:60]}", f"Engine Mode: {research_mode}", "Containment confirmed"],
                     "speaker_notes": "This slide sets the foundational context established by our primary telemetry."
                 },
                 {
@@ -371,21 +583,21 @@ class MockProvider(AIProvider):
                 },
                 {
                     "slide_number": 4,
-                    "title": "Enterprise Risk Matrix & Remediation",
-                    "subtitle": "Mitigating Systemic Vulnerabilities",
-                    "bullets": r_bullets,
-                    "speaker_notes": "Here are our targeted directives to permanently resolve operational risks."
+                    "title": slide_4_title,
+                    "subtitle": slide_4_sub,
+                    "bullets": slide_4_bullets,
+                    "speaker_notes": "Here are our targeted findings and directives calibrated for this operating mode."
                 },
                 {
                     "slide_number": 5,
                     "title": "Conclusion & Governance Roadmap",
                     "subtitle": "Ensuring Continuous Monitoring",
-                    "bullets": ["Continuous tracking against milestones", "Strict executive oversight", "Air-gapped backup validation", "High confidence rating (98%)"],
+                    "bullets": ["Continuous tracking against milestones", "Strict executive oversight", "Air-gapped backup validation", f"Mode: {research_mode} Grounding (98%)"],
                     "speaker_notes": "Thank you. We are now open for questions and executive approval."
                 }
             ]
 
-            summary_text = f"# PRESENTATION DECK: {title}\n\n"
+            summary_text = f"# PRESENTATION DECK [{research_mode}]: {title}\n\n"
             for s in slides:
                 summary_text += f"## Slide {s['slide_number']}: {s['title']}\n*{s['subtitle']}*\n"
                 for b in s['bullets']:
@@ -398,6 +610,7 @@ class MockProvider(AIProvider):
                 "structured_data": {
                     "deck_title": title,
                     "target_audience": audience,
+                    "research_mode": research_mode,
                     "slide_count": len(slides),
                     "slides": slides
                 }
@@ -418,11 +631,12 @@ class MockProvider(AIProvider):
                 {"label": "Confidence", "value": "0.98", "description": "High-fidelity extraction"}
             ]
 
-            info_text = f"""# INFOGRAPHIC VISUAL BLUEPRINT: {title}
+            info_text = f"""# INFOGRAPHIC VISUAL BLUEPRINT [{research_mode}]: {title}
 
 ## 1. VISUAL HIERARCHY & HEADER
 - **Primary Hero Banner:** {title}
 - **Subtitle:** {topic}
+- **Operating Mode Badge:** {mode_tag}
 - **Tone & Palette:** Deep Navy Slate (#0F172A), Sky Cyan (#0EA5E9), Emerald Green (#10B981)
 
 ## 2. KEY METRIC CALLOUT CARDS
@@ -438,12 +652,15 @@ class MockProvider(AIProvider):
 
 ## 4. EXECUTIVE TAKEAWAY
 {exec_sum[:180]}...
+
+{mode_footer}
 """
             return {
                 "title": f"Infographic Blueprint - {title[:40]}",
                 "raw_content": info_text,
                 "structured_data": {
                     "infographic_title": title,
+                    "research_mode": research_mode,
                     "datapoints": datapoints,
                     "layout_recommendation": "3-column responsive card grid with prominent hero metrics banner",
                     "color_palette": ["#0F172A", "#0EA5E9", "#10B981", "#F8FAFC"]
@@ -457,9 +674,9 @@ class MockProvider(AIProvider):
                 {
                     "scene_number": 1,
                     "duration_seconds": 10,
-                    "visual_description": f"Dynamic cinematic title banner displaying '{title[:45]}'. Tech grid overlay with radar sweep.",
-                    "on_screen_text": title[:30].upper(),
-                    "narration": f"In this executive briefing, we present the verified situational analysis on {topic}.",
+                    "visual_description": f"Dynamic cinematic title banner displaying '{title[:45]}'. Mode badge [{research_mode}] overlay.",
+                    "on_screen_text": f"{title[:25].upper()} • {research_mode}",
+                    "narration": f"In this executive briefing, we present the verified situational analysis on {topic} under {research_mode} operating mode.",
                     "subtitle": f"Verified analysis on {topic}."
                 },
                 {
@@ -490,8 +707,8 @@ class MockProvider(AIProvider):
                     "scene_number": 5,
                     "duration_seconds": 8,
                     "visual_description": "Closing governance screen with verified timestamp, operator sign-off badge, and compliance desk link.",
-                    "on_screen_text": "VERIFIED & CERTIFIED",
-                    "narration": "Thank you for reviewing this source-grounded intelligence update.",
+                    "on_screen_text": f"VERIFIED & CERTIFIED • {research_mode}",
+                    "narration": f"Thank you for reviewing this source-grounded intelligence update in {research_mode} mode.",
                     "subtitle": "Thank you for reviewing."
                 }
             ]
@@ -500,10 +717,11 @@ class MockProvider(AIProvider):
                 "title": f"Executive Explainer Video: {title[:50]}",
                 "target_duration_seconds": 60,
                 "aspect_ratio": "16:9",
+                "research_mode": research_mode,
                 "scenes": scenes
             }
 
-            md = f"# VIDEO STORYBOARD & SCRIPT: {video_data['title']}\n\n"
+            md = f"# VIDEO STORYBOARD & SCRIPT [{research_mode}]: {video_data['title']}\n\n"
             for sc in scenes:
                 md += f"### SCENE {sc['scene_number']} ({sc['duration_seconds']}s)\n"
                 md += f"- **Visual:** {sc['visual_description']}\n"
@@ -521,7 +739,7 @@ class MockProvider(AIProvider):
             return {
                 "title": f"{format_type.capitalize()} Output",
                 "raw_content": f"# {title}\n\n{exec_sum}",
-                "structured_data": {"format": format_type, "topic": topic}
+                "structured_data": {"format": format_type, "topic": topic, "research_mode": research_mode}
             }
 
     async def fact_check(self, canonical_data: Dict[str, Any], generated_text: str, format_type: str) -> Dict[str, Any]:
