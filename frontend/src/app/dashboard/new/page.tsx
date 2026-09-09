@@ -39,6 +39,10 @@ import {
   FileEdit,
   X,
   Database,
+  Target,
+  Palette,
+  Compass,
+  BookOpen,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { Project, Output, CanonicalAnalysis } from '@/types'
@@ -197,9 +201,12 @@ function NewTransformationStudioContent() {
   const [tone, setTone] = useState('Professional & Authoritative')
   const [language, setLanguage] = useState('English')
   const [detailLevel, setDetailLevel] = useState('Detailed & Comprehensive')
+  const [communicationObjective, setCommunicationObjective] = useState('Multi-channel enterprise distribution')
+  const [contentStyle, setContentStyle] = useState('Corporate & Government Advisory')
 
-  // Step 4: Generated Deliverables
+  // Step 4: Generated Deliverables & Live Translations
   const [isExecutingAI, setIsExecutingAI] = useState(false)
+  const [isTranslating, setIsTranslating] = useState(false)
   const [generatedOutputs, setGeneratedOutputs] = useState<Output[]>([])
   const [activeOutputTab, setActiveOutputTab] = useState<string>('executive_summary')
 
@@ -232,6 +239,8 @@ function NewTransformationStudioContent() {
         if (data.defaultTone && !templateParam) setTone(data.defaultTone)
         if (data.defaultLanguage) setLanguage(data.defaultLanguage)
         if (data.defaultDetailLevel) setDetailLevel(data.defaultDetailLevel)
+        if (data.defaultObjective) setCommunicationObjective(data.defaultObjective)
+        if (data.defaultContentStyle) setContentStyle(data.defaultContentStyle)
       }
     } catch {}
   }, [templateParam])
@@ -331,8 +340,8 @@ function NewTransformationStudioContent() {
         tone: tone,
         language: language,
         detail_level: detailLevel,
-        communication_objective: 'Multi-channel enterprise distribution',
-        content_style: 'Structured',
+        communication_objective: communicationObjective,
+        content_style: contentStyle,
         research_mode: researchMode,
         requested_formats: selectedFormats,
       })
@@ -346,6 +355,22 @@ function NewTransformationStudioContent() {
       setCurrentStep(3)
     } finally {
       setIsExecutingAI(false)
+    }
+  }
+
+  // STEP 4 ACTION: On-Demand Deliverable Translation (e.g. Kannada, Hindi, etc.)
+  const handleTranslateOutput = async (targetLang: string) => {
+    if (!activeOutput || !targetLang) return
+    try {
+      setIsTranslating(true)
+      const updated = await api.translateOutput(activeOutput.id, targetLang)
+      setGeneratedOutputs((prev) =>
+        prev.map((o) => (o.id === updated.id ? updated : o))
+      )
+    } catch (err: any) {
+      alert(`Translation failed: ${err.message}`)
+    } finally {
+      setIsTranslating(false)
     }
   }
 
@@ -1058,40 +1083,164 @@ function NewTransformationStudioContent() {
           </div>
 
           {/* Audience & Calibration Settings */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+          <div className="space-y-4 pt-6 border-t border-slate-100">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                Target Audience
-              </label>
-              <select
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
-              >
-                <option value="Executive Board & Technical Engineers">Executive Board & Technical Engineers</option>
-                <option value="Executive Board & C-Suite">Executive Board & C-Suite</option>
-                <option value="Government Officials & Regulators">Government Officials & Regulators</option>
-                <option value="Technical Security Engineers">Technical Security Engineers</option>
-                <option value="General Public & Media">General Public & Media</option>
-                <option value="Enterprise Customers & Partners">Enterprise Customers & Partners</option>
-              </select>
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <Sliders className="h-4 w-4 text-blue-600" />
+                <span>Audience, Tone & Calibration Parameters</span>
+              </h3>
+              <p className="text-xs text-slate-500 font-normal mt-0.5">
+                Customize the target audience, tone, language, detail level, communication objective, and content style.
+              </p>
             </div>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-                Tone & Style
-              </label>
-              <select
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
-              >
-                <option value="Professional & Authoritative">Professional & Authoritative</option>
-                <option value="Formal & Strategic">Formal & Strategic</option>
-                <option value="Technical & Precise">Technical & Precise</option>
-                <option value="Urgent Advisory">Urgent Advisory</option>
-                <option value="Educational & Accessible">Educational & Accessible</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 1. Target Audience */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Target Audience
+                  </label>
+                </div>
+                <select
+                  value={audience}
+                  onChange={(e) => setAudience(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="Executive Board & Technical Engineers">Executive Board & Technical Engineers</option>
+                  <option value="Executive Board & C-Suite">Executive Board & C-Suite</option>
+                  <option value="Government Officials & Regulators">Government Officials & Regulators</option>
+                  <option value="Technical Security Engineers">Technical Security Engineers</option>
+                  <option value="General Public & Media">General Public & Media</option>
+                  <option value="Enterprise Customers & Partners">Enterprise Customers & Partners</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Determines technical depth & context assumed.</p>
+              </div>
+
+              {/* 2. Tone & Style */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sliders className="h-4 w-4 text-purple-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Tone & Style
+                  </label>
+                </div>
+                <select
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="Professional & Authoritative">Professional & Authoritative</option>
+                  <option value="Formal & Strategic">Formal & Strategic</option>
+                  <option value="Technical & Precise">Technical & Precise</option>
+                  <option value="Urgent Advisory">Urgent Advisory</option>
+                  <option value="Educational & Accessible">Educational & Accessible</option>
+                  <option value="Conversational & Engaging">Conversational & Engaging</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Sets vocabulary, voice, and formality level.</p>
+              </div>
+
+              {/* 3. Language Selection (Includes Kannada) */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-emerald-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Language Selection
+                  </label>
+                </div>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="English">English</option>
+                  <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                  <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                  <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                  <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
+                  <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                  <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                  <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                  <option value="Spanish (Español)">Spanish (Español)</option>
+                  <option value="French (Français)">French (Français)</option>
+                  <option value="German (Deutsch)">German (Deutsch)</option>
+                  <option value="Japanese (日本語)">Japanese (日本語)</option>
+                  <option value="Chinese (中文)">Chinese (中文)</option>
+                  <option value="Arabic (العربية)">Arabic (العربية)</option>
+                  <option value="Portuguese (Português)">Portuguese (Português)</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Generates calibrated content in target language.</p>
+              </div>
+
+              {/* 4. Level of Detail */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-amber-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Level of Detail
+                  </label>
+                </div>
+                <select
+                  value={detailLevel}
+                  onChange={(e) => setDetailLevel(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="Detailed & Comprehensive">Detailed & Comprehensive</option>
+                  <option value="Balanced & Informative">Balanced & Informative</option>
+                  <option value="Concise Executive Briefing">Concise Executive Briefing</option>
+                  <option value="High-Level Summary">High-Level Summary</option>
+                  <option value="Technical Deep-Dive">Technical Deep-Dive</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Controls verbosity and granular facts included.</p>
+              </div>
+
+              {/* 5. Communication Objective */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Compass className="h-4 w-4 text-indigo-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Communication Objective
+                  </label>
+                </div>
+                <select
+                  value={communicationObjective}
+                  onChange={(e) => setCommunicationObjective(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="Multi-channel enterprise distribution">Multi-channel enterprise distribution</option>
+                  <option value="Inform & Remediate (Security Event)">Inform & Remediate (Security Event)</option>
+                  <option value="Executive Decision & Strategy">Executive Decision & Strategy</option>
+                  <option value="Regulatory Compliance & Audit">Regulatory Compliance & Audit</option>
+                  <option value="Public Awareness & Media Briefing">Public Awareness & Media Briefing</option>
+                  <option value="Product Launch & Marketing">Product Launch & Marketing</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Defines the primary goal & call to action.</p>
+              </div>
+
+              {/* 6. Content Style */}
+              <div className="bg-slate-50/70 rounded-2xl border border-slate-200/80 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-pink-600" />
+                  <label className="text-xs font-bold text-slate-800">
+                    Content Style
+                  </label>
+                </div>
+                <select
+                  value={contentStyle}
+                  onChange={(e) => setContentStyle(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+                >
+                  <option value="Corporate & Government Advisory">Corporate & Government Advisory</option>
+                  <option value="Structured & Analytical">Structured & Analytical</option>
+                  <option value="Narrative & Persuasive">Narrative & Persuasive</option>
+                  <option value="Action-Oriented Bulleted">Action-Oriented Bulleted</option>
+                  <option value="Technical Deep-Dive">Technical Deep-Dive</option>
+                  <option value="Educational & Explanatory">Educational & Explanatory</option>
+                </select>
+                <p className="text-[11px] text-slate-400">Dictates rhetorical structure and formatting format.</p>
+              </div>
             </div>
           </div>
 
@@ -1190,6 +1339,42 @@ function NewTransformationStudioContent() {
 
                       {/* Action Controls */}
                       <div className="flex items-center gap-2 flex-wrap">
+                        {/* Translate Language Selector */}
+                        <div className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:border-blue-300 transition-colors">
+                          <Globe className={clsx("h-3.5 w-3.5 text-blue-600", isTranslating && "animate-spin")} />
+                          <select
+                            disabled={isTranslating}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                handleTranslateOutput(e.target.value)
+                                e.target.value = ''
+                              }
+                            }}
+                            defaultValue=""
+                            className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer disabled:opacity-50"
+                          >
+                            <option value="" disabled>
+                              {isTranslating ? 'Translating...' : '🌐 Translate To...'}
+                            </option>
+                            <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                            <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                            <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                            <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                            <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
+                            <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                            <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                            <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                            <option value="Spanish (Español)">Spanish (Español)</option>
+                            <option value="French (Français)">French (Français)</option>
+                            <option value="German (Deutsch)">German (Deutsch)</option>
+                            <option value="Japanese (日本語)">Japanese (日本語)</option>
+                            <option value="Chinese (中文)">Chinese (中文)</option>
+                            <option value="Arabic (العربية)">Arabic (العربية)</option>
+                            <option value="Portuguese (Português)">Portuguese (Português)</option>
+                            <option value="English">English</option>
+                          </select>
+                        </div>
+
                         <button
                           onClick={() => setManualEditorModalOutput(activeOutput)}
                           className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
