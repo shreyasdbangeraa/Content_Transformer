@@ -519,26 +519,26 @@ function NewTransformationStudioContent() {
       {/* ========================================================================= */}
       {/* 1. HERO SECTION & FLOW DIAGRAM                                            */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 lg:p-10 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-10">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-4 sm:p-8 lg:p-10 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 sm:gap-10">
           {/* Left Text */}
-          <div className="space-y-4 max-w-xl">
+          <div className="space-y-3 sm:space-y-4 max-w-xl">
             <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
               NEW TRANSFORMATION
             </span>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-[1.18]">
+            <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-[1.18]">
               Turn Your Information into <br />
               <span className="text-blue-600">Trusted, Actionable Content</span>
             </h1>
 
-            <p className="text-slate-500 text-sm sm:text-[15px] leading-relaxed max-w-lg font-normal">
+            <p className="text-slate-500 text-xs sm:text-[15px] leading-relaxed max-w-lg font-normal">
               Upload your documents, add a source, or paste a link. Our AI will research, verify and transform it into accurate, evidence-backed content.
             </p>
           </div>
 
           {/* Right SVG Diagram */}
-          <div className="relative flex items-center justify-center w-full xl:w-auto xl:min-w-[560px] py-4 select-none">
+          <div className="relative flex items-center justify-center w-full xl:w-auto xl:min-w-[560px] py-2 sm:py-4 select-none overflow-x-auto no-scrollbar">
             <div className="flex items-center justify-between w-full max-w-2xl gap-2 sm:gap-4 relative">
               {/* Left Column: 4 Source Input Pills */}
               <div className="flex flex-col gap-2.5 z-10 shrink-0">
@@ -1489,8 +1489,8 @@ function NewTransformationStudioContent() {
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
+        <div className="overflow-x-auto -mx-2 sm:mx-0">
+          <table className="w-full text-left text-xs sm:text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-slate-100 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
                 <th className="py-4 font-semibold">Name</th>
