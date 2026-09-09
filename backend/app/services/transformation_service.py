@@ -1,11 +1,12 @@
 import asyncio
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
-from app.database.models import Transformation, CanonicalAnalysis, Output, OutputVersion, FactCheck, QualityScore, AuditLog
+from app.database.models import Transformation, CanonicalAnalysis, Output, OutputVersion, FactCheck, QualityScore, AuditLog, Source
 from app.ai.factory import AIFactory
 from app.ai.huggingface_provider import HuggingFaceProvider
 from app.services.quality_service import QualityService
 from app.services.blockchain_service import BlockchainService
+from app.services.multilingual_service import MultilingualService
 from app.utils.image_resolver import resolve_domain_image_url
 
 class TransformationService:
@@ -20,6 +21,9 @@ class TransformationService:
         canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.id == transformation.canonical_id).first()
         if not canonical:
             raise ValueError(f"Canonical Analysis {transformation.canonical_id} not found")
+
+        source_doc = db.query(Source).filter(Source.id == canonical.source_id).first() if canonical.source_id else None
+        doc_filename = source_doc.filename if source_doc and source_doc.filename else f"{canonical.title or 'document'}.pdf"
 
         ai_provider = AIFactory.get_provider(provider_name)
         hf_provider = HuggingFaceProvider()
@@ -43,7 +47,8 @@ class TransformationService:
             "claims": canonical.claims or [],
             "sensitivity": canonical.sensitivity or {},
             "rag_context": canonical.rag_context or [],
-            "rag_sources": canonical.rag_sources or []
+            "rag_sources": canonical.rag_sources or [],
+            "research_findings": canonical.research_findings or []
         }
 
         # Check if Knowledge Base has relevant guidelines if not already attached
@@ -86,14 +91,16 @@ class TransformationService:
             "video_package"
         ]
 
+        target_lang = MultilingualService.clean_language_name(config.get("language", "English"))
+
         # 1. Concurrently generate all requested artefacts
         async def _generate_single_format(fmt: str):
             try:
-                # Dedicated Hugging Face Model Generation for LinkedIn Thought Leadership
-                if fmt == "linkedin":
-                    gen_result = await hf_provider.generate_linkedin_post(canonical_dict, config)
-                else:
-                    gen_result = await ai_provider.generate_artefact(canonical_dict, fmt, config)
+                gen_result = await ai_provider.generate_artefact(canonical_dict, fmt, config)
+
+                # Localize entire deliverable if target language is non-English
+                if not MultilingualService.is_english(target_lang):
+                    gen_result = await MultilingualService.localize_artefact(gen_result, target_lang, fmt)
 
                 raw_text = gen_result.get("raw_content", "")
                 title = gen_result.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
@@ -122,20 +129,37 @@ class TransformationService:
 
                 return fmt, raw_text, title, structured_data
             except Exception as e:
-                # Graceful fallback to structured extraction
-                topic = canonical.topic or canonical.title
-                title = f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}"
-                raw_text = f"# {title}\n\n**Topic:** {topic}\n\n{canonical.executive_summary}\n\n"
-                for f in (canonical.key_facts or [])[:3]:
-                    raw_text += f"- {f.get('text', '')}\n"
+                # Clean fallback via MockProvider to preserve format-specific structure
+                from app.ai.mock_provider import MockProvider
+                fallback_prov = MockProvider()
+                try:
+                    fallback_gen = await fallback_prov.generate_artefact(canonical_dict, fmt, config)
+                    raw_text = fallback_gen.get("raw_content", "")
+                    title = fallback_gen.get("title", f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}")
+                    fallback_struct = fallback_gen.get("structured_data", {})
+                except Exception:
+                    topic = canonical.topic or canonical.title
+                    title = f"{fmt.replace('_', ' ').capitalize()} - {canonical.title[:30]}"
+                    raw_text = f"# {title}\n\n{canonical.title}\n\n"
+                    for f in (canonical.key_facts or [])[:3]:
+                        raw_text += f"- {f.get('text', '')}\n"
+                    fallback_struct = {"format": fmt}
+
+                fallback_struct["error"] = str(e)
+                fallback_struct["rag_sources"] = canonical_dict.get("rag_sources", [])
+                fallback_struct["rag_context"] = canonical_dict.get("rag_context", [])
+                fallback_struct["is_rag_grounded"] = len(canonical_dict.get("rag_sources", [])) > 0
                 
-                fallback_struct: Dict[str, Any] = {
-                    "format": fmt,
-                    "error": str(e),
-                    "rag_sources": canonical_dict.get("rag_sources", []),
-                    "rag_context": canonical_dict.get("rag_context", []),
-                    "is_rag_grounded": len(canonical_dict.get("rag_sources", [])) > 0
-                }
+                if not MultilingualService.is_english(target_lang):
+                    localized_fallback = await MultilingualService.localize_artefact({
+                        "title": title,
+                        "raw_content": raw_text,
+                        "structured_data": fallback_struct
+                    }, target_lang, fmt)
+                    title = localized_fallback["title"]
+                    raw_text = localized_fallback["raw_content"]
+                    fallback_struct = localized_fallback["structured_data"]
+
                 if fmt == "linkedin":
                     linkedin_banner_uri = await hf_provider.generate_linkedin_banner(canonical_dict)
                     fallback_struct["image_uri"] = linkedin_banner_uri
@@ -169,7 +193,7 @@ class TransformationService:
                         "claim_id": f"c_{idx+1}",
                         "text": f.get("text", "")[:100],
                         "status": "VERIFIED",
-                        "source_file": f.get("source", {}).get("file", "novatech_incident_report.pdf"),
+                        "source_file": f.get("source", {}).get("file", doc_filename),
                         "source_page": f.get("source", {}).get("page", 1),
                         "source_section": f.get("source", {}).get("section", "Overview"),
                         "source_match": f.get("text", ""),

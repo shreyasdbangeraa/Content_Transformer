@@ -61,6 +61,7 @@ class OllamaProvider(AIProvider):
 Extract strictly factual, source-grounded information from the provided document into a structured JSON schema.
 IMPORTANT RULE 1: Extract an exhaustive catalog of 10 to 15+ granular key facts covering root cause, systems, telemetry metrics, timelines, impacts, and directives with exact page and section source attribution.
 IMPORTANT RULE 2: The 'executive_summary' MUST start with the exact document topic / subject name in bold right at the beginning (e.g. '**Topic: [Topic Name]** — This strategic synthesis analyzes...').
+IMPORTANT RULE 3: Extract ALL explicit calendar dates, submission deadlines, timestamps, project phases, and roadmap milestones from the document into both 'dates' and 'events'. Do not omit proposal submission dates or phased schedules.
 Never fabricate statistics, dates, names, or numbers.
 Detect sensitive data (emails, internal IPs, credentials, phone numbers)."""
 
@@ -102,20 +103,24 @@ SOURCE CONTENT:
             return await self._fallback.analyze_document(text, filename)
 
     async def generate_artefact(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.multilingual_service import MultilingualService
         audience = config.get("target_audience", "Executive Board & Regulators")
         tone = config.get("tone", "Professional & Authoritative")
-        lang = config.get("language", "English")
+        lang = MultilingualService.clean_language_name(config.get("language", "English"))
+
+        lang_instruction = f"CRITICAL: Output Language is '{lang}'. You MUST write all titles, headings, bullet points, narrative, slides, and scripts entirely in '{lang}'." if not MultilingualService.is_english(lang) else ""
 
         prompt = f"""You are an elite communication transformer running privately on local AI (Llama 3).
 Transform the following canonical facts into format: '{format_type}'.
-Target Audience: {audience} | Tone: {tone} | Language: {lang}
+Target Audience: {audience} | Tone: {tone} | Target Language: {lang}
+{lang_instruction}
 Anti-hallucination rule: ONLY use facts and information from the provided canonical data.
 
 Return valid JSON with:
 {{
-  "title": "Title of the output",
-  "raw_content": "Full formatted markdown text of the output tailored to the format",
-  "structured_data": {{ "format": "{format_type}" }}
+  "title": "Title of the output in {lang}",
+  "raw_content": "Full formatted markdown text of the output in {lang} tailored to the format",
+  "structured_data": {{ "format": "{format_type}", "language": "{lang}" }}
 }}
 
 CANONICAL SOURCE DATA:
@@ -129,25 +134,67 @@ RAG Organizational Context: {canonical_data.get('rag_prompt_block', '')}
 """
 
         if format_type == "presentation":
-            prompt += """\nFormat as structured slides. The 'structured_data' MUST have a 'slides' array containing 4-5 slide objects:
-{"slides": [{"slide_number": 1, "title": "Slide Title", "bullets": ["Point 1", "Point 2"], "speaker_notes": "Notes"}]}"""
+            prompt += f"""\nFormat as structured slides (5-7 slides max). Each slide must have punchy bullet points ONLY (NO long paragraphs) and practical speaker notes.
+The 'structured_data' MUST have a 'slides' array:
+{{"slides": [{{"slide_number": 1, "title": "Slide Title", "bullets": ["Punchy bullet 1", "Punchy bullet 2"], "speaker_notes": "Context for the presenter"}}]}}"""
 
         elif format_type == "linkedin":
-            prompt += """\nFormat as a comprehensive, high-value LinkedIn Thought Leadership Post. Include: (1) Bold opening hook, (2) Detailed situational context paragraphs, (3) 4-6 deep verified factual findings with bold headers and page citations, (4) Quantified metrics/telemetry section, (5) Monitored operational risks, (6) 3-phase strategic action directives roadmap with numbers, (7) Executive bottom-line takeaway principle, (8) Community discussion question, (9) 5-7 hashtags."""
+            prompt += f"""\nFormat as an engaging, authentic LinkedIn post (150-250 words total).
+Tone: Professional, direct, human, and conversational.
+Structure:
+1. Hook (1-2 punchy lines highlighting the real core problem/vision)
+2. What the initiative is
+3. Core pillars or structure from the source document
+4. Practical value / impact
+5. Collaboration / call to action
+DO NOT write fake telemetry, corporate governance slogans, or robotic filler."""
 
         elif format_type == "twitter":
-            prompt += """\nFormat as a sequential X/Twitter thread. The 'structured_data' MUST have a 'tweets' array of strings:
-{"tweets": ["1/5 Hook...", "2/5 Core Finding...", "3/5 Telemetry...", "4/5 Remediation...", "5/5 Takeaway..."]}"""
+            prompt += f"""\nFormat as a concise X/Twitter thread (maximum 4 posts). Each post must be punchy, self-contained, and natural.
+The 'structured_data' MUST have a 'tweets' array of strings:
+{{"tweets": ["1/ Hook addressing the core topic...", "2/ What this initiative or document solves...", "3/ The key breakdown or roadmap...", "4/ Impact and call to action..."]}}"""
 
         elif format_type == "video_package":
-            prompt += """\nFormat as a 5-scene video package. The 'structured_data' MUST have a 'scenes' array:
-{"scenes": [{"scene_number": 1, "title": "Intro", "visual_prompt": "Visual description", "narration_text": "Spoken audio script", "on_screen_text": "Key stat", "duration_seconds": 12}]}"""
+            prompt += f"""\nFormat as a 45-60 second storytelling video script across ~5 scenes.
+The narration MUST be natural, conversational, and spoken-word ready.
+The 'structured_data' MUST have a 'scenes' array:
+{{"scenes": [{{"scene_number": 1, "title": "Scene Title", "visual_prompt": "Clear visual description", "narration_text": "Natural spoken voiceover", "on_screen_text": "Short punchy text", "duration_seconds": 12}}]}}"""
 
         elif format_type == "infographic":
-            prompt += """\nFormat as an infographic visual wireframe layout with metrics, risk matrix, and visual tokens."""
+            prompt += f"""\nFormat as a visual-first infographic outline with minimal text and high visual impact:
+1. Header / Core Problem
+2. Proposed Solution
+3. Core Structure / Key Pillars
+4. Expected Outcomes
+5. Support & Partnership Requirements"""
+
+        elif format_type == "executive_summary":
+            prompt += f"""\nFormat as an EXCLUSIVE SUMMARY in {lang} (450-700 words).
+PURPOSE: UNDERSTAND ("What is this document about, and what are the most important things I need to know?").
+Allows someone to understand the document thoroughly without reading the original document.
+Structure:
+## 1. Overview & Strategic Purpose (document subject, author, recipient, core mission)
+## 2. Core Problem & Context (background, student questions, practical challenges)
+## 3. Key Numbers, Scope & Structural Facts (quantitative metrics, dates, episode counts, audience tiers, budget lines)
+## 4. Main Components & Detailed Structure (complete breakdown of episodes/tracks with titles and descriptions, or phases)
+## 5. Guest Selection Framework & Core Principle (criteria, guiding motto, guest profiles if applicable)
+## 6. Operational Requirements & Partner Support (equipment, facilities, network access, administrative coordination)
+## 7. Concrete Expected Outcomes (specific educational and operational outcomes)
+## 8. Bottom Line (2-3 sentences summarizing overall meaning)
+STRICT: Comprehensive factual summary ONLY. Do NOT include speculative analysis, unsolicited recommendations, or invented risks."""
 
         elif format_type == "advisory":
-            prompt += """\nFormat as a strict security advisory with CVSS score, Indicators of Compromise (IoCs), timeline, and required mitigations."""
+            prompt += f"""\nFormat as an EXECUTIVE ADVISORY in {lang} (400-700 words).
+PURPOSE: DECIDE ("What does this information mean, what should I pay attention to, and what should I consider doing?").
+Structure:
+## 1. Executive Assessment (Analytical assessment: What is happening? Why it matters? Overall situation)
+## 2. Key Findings (Decision-relevant facts, gaps, constraints, dependencies)
+## 3. Implications (Analytical observations: "- **Implication:** ...")
+## 4. Risks & Considerations (Meaningful uncertainties: "- **Consideration:** ...")
+## 5. Recommendations (Practical actionable steps: "1. **Recommendation:** ...")
+## 6. Decision Points & Next Steps (Milestones and approvals needed)
+## 7. Advisory Conclusion (Decision takeaway)
+STRICT: Decision-support analysis. Clearly separate Findings, Implications, and Recommendations."""
 
         try:
             raw_json = await self._call_ollama(prompt)
@@ -156,7 +203,7 @@ RAG Organizational Context: {canonical_data.get('rag_prompt_block', '')}
                 data["title"] = f"{canonical_data.get('topic', 'Analysis')} - {format_type.upper()}"
             if not data.get("raw_content"):
                 data["raw_content"] = f"# {data['title']}\n\n" + canonical_data.get("executive_summary", "")
-            return data
+            return await MultilingualService.localize_artefact(data, lang, format_type)
         except Exception:
             return await self._fallback.generate_artefact(canonical_data, format_type, config)
 

@@ -22,6 +22,7 @@ import {
   Check,
   Database,
   Copy,
+  Globe,
 } from 'lucide-react'
 import clsx from 'clsx'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
@@ -54,6 +55,46 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
     if (factFilter === 'DEEP_SYNTHESIS') return fact.provenance === 'DEEP_RESEARCH_SYNTHESIS'
     return true
   })
+
+  // Unified Timeline & Events Construction
+  const unifiedTimeline = React.useMemo(() => {
+    const items: Array<{
+      dateOrTime: string
+      event: string
+      severity?: string
+      type?: string
+    }> = []
+    const seen = new Set<string>()
+
+    // Add explicit dates
+    for (const d of canonical.dates || []) {
+      const key = `${d.date}::${d.event}`.toLowerCase().trim()
+      if (!seen.has(key)) {
+        seen.add(key)
+        items.push({
+          dateOrTime: d.date,
+          event: d.event,
+          type: (d as any).type || 'Milestone'
+        })
+      }
+    }
+
+    // Add events
+    for (const ev of canonical.events || []) {
+      const key = `${ev.timestamp}::${ev.event}`.toLowerCase().trim()
+      if (!seen.has(key)) {
+        seen.add(key)
+        items.push({
+          dateOrTime: ev.timestamp,
+          event: ev.event,
+          severity: ev.severity,
+          type: ev.severity ? `Incident ${ev.severity}` : 'Milestone'
+        })
+      }
+    }
+
+    return items
+  }, [canonical.dates, canonical.events])
 
   const provenanceBadge = (tag?: string) => {
     switch (tag) {
@@ -121,6 +162,55 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
     )
   }
 
+  const isValidDiscoveredUrl = (url?: string): boolean => {
+    if (!url || typeof url !== 'string') return false
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return false
+    const low = url.toLowerCase()
+    const banned = ['example.com', 'example.org', 'bing.com', 'google.com', 'localhost', '127.0.0.1']
+    return !banned.some((b) => low.includes(b))
+  }
+
+  const relationshipBadge = (rel?: string) => {
+    switch (rel) {
+      case 'Supported':
+        return (
+          <span className="inline-flex items-center gap-1 text-emerald-800 font-extrabold text-[11px] bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-300">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Supported by Source
+          </span>
+        )
+      case 'Partially Supported':
+        return (
+          <span className="inline-flex items-center gap-1 text-sky-800 font-extrabold text-[11px] bg-sky-50 px-2.5 py-0.5 rounded-md border border-sky-300">
+            <CheckCircle2 className="h-3 w-3 text-sky-600" /> Partially Supported
+          </span>
+        )
+      case 'Additional Context':
+        return (
+          <span className="inline-flex items-center gap-1 text-indigo-800 font-extrabold text-[11px] bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-300">
+            <Lightbulb className="h-3 w-3 text-indigo-600" /> Additional Context
+          </span>
+        )
+      case 'Contradicted':
+        return (
+          <span className="inline-flex items-center gap-1 text-rose-800 font-extrabold text-[11px] bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-300">
+            <AlertTriangle className="h-3 w-3 text-rose-600" /> Contradicted by Source
+          </span>
+        )
+      case 'Not Found':
+        return (
+          <span className="inline-flex items-center gap-1 text-slate-700 font-extrabold text-[11px] bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-300">
+            <HelpCircle className="h-3 w-3 text-slate-500" /> Not Found
+          </span>
+        )
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 text-slate-700 font-extrabold text-[11px] bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-300">
+            <Check className="h-3 w-3 text-slate-500" /> Corroborated Source
+          </span>
+        )
+    }
+  }
+
   const primaryCount = (canonical.key_facts || []).filter(f => f.provenance === 'PRIMARY_SOURCE_FACT').length
   const externalCount = (canonical.key_facts || []).filter(f => f.provenance === 'VERIFIED_EXTERNAL_FACT').length
 
@@ -140,7 +230,7 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
     { id: 'research', label: `External Research (${canonical.research_findings?.length || 0})`, icon: Search },
     { id: 'conflicts', label: `Conflicts (${canonical.conflicts?.length || 0})`, icon: AlertOctagon, alert: (canonical.conflicts?.length || 0) > 0 },
     { id: 'stats', label: `Metrics & Telemetry (${canonical.statistics?.length || 0})`, icon: BarChart3 },
-    { id: 'timeline', label: `Timeline (${canonical.dates?.length || canonical.events?.length || 0})`, icon: Clock },
+    { id: 'timeline', label: `Timeline (${unifiedTimeline.length})`, icon: Clock },
     { id: 'recs', label: `Recommendations (${canonical.recommendations?.length || 0})`, icon: Lightbulb },
     { id: 'risks', label: `Risks (${canonical.risks?.length || 0})`, icon: AlertTriangle },
     { id: 'uncertainties', label: `Under Investigation (${canonical.uncertainties?.length || 0})`, icon: HelpCircle },
@@ -425,51 +515,146 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
 
         {/* EXTERNAL RESEARCH FINDINGS TAB */}
         {activeTab === 'research' && (
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-sky-50/80 border border-sky-200 p-4 text-xs sm:text-sm text-sky-900 font-medium flex items-center gap-3">
-              <Search className="h-5 w-5 text-sky-600 shrink-0" />
-              <span>
-                Evidence gathered via automated 8-tier authoritative source discovery. Prioritizing CISA, government advisories, and certified incident portals.
-              </span>
+          <div className="space-y-6">
+            <div className="rounded-2xl bg-gradient-to-r from-sky-50 via-indigo-50/40 to-blue-50 border border-sky-200 p-5 text-xs sm:text-sm text-sky-950 font-medium flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Globe className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm sm:text-base">
+                    Authoritative External Research &amp; Live Web Grounding
+                  </h4>
+                  <p className="text-slate-600 text-xs">
+                    Autonomous multi-tier discovery actively visits external websites, parses authoritative evidence, and corroborates primary facts against government, academic, and vendor repositories.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-100/90 border border-sky-300 text-sky-900 font-bold text-xs">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-sky-700" />
+                  {canonical.research_findings?.length || 0} Sources Researched
+                </span>
+              </div>
             </div>
 
             {canonical.research_findings && canonical.research_findings.length > 0 ? (
-              canonical.research_findings.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-3 hover:bg-white transition-all shadow-xs"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-bold text-slate-900 text-sm sm:text-base">
-                      {item.source_title}
-                    </span>
-                    {tierBadge(item.source_tier)}
-                  </div>
-                  <p className="text-xs sm:text-sm text-slate-700 font-semibold bg-white p-3 rounded-xl border border-slate-200">
-                    &ldquo;{item.evidence_snippet}&rdquo;
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium pt-1">
-                    <span>Verified Claim: <strong className="text-slate-800">{item.claim_text}</strong></span>
-                    {item.source_url && (
-                      <a
-                        href={item.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sky-600 hover:text-sky-700 flex items-center gap-1 font-bold"
-                      >
-                        Source Link <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              ))
+              <div className="grid grid-cols-1 gap-5">
+                {canonical.research_findings.map((item, idx) => {
+                  const hasValidUrl = isValidDiscoveredUrl(item.source_url)
+                  const domainDisplay = item.domain || (hasValidUrl ? item.source_url!.replace(/^https?:\/\//, '').split('/')[0].replace('www.', '') : '')
+                  const sourceName = item.source_name || item.source_title || 'Identified Entity / Topic'
+                  const pageTitle = item.page_title && item.page_title !== sourceName ? item.page_title : null
+                  const rel = item.relationship_to_document || (item.researched_status === 'corroborated' ? 'Supported' : 'Additional Context')
+                  const whyResearched = item.why_researched || item.claim_text || 'Researched based on key entities and statements in the uploaded document'
+                  const findingContent = item.research_finding || item.evidence_snippet || 'Document context corroborated against official records.'
+
+                  return (
+                    <div
+                      key={idx}
+                      className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4 hover:border-sky-300 hover:shadow-md transition-all group"
+                    >
+                      {/* Top Header: Source Name, Page Title, Tier, Status Badge */}
+                      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3.5">
+                        <div className="space-y-1.5 max-w-2xl">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-black text-slate-900 text-base group-hover:text-sky-900 transition-colors">
+                              {sourceName}
+                            </span>
+                            {domainDisplay && (
+                              <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold border border-slate-200">
+                                {domainDisplay}
+                              </span>
+                            )}
+                          </div>
+                          {pageTitle && (
+                            <p className="text-xs font-semibold text-slate-600">
+                              Page Title: <span className="text-slate-800 font-bold">{pageTitle}</span>
+                            </p>
+                          )}
+                          <div className="pt-0.5">
+                            {relationshipBadge(rel)}
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {tierBadge(item.source_tier)}
+                        </div>
+                      </div>
+
+                      {/* Discovered Real Destination Website Link Box */}
+                      {hasValidUrl ? (
+                        <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-all hover:bg-sky-100/70 hover:border-sky-300">
+                          <div className="flex items-center gap-2.5 min-w-0 max-w-full">
+                            <div className="h-8 w-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                              <Globe className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">
+                                Discovered External Source:
+                              </div>
+                              <a
+                                href={item.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-xs text-sky-700 hover:text-sky-950 hover:underline font-bold truncate block transition-colors"
+                                title={item.source_url}
+                              >
+                                {item.source_url}
+                              </a>
+                            </div>
+                          </div>
+                          <a
+                            href={item.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs shrink-0 transition-all hover:shadow-sm active:scale-95"
+                          >
+                            <span>Visit Website</span>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 flex items-center gap-2">
+                          <HelpCircle className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span>No relevant external source found for this item — grounded strictly in primary baseline document.</span>
+                        </div>
+                      )}
+
+                      {/* Why it was researched from uploaded document */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <Search className="h-3.5 w-3.5 text-indigo-500" /> Why Researched (From Document):
+                        </span>
+                        <div className="text-xs sm:text-sm text-slate-800 font-semibold bg-indigo-50/40 p-3 rounded-xl border border-indigo-100/80 leading-relaxed">
+                          {whyResearched}
+                        </div>
+                      </div>
+
+                      {/* Relevant Information Found on Website */}
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 text-emerald-600" /> Relevant Information Found:
+                        </span>
+                        <p className="text-xs sm:text-sm text-slate-800 font-medium bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed italic">
+                          &ldquo;{findingContent}&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             ) : (
-              <div className="text-center py-10 text-slate-500 text-sm font-medium">
-                Research mode configured to primary source. No external queries conducted.
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center space-y-3 shadow-xs">
+                <Search className="h-8 w-8 text-slate-400 mx-auto" />
+                <h4 className="font-bold text-slate-800 text-base">Primary Source Only (Confidential Sandbox)</h4>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                  Research mode was configured to primary source. No outside websites were queried to protect data confidentiality. Select &ldquo;Source &amp; Verify&rdquo; or &ldquo;Deep Research&rdquo; when creating a project to enable live web research with clickable links.
+                </p>
               </div>
             )}
           </div>
         )}
+
 
         {/* DETECTED CONFLICTS & CONTRADICTIONS TAB */}
         {activeTab === 'conflicts' && (
@@ -558,40 +743,99 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
 
         {/* TIMELINE & EVENTS TAB */}
         {activeTab === 'timeline' && (
-          <div className="space-y-4">
-            {canonical.events && canonical.events.length > 0 ? (
-              canonical.events.map((ev, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5 hover:bg-white transition-all shadow-xs"
-                >
-                  <div className="rounded-xl bg-sky-100 text-sky-800 text-xs font-black px-3 py-2 shrink-0 font-mono">
-                    {ev.timestamp}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-900">{ev.event}</p>
-                    {ev.severity && (
-                      <span className="inline-block mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded bg-slate-200 text-slate-800 uppercase">
-                        Severity: {ev.severity}
-                      </span>
-                    )}
-                  </div>
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-gradient-to-r from-sky-50 via-blue-50/50 to-indigo-50 border border-sky-200 p-4 text-xs sm:text-sm text-sky-950 font-medium flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Clock className="h-4.5 w-4.5" />
                 </div>
-              ))
-            ) : (
-              canonical.dates?.map((d, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5 hover:bg-white transition-all shadow-xs"
-                >
-                  <div className="rounded-xl bg-sky-100 text-sky-800 text-xs font-bold px-3 py-2 shrink-0">
-                    {d.date}
-                  </div>
-                  <p className="text-sm font-semibold text-slate-800">
-                    <FormattedText text={d.event} />
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">Chronological Milestones &amp; Important Dates</h4>
+                  <p className="text-slate-600 text-xs">
+                    Autonomous date and milestone extraction mapping submission dates, operational deadlines, and phased delivery schedules.
                   </p>
                 </div>
-              ))
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-100 border border-sky-300 text-sky-900 font-bold text-xs shrink-0">
+                {unifiedTimeline.length} Timeline Points
+              </span>
+            </div>
+
+            {unifiedTimeline.length > 0 ? (
+              <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-sky-500 before:via-indigo-400 before:to-slate-300 space-y-4">
+                {unifiedTimeline.map((item, idx) => {
+                  const isCritical = item.severity === 'CRITICAL'
+                  const isHigh = item.severity === 'HIGH'
+                  const isPhase = item.type === 'PROJECT_PHASE' || item.type?.includes('Phase') || item.dateOrTime.toLowerCase().includes('part') || item.dateOrTime.toLowerCase().includes('episode')
+                  const isCalendarDate = item.type === 'CALENDAR_DATE' || item.type === 'NUMERIC_DATE' || /\d{4}/.test(item.dateOrTime)
+
+                  return (
+                    <div
+                      key={idx}
+                      className="relative rounded-2xl border border-slate-200 bg-white p-5 space-y-2 hover:border-sky-300 hover:shadow-md transition-all group"
+                    >
+                      {/* Timeline Dot on the connecting bar */}
+                      <div
+                        className={clsx(
+                          'absolute -left-[27px] sm:-left-[35px] top-6 h-4 w-4 rounded-full border-2 border-white shadow-xs transition-transform group-hover:scale-125',
+                          isCritical
+                            ? 'bg-rose-500 ring-4 ring-rose-100'
+                            : isHigh
+                            ? 'bg-amber-500 ring-4 ring-amber-100'
+                            : isPhase
+                            ? 'bg-indigo-500 ring-4 ring-indigo-100'
+                            : 'bg-sky-500 ring-4 ring-sky-100'
+                        )}
+                      />
+
+                      {/* Header: Date Badge & Category Tag */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="rounded-xl bg-sky-100/90 text-sky-900 text-xs font-mono font-black px-3 py-1 border border-sky-200 shadow-2xs">
+                            {item.dateOrTime}
+                          </span>
+                          {isCalendarDate && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
+                              Verified Calendar Date
+                            </span>
+                          )}
+                          {isPhase && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 uppercase tracking-wider">
+                              Project Phase Roadmap
+                            </span>
+                          )}
+                        </div>
+
+                        {item.severity && (
+                          <span
+                            className={clsx(
+                              'text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase',
+                              isCritical
+                                ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                            )}
+                          >
+                            Severity: {item.severity}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Event description */}
+                      <p className="text-sm font-semibold text-slate-800 leading-relaxed pt-1">
+                        <FormattedText text={item.event} />
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center space-y-3 shadow-xs">
+                <Clock className="h-8 w-8 text-slate-400 mx-auto" />
+                <h4 className="font-bold text-slate-800 text-base">No Explicit Dates or Milestones Detected</h4>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+                  The uploaded document does not specify calendar dates, deadlines, or phased roadmap schedules. All baseline narrative is fully preserved in Key Facts and Executive Summary.
+                </p>
+              </div>
             )}
           </div>
         )}

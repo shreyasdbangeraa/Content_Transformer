@@ -43,11 +43,14 @@ class OpenAIProvider(AIProvider):
         return json.loads(raw)
 
     async def generate_artefact(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        from app.services.multilingual_service import MultilingualService
         mode = config.get("research_mode", "SOURCE_AND_VERIFY")
-        sys = f"You are a communication specialist. Generate format '{format_type}' operating strictly under Research Mode '{mode}'. If SOURCE_ONLY: strictly use only primary source document facts with zero outside claims. If SOURCE_AND_VERIFY: use primary document as ground truth with verified external citations. If DEEP_RESEARCH: synthesize 8-tier research, cross-source comparative telemetry, and deep benchmarks. Output JSON with title, raw_content, structured_data."
-        user = f"Config: {json.dumps(config)}\nData: {json.dumps(canonical_data)[:15000]}"
+        lang = MultilingualService.clean_language_name(config.get("language", "English"))
+        sys = f"You are a professional content transformation specialist. Transform the source into clean, platform-tailored format '{format_type}' strictly grounded in the provided facts without inventing information. Do not use artificial corporate jargon or fake telemetry. Output Language: '{lang}'. Write ALL titles, section headings, body text, slides, tweets, and scripts entirely in '{lang}'. Output valid JSON with title, raw_content, structured_data."
+        user = f"Target Language: {lang}\nConfig: {json.dumps(config)}\nData: {json.dumps(canonical_data)[:15000]}"
         raw = await self._call_openai(sys, user)
-        return json.loads(raw)
+        res = json.loads(raw)
+        return await MultilingualService.localize_artefact(res, lang, format_type)
 
     async def fact_check(self, canonical_data: Dict[str, Any], generated_text: str, format_type: str) -> Dict[str, Any]:
         sys = "You are a fact checker. Verify generated claims against canonical facts. Output JSON with claims, status (VERIFIED/UNSUPPORTED), grounding_score."

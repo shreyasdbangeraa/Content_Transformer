@@ -187,29 +187,11 @@ export default function KnowledgeBasePage() {
 
         <div className="flex items-center gap-3 flex-wrap relative z-10">
           <button
-            onClick={handleSeedDefaults}
-            disabled={isSeeding}
-            className="flex items-center gap-2 rounded-2xl border border-indigo-300 bg-white/90 px-4 sm:px-5 py-3 text-xs sm:text-sm font-bold text-indigo-950 hover:bg-white hover:border-indigo-400 hover:scale-105 active:scale-95 transition-all shadow-xs"
-          >
-            {isSeeding ? (
-              <>
-                <RefreshCw className="h-4 w-4 animate-spin text-indigo-600" />
-                <span>Seeding...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 text-indigo-600" />
-                <span>Seed Enterprise Policies</span>
-              </>
-            )}
-          </button>
-
-          <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-sky-600 px-5 sm:px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-sky-600 px-6 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/30 hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="h-4 w-4" />
-            <span>Add Knowledge</span>
+            <span>Add Knowledge Document</span>
           </button>
         </div>
       </div>
@@ -329,7 +311,7 @@ export default function KnowledgeBasePage() {
 
             {searchResults.length === 0 ? (
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs font-medium text-slate-500">
-                No chunks matched with sufficient similarity score. Try broader terms or seed enterprise policies.
+                No chunks matched with sufficient similarity score. Try broader search terms.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -391,19 +373,17 @@ export default function KnowledgeBasePage() {
         ) : filtered.length === 0 ? (
           <div className="rounded-3xl border-2 border-dashed border-slate-300 p-16 text-center space-y-4 bg-white">
             <BookOpen className="h-10 w-10 mx-auto text-slate-400" />
-            <p className="text-base text-slate-600 font-medium">No knowledge documents stored yet.</p>
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={handleSeedDefaults}
-                className="rounded-2xl bg-indigo-50 px-5 py-2.5 text-sm font-bold text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors shadow-xs"
-              >
-                Seed Sample Policies
-              </button>
+            <p className="text-base text-slate-700 font-bold">No knowledge documents stored yet.</p>
+            <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
+              Upload your corporate policies, style guides, or reference papers to ground all AI transformations in your organizational truth.
+            </p>
+            <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-500 transition-colors shadow-xs"
+                className="flex items-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/20"
               >
-                Upload First Document
+                <Plus className="h-4 w-4" />
+                <span>Upload First Document</span>
               </button>
             </div>
           </div>

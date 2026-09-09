@@ -23,7 +23,7 @@ Traditional generative AI platforms operate as naive chatbot wrappers: they feed
 4. **Lack of Enterprise Governance:** Direct unreviewed publication risks severe brand and legal liability.
 
 > 💡 **The ContexAI Paradigm Shift:**
-> ContexAI breaks the direct pipeline between raw input and final content. It introduces an intermediate **Canonical Factual Knowledge Core** that serves as an immutable, audited single source of truth (SSOT). Every downstream asset (Exclusive Summary, Strategic Advisory, Pitch Deck, Social Thread, Video Script) is deterministically generated and fact-verified against this canonical model before publishing.
+> ContexAI breaks the direct pipeline between raw input and final content. It introduces an intermediate **Canonical Factual Knowledge Core** that serves as an immutable, audited single source of truth (SSOT). Every downstream asset (Executive Summary, Strategic Advisory, Pitch Deck, Social Thread, Video Script) is deterministically generated and fact-verified against this canonical model before publishing.
 
 ---
 

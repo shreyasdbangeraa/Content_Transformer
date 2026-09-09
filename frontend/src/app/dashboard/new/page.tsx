@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   UploadCloud,
@@ -12,31 +13,31 @@ import {
   ArrowRight,
   ArrowLeft,
   Search,
-  Eye,
   Send,
   Linkedin,
   Twitter,
   Image as ImageIcon,
   Presentation,
   Video,
-  FileCode,
   Layers,
   Check,
   RefreshCw,
   Sliders,
-  ShieldAlert,
   Clock,
   ExternalLink,
   Edit3,
-  Flame,
-  Zap,
   Lock,
-  EyeOff,
   FolderKanban,
   Building2,
-  Compass,
-  FileLock,
-  Cpu,
+  Link2,
+  LayoutGrid,
+  Share2,
+  MoreVertical,
+  Folder,
+  Plus,
+  PlayCircle,
+  FileEdit,
+  X,
   Database,
 } from 'lucide-react'
 import { api } from '@/lib/api'
@@ -62,90 +63,115 @@ import clsx from 'clsx'
 const OUTPUT_OPTIONS = [
   {
     id: 'executive_summary',
-    label: 'Executive Dossier',
-    desc: '3-page comprehensive briefing with risk matrices & telemetry',
+    label: 'Exclusive Summary',
+    desc: 'High-signal document summary (250–500 words) answering "What is this document about?"',
     icon: FileText,
-    color: 'text-indigo-700',
-    bg: 'bg-indigo-100',
-    border: 'border-indigo-300',
-    cardBg: 'bg-gradient-to-br from-indigo-50 via-white to-purple-50/40',
-  },
-  {
-    id: 'linkedin',
-    label: 'LinkedIn Executive Post',
-    desc: 'High-engagement thought-leadership post with hashtags & hero visual',
-    icon: Linkedin,
-    color: 'text-sky-700',
-    bg: 'bg-sky-100',
-    border: 'border-sky-300',
-    cardBg: 'bg-gradient-to-br from-sky-50 via-white to-indigo-50/40',
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-400',
+    cardBg: 'bg-gradient-to-br from-blue-50/70 via-white to-indigo-50/40',
   },
   {
     id: 'presentation',
     label: 'Interactive Slide Deck',
-    desc: 'Multi-slide presentation deck with SVG diagrams & Speaker Notes',
+    desc: 'Multi-slide presentation deck with structured bullet points & speaker notes',
     icon: Presentation,
-    color: 'text-purple-700',
-    bg: 'bg-purple-100',
-    border: 'border-purple-300',
-    cardBg: 'bg-gradient-to-br from-purple-50 via-white to-pink-50/40',
+    color: 'text-amber-600',
+    bg: 'bg-amber-50',
+    border: 'border-amber-400',
+    cardBg: 'bg-gradient-to-br from-amber-50/70 via-white to-orange-50/40',
+  },
+  {
+    id: 'linkedin',
+    label: 'LinkedIn Executive Post',
+    desc: 'High-engagement thought-leadership post with pillars, hook & hashtags',
+    icon: Linkedin,
+    color: 'text-blue-700',
+    bg: 'bg-blue-50',
+    border: 'border-blue-400',
+    cardBg: 'bg-gradient-to-br from-sky-50/70 via-white to-blue-50/40',
+  },
+  {
+    id: 'advisory',
+    label: 'Executive Advisory',
+    desc: 'Decision-support briefing with findings, implications & actionable next steps',
+    icon: ShieldCheck,
+    color: 'text-emerald-700',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-400',
+    cardBg: 'bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40',
   },
   {
     id: 'infographic',
     label: 'Visual Infographic Asset',
-    desc: 'High-resolution diagram with structured statistics & visual synthesis',
-    icon: ImageIcon,
-    color: 'text-emerald-700',
-    bg: 'bg-emerald-100',
-    border: 'border-emerald-300',
-    cardBg: 'bg-gradient-to-br from-emerald-50 via-white to-teal-50/40',
+    desc: 'Visual structure with metrics, data flow architecture & strategic takeaways',
+    icon: LayoutGrid,
+    color: 'text-rose-600',
+    bg: 'bg-rose-50',
+    border: 'border-rose-400',
+    cardBg: 'bg-gradient-to-br from-rose-50/70 via-white to-pink-50/40',
   },
   {
     id: 'video_package',
     label: 'Video Script & Production Package',
-    desc: 'Scene-by-scene script with visual cues & audio narrator prompts',
+    desc: 'Scene-by-scene script with timestamps, visual cues & narrator instructions',
     icon: Video,
-    color: 'text-rose-700',
-    bg: 'bg-rose-100',
-    border: 'border-rose-300',
-    cardBg: 'bg-gradient-to-br from-rose-50 via-white to-orange-50/40',
-  },
-  {
-    id: 'advisory',
-    label: 'Technical Security Advisory',
-    desc: 'CERT-standard structured bulletin with CVSS scores & IoCs',
-    icon: ShieldCheck,
-    color: 'text-amber-700',
-    bg: 'bg-amber-100',
-    border: 'border-amber-300',
-    cardBg: 'bg-gradient-to-br from-amber-50 via-white to-yellow-50/40',
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    border: 'border-purple-400',
+    cardBg: 'bg-gradient-to-br from-purple-50/70 via-white to-indigo-50/40',
   },
   {
     id: 'twitter',
     label: 'X / Twitter Social Thread',
-    desc: 'Multi-tweet sequential breakdown strictly formatted under 280 chars',
+    desc: 'Numbered multi-tweet breakdown strictly formatted under 280 characters',
     icon: Twitter,
-    color: 'text-sky-600',
-    bg: 'bg-sky-100',
-    border: 'border-sky-300',
-    cardBg: 'bg-gradient-to-br from-cyan-50 via-white to-sky-50/40',
+    color: 'text-slate-900',
+    bg: 'bg-slate-100',
+    border: 'border-slate-400',
+    cardBg: 'bg-gradient-to-br from-slate-50 via-white to-sky-50/40',
   },
 ]
+
+function formatRelativeTime(dateStr?: string): string {
+  if (!dateStr) return 'Recently'
+  try {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    if (diffMs < 0 || isNaN(diffMs)) return 'Just now'
+
+    const diffMins = Math.floor(diffMs / 60000)
+    if (diffMins < 1) return 'Just now'
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`
+
+    const diffHours = Math.floor(diffMins / 60)
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays === 1) return '1 day ago'
+    if (diffDays < 7) return `${diffDays} days ago`
+
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  } catch {
+    return 'Recently'
+  }
+}
 
 function NewTransformationStudioContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const templateParam = searchParams.get('template')
 
-  // Wizard Step Control (1 to 6)
+  // 4-Step Wizard: 1: Ingestion & Security, 2: Research & Verification, 3: Choose Format, 4: Generate
   const [currentStep, setCurrentStep] = useState<number>(1)
 
   // Step 1 Form States
   const [projectTitle, setProjectTitle] = useState('')
-  const [organizationName, setOrganizationName] = useState('Acme Global Operations')
+  const [organizationName, setOrganizationName] = useState('')
   const [domain, setDomain] = useState('Auto-Detect')
   const [researchMode, setResearchMode] = useState<'SOURCE_ONLY' | 'SOURCE_AND_VERIFY' | 'DEEP_RESEARCH'>('SOURCE_AND_VERIFY')
-  const [inputTab, setInputTab] = useState<'upload' | 'paste' | 'url'>('upload')
+  const [inputTab, setInputTab] = useState<'upload' | 'url' | 'paste'>('upload')
   const [pasteText, setPasteText] = useState('')
   const [urlInput, setUrlInput] = useState('')
   const [crawlSubpages, setCrawlSubpages] = useState<boolean>(true)
@@ -157,14 +183,14 @@ function NewTransformationStudioContent() {
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [canonical, setCanonical] = useState<CanonicalAnalysis | null>(null)
 
-  // Step 4: Multi-Format Configuration States
+  // Step 3: Multi-Format Configuration States
   const [selectedFormats, setSelectedFormats] = useState<string[]>([
     'executive_summary',
-    'linkedin',
     'presentation',
+    'linkedin',
+    'advisory',
     'infographic',
     'video_package',
-    'advisory',
     'twitter',
   ])
   const [audience, setAudience] = useState('Executive Board & Technical Engineers')
@@ -172,7 +198,7 @@ function NewTransformationStudioContent() {
   const [language, setLanguage] = useState('English')
   const [detailLevel, setDetailLevel] = useState('Detailed & Comprehensive')
 
-  // Step 5 & 6: Generated Deliverables
+  // Step 4: Generated Deliverables
   const [isExecutingAI, setIsExecutingAI] = useState(false)
   const [generatedOutputs, setGeneratedOutputs] = useState<Output[]>([])
   const [activeOutputTab, setActiveOutputTab] = useState<string>('executive_summary')
@@ -181,6 +207,18 @@ function NewTransformationStudioContent() {
   const [publishModalOutput, setPublishModalOutput] = useState<Output | null>(null)
   const [editorModalOutput, setEditorModalOutput] = useState<Output | null>(null)
   const [manualEditorModalOutput, setManualEditorModalOutput] = useState<Output | null>(null)
+
+  // Live Recent Pipelines Table Data
+  const [recentProjects, setRecentProjects] = useState<Project[]>([])
+  const [loadingPipelines, setLoadingPipelines] = useState<boolean>(true)
+
+  useEffect(() => {
+    api
+      .listProjects()
+      .then((data) => setRecentProjects(data || []))
+      .catch(() => setRecentProjects([]))
+      .finally(() => setLoadingPipelines(false))
+  }, [])
 
   // Load saved settings from localStorage on mount
   useEffect(() => {
@@ -196,19 +234,19 @@ function NewTransformationStudioContent() {
         if (data.defaultDetailLevel) setDetailLevel(data.defaultDetailLevel)
       }
     } catch {}
-  }, [])
+  }, [templateParam])
 
   // Handle Preset Template prefilling
   useEffect(() => {
     if (templateParam) {
       if (templateParam === 'cyber_advisory') {
-        setProjectTitle('DarkHydra Ransomware Threat Advisory & Containment Protocol')
+        setProjectTitle('Threat Advisory & System Resilience Briefing')
         setDomain('Cybersecurity')
-        setAudience('Government Cyber Regulators & IT Teams')
+        setAudience('Enterprise Leadership & Technical Teams')
         setTone('Urgent & Authoritative')
         setSelectedFormats(['advisory', 'linkedin', 'presentation', 'infographic', 'video_package'])
       } else if (templateParam === 'exec_brief') {
-        setProjectTitle('Q3 Enterprise Digital Resilience Strategic Briefing')
+        setProjectTitle('Enterprise Strategic & Operations Briefing')
         setDomain('Leadership & Strategy')
         setAudience('Executive Board & C-Suite')
         setTone('Formal & Strategic')
@@ -222,26 +260,33 @@ function NewTransformationStudioContent() {
     try {
       setIsProcessingSource(true)
 
-      let sourceContent = pasteText
-
-      if (inputTab === 'upload' && selectedFile) {
-        sourceContent = await selectedFile.text()
-      } else if (inputTab === 'url' && urlInput) {
-        sourceContent = `URL Reference: ${urlInput}\nTarget Analysis Domain: ${domain}`
+      if (inputTab === 'upload' && !selectedFile) {
+        alert('Please select a file to upload (PDF, DOCX, PPT, XLS, or image).')
+        setIsProcessingSource(false)
+        return
       }
 
-      if (!sourceContent.trim()) {
-        sourceContent =
-          'CRITICAL INCIDENT REPORT: Project Titan Containment Directive\n' +
-          'Date: 2026-08-29 08:30 UTC\n' +
-          'Scope: 500 endpoints isolated within 42 minutes. Zero data exfiltration verified via EDR telemetry. CVSS 8.8 vulnerability mitigated via emergency patch v4.2.1.'
+      if (inputTab === 'url' && !urlInput.trim()) {
+        alert('Please enter a valid website URL.')
+        setIsProcessingSource(false)
+        return
       }
+
+      if (inputTab === 'paste' && !pasteText.trim()) {
+        alert('Please paste or enter your source document text.')
+        setIsProcessingSource(false)
+        return
+      }
+
+      const defaultTitle =
+        selectedFile?.name.replace(/\.[^/.]+$/, '') ||
+        (urlInput ? urlInput.replace(/^https?:\/\//, '').split('/')[0] : 'Transformation Project')
 
       const proj = await api.createProject({
-        title: projectTitle.trim() || 'Verified Transformation Project',
+        title: projectTitle.trim() || defaultTitle,
         description: `Single-Truth canonical pipeline for ${organizationName || 'Enterprise'}.`,
         domain: domain,
-        organization_name: organizationName,
+        organization_name: organizationName || 'Enterprise',
         research_mode: researchMode,
       })
 
@@ -258,8 +303,8 @@ function NewTransformationStudioContent() {
       } else {
         sourceObj = await api.pasteSourceText(
           proj.id,
-          projectTitle || 'Incident Report',
-          sourceContent
+          projectTitle.trim() || 'Source Document',
+          pasteText
         )
       }
 
@@ -273,12 +318,12 @@ function NewTransformationStudioContent() {
     }
   }
 
-  // STEP 4 ACTION: Execute AI Multi-Format Generation
+  // STEP 3 ACTION: Execute AI Multi-Format Generation
   const handleExecuteTransformation = async () => {
     if (!activeProject || !canonical) return
     try {
       setIsExecutingAI(true)
-      setCurrentStep(5)
+      setCurrentStep(4)
 
       const res = await api.createTransformation(activeProject.id, {
         canonical_id: canonical.id,
@@ -298,7 +343,7 @@ function NewTransformationStudioContent() {
       }
     } catch (err: any) {
       alert(`Transformation failed: ${err.message}`)
-      setCurrentStep(4)
+      setCurrentStep(3)
     } finally {
       setIsExecutingAI(false)
     }
@@ -324,7 +369,12 @@ function NewTransformationStudioContent() {
       let publishNotice = ''
       if (action === 'APPROVE') {
         try {
-          const targetPlatform = activeOutput.format_type === 'linkedin' ? 'linkedin' : (activeOutput.format_type === 'twitter' ? 'twitter' : 'n8n')
+          const targetPlatform =
+            activeOutput.format_type === 'linkedin'
+              ? 'linkedin'
+              : activeOutput.format_type === 'twitter'
+              ? 'twitter'
+              : 'n8n'
           await api.publishToN8n(activeOutput.id, targetPlatform)
           updated.status = 'PUBLISHED'
           publishNotice = ' & Dispatched to n8n Social Media Publisher'
@@ -352,8 +402,8 @@ function NewTransformationStudioContent() {
         if (activeOutput.format_type === 'linkedin') {
           const shouldOpen = window.confirm(
             `✅ LinkedIn Post Approved${publishNotice}!\n\n` +
-            `The post text (with hashtags) is copied to your clipboard.\n\n` +
-            `Would you like to open LinkedIn in a new tab now to publish directly?`
+              `The post text (with hashtags) is copied to your clipboard.\n\n` +
+              `Would you like to open LinkedIn in a new tab now to publish directly?`
           )
           if (shouldOpen) {
             const cleanText = (activeOutput.raw_content || '')
@@ -361,7 +411,11 @@ function NewTransformationStudioContent() {
               .replace(/\n{3,}/g, '\n\n')
               .trim()
             const encoded = encodeURIComponent(cleanText)
-            window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`, '_blank', 'noopener,noreferrer')
+            window.open(
+              `https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`,
+              '_blank',
+              'noopener,noreferrer'
+            )
           }
         } else {
           alert(`✅ Deliverable Approved${publishNotice}!`)
@@ -374,439 +428,542 @@ function NewTransformationStudioContent() {
 
   const activeOutput = generatedOutputs.find((o) => o.format_type === activeOutputTab)
 
-  const stepsList = [
-    { step: 1, label: 'Ingestion & Security', icon: UploadCloud, color: 'text-indigo-600', activeBg: 'from-indigo-600 to-indigo-700' },
-    { step: 2, label: 'Research & Conflicts', icon: Search, color: 'text-sky-600', activeBg: 'from-sky-600 to-blue-700' },
-    { step: 3, label: 'Canonical Truth', icon: FileText, color: 'text-purple-600', activeBg: 'from-purple-600 to-violet-700' },
-    { step: 4, label: 'Formats & Brand', icon: Sliders, color: 'text-pink-600', activeBg: 'from-pink-600 to-rose-700' },
-    { step: 5, label: 'AI Generation', icon: Sparkles, color: 'text-amber-600', activeBg: 'from-amber-600 to-orange-700' },
-    { step: 6, label: 'Output Studio', icon: Send, color: 'text-emerald-600', activeBg: 'from-emerald-600 to-teal-700' },
-  ]
+  // Map live recent projects for bottom table
+  const pipelinesToDisplay = recentProjects.map((p) => {
+    const isPdf =
+      p.source_types?.includes('pdf') ||
+      p.first_source_name?.toLowerCase().endsWith('.pdf')
+    const isDoc =
+      p.source_types?.includes('docx') ||
+      p.source_types?.includes('txt') ||
+      p.source_types?.includes('text_paste')
+    const isWeb =
+      p.source_types?.includes('url') ||
+      (p.title && (p.title.startsWith('http://') || p.title.startsWith('https://')))
+    const isImg = p.source_types?.includes('image')
+
+    const iconType = isPdf ? 'pdf' : isWeb ? 'link' : isImg ? 'image' : 'doc'
+
+    let subtitle = ''
+    if (isPdf) {
+      const pages = p.first_source_pages || 1
+      subtitle = `PDF • ${pages} page${pages > 1 ? 's' : ''}`
+    } else if (isWeb) {
+      subtitle = `Web • ${p.sources_count || 1} source${(p.sources_count || 1) > 1 ? 's' : ''}`
+    } else if (isDoc) {
+      subtitle = `Text/Doc • ${p.sources_count || 1} source${(p.sources_count || 1) > 1 ? 's' : ''}`
+    } else {
+      subtitle = `Mixed • ${p.sources_count || 1} source${(p.sources_count || 1) > 1 ? 's' : ''}`
+    }
+
+    const sources: string[] = []
+    if (isPdf) sources.push('pdf')
+    if (isWeb) sources.push('globe')
+    if (isDoc) sources.push('doc')
+    if (isImg) sources.push('image')
+    if (p.sources_count && p.sources_count > 1) {
+      sources.push('drive')
+    }
+    if (sources.length === 0) sources.push('doc')
+
+    const rawOutputs = p.output_formats || []
+    const outputs = rawOutputs.map((fmt) => {
+      if (fmt === 'executive_summary') return 'summary'
+      if (fmt === 'video_package') return 'video'
+      return fmt
+    })
+
+    const isCompleted = (p.outputs_count || 0) > 0 || p.status === 'COMPLETED'
+    const status = isCompleted ? 'Completed' : 'In Progress'
+
+    return {
+      id: p.id,
+      name: p.title || 'Untitled Project',
+      subtitle,
+      iconType,
+      sources,
+      outputs,
+      status,
+      lastUpdated: formatRelativeTime(p.updated_at || p.created_at),
+      projectId: p.id,
+    }
+  })
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 max-w-5xl mx-auto w-full">
+    <div className="space-y-6 animate-fade-in pb-16 max-w-7xl mx-auto w-full">
       {/* ========================================================================= */}
-      {/* COLORFUL INTERACTIVE TIMELINE STEPPER                                     */}
+      {/* 1. HERO SECTION & FLOW DIAGRAM                                            */}
       {/* ========================================================================= */}
-      <div className="rounded-3xl border border-indigo-200/80 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-sky-50/70 backdrop-blur-xl p-4 sm:p-5 shadow-xs">
-        <div className="flex items-center justify-between overflow-x-auto no-scrollbar gap-2 sm:gap-3">
-          {stepsList.map((s) => {
-            const Icon = s.icon
-            const isCurrent = currentStep === s.step
-            const isPassed = currentStep > s.step
+      <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 lg:p-10 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-10">
+          {/* Left Text */}
+          <div className="space-y-4 max-w-xl">
+            <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
+              NEW TRANSFORMATION
+            </span>
 
-            return (
-              <div
-                key={s.step}
-                className={clsx(
-                  'flex items-center gap-2.5 px-3.5 py-2 rounded-2xl transition-all duration-300 shrink-0 select-none border',
-                  isCurrent
-                    ? `bg-gradient-to-r ${s.activeBg} text-white shadow-md shadow-indigo-600/30 border-transparent`
-                    : isPassed
-                    ? 'bg-emerald-100/80 text-emerald-900 border-emerald-300'
-                    : 'bg-white/80 text-slate-600 border-slate-200 shadow-2xs'
-                )}
-              >
-                <div
-                  className={clsx(
-                    'flex h-6 w-6 items-center justify-center rounded-xl text-xs font-black shrink-0 transition-transform',
-                    isCurrent
-                      ? 'bg-white/20 text-white'
-                      : isPassed
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-slate-100 text-slate-600 border border-slate-200'
-                  )}
-                >
-                  {isPassed ? <Check className="h-3.5 w-3.5" /> : s.step}
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-[1.18]">
+              Turn Your Information into <br />
+              <span className="text-blue-600">Trusted, Actionable Content</span>
+            </h1>
+
+            <p className="text-slate-500 text-sm sm:text-[15px] leading-relaxed max-w-lg font-normal">
+              Upload your documents, add a source, or paste a link. Our AI will research, verify and transform it into accurate, evidence-backed content.
+            </p>
+          </div>
+
+          {/* Right SVG Diagram */}
+          <div className="relative flex items-center justify-center w-full xl:w-auto xl:min-w-[560px] py-4 select-none">
+            <div className="flex items-center justify-between w-full max-w-2xl gap-2 sm:gap-4 relative">
+              {/* Left Column: 4 Source Input Pills */}
+              <div className="flex flex-col gap-2.5 z-10 shrink-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700">
+                  <FileText className="h-4 w-4 text-slate-600" />
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Icon className={clsx('h-3.5 w-3.5', isCurrent ? 'text-white' : isPassed ? 'text-emerald-700' : s.color)} />
-                  <span className="text-xs font-bold whitespace-nowrap">
-                    {s.label}
-                  </span>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700">
+                  <Link2 className="h-4 w-4 text-slate-600" />
+                </div>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700">
+                  <Globe className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700">
+                  <ImageIcon className="h-4 w-4 text-slate-600" />
                 </div>
               </div>
-            )
-          })}
+
+              {/* Left SVG Bezier Connector Curves */}
+              <div className="hidden sm:block absolute left-[36px] top-0 bottom-0 w-28 pointer-events-none z-0">
+                <svg className="w-full h-full" viewBox="0 0 100 160" preserveAspectRatio="none">
+                  <path d="M 0 18 C 60 18, 40 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
+                  <path d="M 0 58 C 50 58, 50 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
+                  <path d="M 0 98 C 50 98, 50 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
+                  <path d="M 0 138 C 60 138, 40 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
+                </svg>
+              </div>
+
+              {/* Center: Layered Verified Document Stack */}
+              <div className="relative z-10 flex flex-col items-center shrink-0 mx-auto sm:mx-8">
+                <div className="relative w-28 sm:w-32 h-36 sm:h-40">
+                  <div className="absolute inset-0 translate-x-3 -translate-y-2 rounded-xl bg-blue-500/10 border border-blue-200/60 rotate-3 shadow-2xs" />
+                  <div className="absolute inset-0 translate-x-1.5 -translate-y-1 rounded-xl bg-blue-600/15 border border-blue-300/80 rotate-1 shadow-2xs" />
+
+                  <div className="relative h-full w-full rounded-xl bg-white border border-slate-200 shadow-md p-3.5 flex flex-col justify-between overflow-hidden">
+                    <div className="absolute top-0 right-0 w-6 h-6 bg-slate-50 border-l border-b border-slate-200 rounded-bl-lg" />
+
+                    <div className="space-y-2 pt-1">
+                      <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+                      <div className="w-full h-1 bg-slate-200 rounded-full" />
+                      <div className="w-5/6 h-1 bg-slate-200 rounded-full" />
+                      <div className="w-4/5 h-1 bg-slate-200 rounded-full" />
+                      <div className="w-3/4 h-1 bg-slate-200 rounded-full" />
+                    </div>
+
+                    <div className="mt-auto pt-2 flex justify-center">
+                      <div className="h-7 w-7 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                        <ShieldCheck className="h-4 w-4" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right SVG Bezier Connector Curves */}
+              <div className="hidden sm:block absolute right-[135px] top-0 bottom-0 w-28 pointer-events-none z-0">
+                <svg className="w-full h-full" viewBox="0 0 100 180" preserveAspectRatio="none">
+                  <path d="M 0 90 C 50 90, 40 16, 100 16" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
+                  <path d="M 0 90 C 50 90, 50 52, 100 52" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
+                  <path d="M 0 90 C 60 90, 40 90, 100 90" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
+                  <path d="M 0 90 C 50 90, 50 128, 100 128" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
+                  <path d="M 0 90 C 50 90, 40 164, 100 164" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
+                </svg>
+              </div>
+
+              {/* Right Column: 5 Output Chips */}
+              <div className="flex flex-col gap-2 z-10 shrink-0">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold">
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Summary</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold">
+                  <Presentation className="h-3.5 w-3.5 text-amber-500" />
+                  <span>Presentation</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold">
+                  <Share2 className="h-3.5 w-3.5 text-purple-600" />
+                  <span>Social Media</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Advisory</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-xs font-semibold">
+                  <LayoutGrid className="h-3.5 w-3.5 text-rose-500" />
+                  <span>Infographic</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* SCREEN 1: MULTI-COLOR INGESTION & SECURITY GATE                            */}
+      {/* 2. 4-STEP WIZARD PROGRESS BAR                                             */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-xs">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+          {/* Step 1 */}
+          <div className="flex items-center gap-3 relative">
+            <div
+              className={clsx(
+                'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                currentStep === 1
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : currentStep > 1
+                  ? 'bg-emerald-600 text-white'
+                  : 'border border-slate-300 text-slate-500'
+              )}
+            >
+              {currentStep > 1 ? <Check className="h-4 w-4 stroke-[3]" /> : '1'}
+            </div>
+            <div className="min-w-0">
+              <div
+                className={clsx(
+                  'text-xs sm:text-sm font-bold truncate',
+                  currentStep === 1 ? 'text-blue-600' : 'text-slate-800'
+                )}
+              >
+                Ingestion & Security
+              </div>
+              <div className="text-[11px] text-slate-400 font-medium truncate">
+                Add your source
+              </div>
+            </div>
+            <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-slate-200" />
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex items-center gap-3 relative">
+            <div
+              className={clsx(
+                'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                currentStep === 2
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : currentStep > 2
+                  ? 'bg-emerald-600 text-white'
+                  : 'border border-slate-300 text-slate-500'
+              )}
+            >
+              {currentStep > 2 ? <Check className="h-4 w-4 stroke-[3]" /> : '2'}
+            </div>
+            <div className="min-w-0">
+              <div
+                className={clsx(
+                  'text-xs sm:text-sm font-bold truncate',
+                  currentStep === 2 ? 'text-blue-600' : 'text-slate-800'
+                )}
+              >
+                Research & Verification
+              </div>
+              <div className="text-[11px] text-slate-400 font-medium truncate">
+                Find and validate information
+              </div>
+            </div>
+            <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-slate-200" />
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex items-center gap-3 relative">
+            <div
+              className={clsx(
+                'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                currentStep === 3
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : currentStep > 3
+                  ? 'bg-emerald-600 text-white'
+                  : 'border border-slate-300 text-slate-500'
+              )}
+            >
+              {currentStep > 3 ? <Check className="h-4 w-4 stroke-[3]" /> : '3'}
+            </div>
+            <div className="min-w-0">
+              <div
+                className={clsx(
+                  'text-xs sm:text-sm font-bold truncate',
+                  currentStep === 3 ? 'text-blue-600' : 'text-slate-800'
+                )}
+              >
+                Choose Format
+              </div>
+              <div className="text-[11px] text-slate-400 font-medium truncate">
+                Select output type
+              </div>
+            </div>
+            <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-px bg-slate-200" />
+          </div>
+
+          {/* Step 4 */}
+          <div className="flex items-center gap-3">
+            <div
+              className={clsx(
+                'h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
+                currentStep >= 4
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : 'border border-slate-300 text-slate-500'
+              )}
+            >
+              {currentStep > 4 ? <Check className="h-4 w-4 stroke-[3]" /> : '4'}
+            </div>
+            <div className="min-w-0">
+              <div
+                className={clsx(
+                  'text-xs sm:text-sm font-bold truncate',
+                  currentStep >= 4 ? 'text-blue-600' : 'text-slate-800'
+                )}
+              >
+                Generate
+              </div>
+              <div className="text-[11px] text-slate-400 font-medium truncate">
+                Create your content
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. STEP 1 CONTAINER: INGESTION & SECURITY                                 */}
       {/* ========================================================================= */}
       {currentStep === 1 && (
-        <div className="space-y-6">
-          {/* Card 1: Modern Header Spotlight with Sunset-Indigo Mesh */}
-          <div className="rounded-3xl border-2 border-indigo-200/90 bg-gradient-to-r from-indigo-100/90 via-purple-100/70 to-sky-100/90 p-7 sm:p-9 space-y-3 shadow-md relative overflow-hidden">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/90 border border-indigo-200 px-3.5 py-1 text-xs font-black text-indigo-900 font-mono uppercase tracking-wider shadow-2xs">
-              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
-              Step 1 of 6 • Multimodal Ingestion Gate
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 lg:p-10 shadow-xs space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-3 pb-2 border-b border-slate-100">
+            <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Ingest Source Material &amp; Configure Research
-            </h2>
-            <p className="text-sm sm:text-base text-slate-700 font-medium leading-relaxed max-w-3xl">
-              Upload any PDF, Word document, plain text, or article URL. The engine extracts the text, applies prompt injection defense, and formulates research queries.
-            </p>
-          </div>
-
-          {/* Card 2: Incident & Organizational Metadata (Lavender-Indigo Tint) */}
-          <div className="rounded-3xl card-indigo-tint p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center gap-3 border-b border-indigo-200/60 pb-3">
-              <div className="p-2.5 rounded-2xl bg-indigo-600 text-white shadow-xs">
-                <FolderKanban className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">1. Project &amp; Organizational Details</h3>
-                <p className="text-xs text-slate-600 font-medium">Assign a project title and organization name to establish corporate branding context.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Project Title / Reference
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Mic On Campus / Strategic Brief"
-                  value={projectTitle}
-                  onChange={(e) => setProjectTitle(e.target.value)}
-                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Organization / Entity Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Media / Acme Corporation"
-                  value={organizationName}
-                  onChange={(e) => setOrganizationName(e.target.value)}
-                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Industry Domain
-                </label>
-                <select
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  className="w-full rounded-2xl border border-indigo-200 bg-white px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 shadow-2xs font-semibold transition-all cursor-pointer"
-                >
-                  <option value="Auto-Detect">✨ Auto-Detect (From Document)</option>
-                  <option value="Media & Podcast">🎙️ Media &amp; Podcast</option>
-                  <option value="Business & Strategy">💼 Business &amp; Strategy</option>
-                  <option value="Cybersecurity">🛡️ Cybersecurity</option>
-                  <option value="Education & Academia">🎓 Education &amp; Academia</option>
-                  <option value="Healthcare & Medicine">🏥 Healthcare &amp; Medicine</option>
-                  <option value="Finance & Banking">📈 Finance &amp; Banking</option>
-                  <option value="Legal & Compliance">⚖️ Legal &amp; Compliance</option>
-                  <option value="Energy & Technology">⚡ Energy &amp; Technology</option>
-                  <option value="General Enterprise">🏢 General Enterprise</option>
-                </select>
-              </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                1. Ingestion & Security
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-normal">
+                Choose how you want to add your information.
+              </p>
             </div>
           </div>
 
-          {/* Card 3: Research Mode Selection (3 Distinct Color Modes) */}
-          <div className="rounded-3xl border border-purple-200/80 bg-gradient-to-br from-purple-50/60 via-white to-pink-50/40 p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center gap-3 border-b border-purple-200/60 pb-3">
-              <div className="p-2.5 rounded-2xl bg-purple-600 text-white shadow-xs">
-                <Search className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">2. Select Automated Research Engine Mode</h3>
-                <p className="text-xs text-slate-600 font-medium">Choose how rigorously the engine should verify claims and research external authoritative tiers.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-              {[
-                {
-                  id: 'SOURCE_ONLY',
-                  label: 'Source Only',
-                  badge: 'Strict Sandbox',
-                  desc: 'Strictly bounds knowledge synthesis to uploaded document.',
-                  icon: FileLock,
-                  themeBg: 'card-sky-tint',
-                  activeBorder: 'border-sky-500',
-                  iconColor: 'bg-sky-500 text-white',
-                  badgeBg: 'bg-sky-100 text-sky-800 border-sky-300',
-                },
-                {
-                  id: 'SOURCE_AND_VERIFY',
-                  label: 'Source & Verify',
-                  badge: 'Recommended',
-                  desc: 'Queries authoritative external tiers (CISA, CERT) to cross-verify claims.',
-                  icon: ShieldCheck,
-                  themeBg: 'card-indigo-tint',
-                  activeBorder: 'border-indigo-600',
-                  iconColor: 'bg-indigo-600 text-white',
-                  badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-300',
-                },
-                {
-                  id: 'DEEP_RESEARCH',
-                  label: 'Deep Research',
-                  badge: 'Comprehensive',
-                  desc: 'Multi-query discovery across all 8 source hierarchy tiers.',
-                  icon: Compass,
-                  themeBg: 'card-emerald-tint',
-                  activeBorder: 'border-emerald-500',
-                  iconColor: 'bg-emerald-500 text-white',
-                  badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-                },
-              ].map((mode) => {
-                const Icon = mode.icon
-                const isSel = researchMode === mode.id
-                return (
-                  <div
-                    key={mode.id}
-                    onClick={() => setResearchMode(mode.id as any)}
-                    className={clsx(
-                      'p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 space-y-2 flex flex-col justify-between group',
-                      mode.themeBg,
-                      isSel
-                        ? `${mode.activeBorder} shadow-lg scale-[1.02]`
-                        : 'border-slate-200/80 hover:border-slate-400 hover:shadow-xs'
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className={clsx('p-2.5 rounded-xl shadow-xs', mode.iconColor)}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        {isSel ? (
-                          <span className="flex items-center gap-1 text-[11px] font-black text-indigo-950 bg-white border border-indigo-300 px-2.5 py-0.5 rounded-full shadow-2xs">
-                            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-600" /> Selected
-                          </span>
-                        ) : (
-                          <span className={clsx('text-[10px] font-bold px-2 py-0.5 rounded-full border', mode.badgeBg)}>
-                            {mode.badge}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
-                        {mode.label}
-                      </div>
-                      <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                        {mode.desc}
-                      </p>
-                    </div>
+          {/* 3 Source Options Grid (Images supported directly inside Upload Document) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Card 1: Upload Document */}
+            <div
+              onClick={() => setInputTab('upload')}
+              className={clsx(
+                'rounded-2xl border p-5 cursor-pointer transition-all flex items-center justify-between group shadow-2xs',
+                inputTab === 'upload'
+                  ? 'border-blue-600 bg-blue-50/20 ring-2 ring-blue-500/10'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+              )}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <UploadCloud className="h-6 w-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-900 text-sm truncate group-hover:text-blue-600 transition-colors">
+                    Upload Document
                   </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Card 4: Source Material Input (Sky Tint) */}
-          <div className="rounded-3xl card-sky-tint p-6 sm:p-8 space-y-5 shadow-xs">
-            <div className="flex items-center justify-between border-b border-sky-200/60 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-sky-600 text-white shadow-xs">
-                  <UploadCloud className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">3. Provide Source Content</h3>
-                  <p className="text-xs text-slate-600 font-medium">Choose a file, paste raw text, or enter an article URL.</p>
-                </div>
-              </div>
-
-              {/* Input Selection Tabs */}
-              <div className="flex gap-1.5 bg-white/90 p-1 rounded-2xl border border-sky-200 shadow-2xs">
-                {[
-                  { id: 'upload', label: 'File Upload', icon: UploadCloud },
-                  { id: 'paste', label: 'Paste Text', icon: FileText },
-                  { id: 'url', label: 'Web URL', icon: Globe },
-                ].map((t) => {
-                  const Icon = t.icon
-                  const isSel = inputTab === t.id
-                  return (
-                    <button
-                      key={t.id}
-                      onClick={() => setInputTab(t.id as any)}
-                      className={clsx(
-                        'flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all',
-                        isSel
-                          ? 'bg-sky-600 text-white shadow-xs font-extrabold'
-                          : 'text-slate-700 hover:text-slate-900 hover:bg-sky-50'
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>{t.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* File Upload Box */}
-            {inputTab === 'upload' && (
-              <div className="rounded-3xl border-2 border-dashed border-sky-300 p-8 sm:p-12 text-center hover:border-sky-500 hover:bg-sky-100/30 transition-all bg-white/80 relative group">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-50 border border-sky-200 shadow-xs mx-auto group-hover:scale-110 group-hover:border-sky-400 transition-all">
-                  <UploadCloud className="h-7 w-7 text-sky-600" />
-                </div>
-                <p className="text-base font-bold text-slate-800 mt-4">
-                  Drag &amp; drop your source document here, or click to browse
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-                  <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg">PDF</span>
-                  <span className="text-[11px] font-bold text-sky-700 bg-sky-50 border border-sky-200 px-2.5 py-1 rounded-lg">DOCX</span>
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">TXT</span>
-                  <span className="text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-1 rounded-lg">Markdown</span>
-                  <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">Images</span>
-                </div>
-                <input
-                  type="file"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="mt-5 text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-600 file:text-white hover:file:bg-sky-500 file:shadow-xs cursor-pointer"
-                />
-                {selectedFile && (
-                  <div className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-emerald-100 border border-emerald-300 px-4 py-2 text-xs text-emerald-900 font-bold shadow-xs">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)</span>
+                  <div className="text-[11px] text-slate-400 font-normal mt-0.5 truncate">
+                    PDF, DOC, DOCX, PPT, XLS, etc.
                   </div>
+                </div>
+              </div>
+              <ArrowRight
+                className={clsx(
+                  'h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5',
+                  inputTab === 'upload' ? 'text-blue-600' : 'text-slate-400'
                 )}
-              </div>
-            )}
-
-            {/* Text Paste Box */}
-            {inputTab === 'paste' && (
-              <textarea
-                rows={8}
-                placeholder="Paste your source document text, research notes, meeting transcript, or operational briefing here..."
-                value={pasteText}
-                onChange={(e) => setPasteText(e.target.value)}
-                className="w-full rounded-2xl border border-sky-200 bg-white p-4 text-xs sm:text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-mono transition-all leading-relaxed"
               />
-            )}
+            </div>
 
-            {/* URL Input Box */}
-            {inputTab === 'url' && (
-              <div className="space-y-3.5">
-                <div className="space-y-2">
-                  <input
-                    type="url"
-                    placeholder="https://example.in or https://company.com"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    className="w-full rounded-2xl border border-sky-200 bg-white px-4 py-3.5 text-sm text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/15 shadow-2xs font-medium transition-all"
-                  />
-                  <p className="text-xs text-slate-600 font-medium">
-                    Protected by SSRF security firewall &amp; prompt injection sanitizer.
-                  </p>
+            {/* Card 2: Add URL */}
+            <div
+              onClick={() => setInputTab('url')}
+              className={clsx(
+                'rounded-2xl border p-5 cursor-pointer transition-all flex items-center justify-between group shadow-2xs',
+                inputTab === 'url'
+                  ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-500/10'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+              )}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Link2 className="h-6 w-6" />
                 </div>
-
-                {/* Multi-Page Deep Crawling Options */}
-                <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50/70 via-indigo-50/30 to-purple-50/30 p-4 sm:p-4.5 space-y-3 shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-600 text-white shadow-2xs">
-                        <Globe className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-extrabold text-slate-900">Deep Website Crawl (Root + Subpages)</span>
-                        <span className="ml-2 text-[10px] font-bold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-full border border-sky-200">
-                          Auto-Discovery
-                        </span>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={crawlSubpages}
-                        onChange={(e) => setCrawlSubpages(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-sky-600"></div>
-                    </label>
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-900 text-sm truncate group-hover:text-emerald-600 transition-colors">
+                    Add URL
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                    When enabled, the crawler automatically discovers and aggregates content from all internal subpages (e.g.{' '}
-                    <span className="font-mono text-sky-800 font-semibold">/about</span>,{' '}
-                    <span className="font-mono text-sky-800 font-semibold">/services</span>,{' '}
-                    <span className="font-mono text-sky-800 font-semibold">/pricing</span>,{' '}
-                    <span className="font-mono text-sky-800 font-semibold">/team</span>,{' '}
-                    <span className="font-mono text-sky-800 font-semibold">/docs</span>) within the same domain.
-                  </p>
+                  <div className="text-[11px] text-slate-400 font-normal mt-0.5 truncate">
+                    Web page or article link
+                  </div>
+                </div>
+              </div>
+              <ArrowRight
+                className={clsx(
+                  'h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5',
+                  inputTab === 'url' ? 'text-emerald-600' : 'text-slate-400'
+                )}
+              />
+            </div>
 
-                  {crawlSubpages && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-sky-200/60 text-xs">
-                      <span className="text-slate-700 font-bold">Max Subpages to Ingest:</span>
-                      <div className="flex items-center gap-1.5">
-                        {[4, 8, 12, 16].map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setMaxCrawlPages(num)}
-                            className={clsx(
-                              'px-3 py-1 rounded-xl text-xs font-bold transition-all',
-                              maxCrawlPages === num
-                                ? 'bg-sky-600 text-white shadow-2xs font-extrabold'
-                                : 'bg-white border border-sky-200 text-slate-700 hover:bg-sky-100/50'
-                            )}
-                          >
-                            {num} pgs
-                          </button>
-                        ))}
-                      </div>
+            {/* Card 3: Paste Text */}
+            <div
+              onClick={() => setInputTab('paste')}
+              className={clsx(
+                'rounded-2xl border p-5 cursor-pointer transition-all flex items-center justify-between group shadow-2xs',
+                inputTab === 'paste'
+                  ? 'border-purple-600 bg-purple-50/20 ring-2 ring-purple-500/10'
+                  : 'border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+              )}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="h-12 w-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <FileEdit className="h-6 w-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-slate-900 text-sm truncate group-hover:text-purple-600 transition-colors">
+                    Paste Text
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-normal mt-0.5 truncate">
+                    Directly input text content
+                  </div>
+                </div>
+              </div>
+              <ArrowRight
+                className={clsx(
+                  'h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5',
+                  inputTab === 'paste' ? 'text-purple-600' : 'text-slate-400'
+                )}
+              />
+            </div>
+          </div>
+
+          {/* Interactive Source Input Area */}
+          <div className="bg-slate-50/60 rounded-2xl border border-slate-200/80 p-5 space-y-4">
+            {/* Project Title Field */}
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                Transformation Project Title (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Enterprise Strategic Report 2026 / Mic on Campus"
+                value={projectTitle}
+                onChange={(e) => setProjectTitle(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/15 shadow-2xs transition-all"
+              />
+            </div>
+
+            {/* If Upload Document */}
+            {inputTab === 'upload' && (
+              <div className="space-y-3">
+                <div className="rounded-2xl border-2 border-dashed border-slate-300 p-7 text-center hover:border-blue-500 hover:bg-blue-50/30 transition-all bg-white relative">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mx-auto">
+                    <UploadCloud className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-800 mt-3">
+                    Drag and drop your document or image here, or click to browse
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Supports PDF, DOCX, TXT, PPT, XLS, and image files (JPG, PNG, WEBP)
+                  </p>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="mt-4 text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:shadow-xs cursor-pointer"
+                  />
+                  {selectedFile && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs text-emerald-800 font-semibold shadow-2xs">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>
+                        Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
             )}
+
+            {/* If Add URL */}
+            {inputTab === 'url' && (
+              <div className="space-y-3">
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Source Web URL
+                </label>
+                <div className="relative">
+                  <Globe className="h-4 w-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="url"
+                    placeholder="https://example.com/report-or-article"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/15 shadow-2xs transition-all"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
+                  <span>Deep crawl website subpages</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={crawlSubpages}
+                      onChange={(e) => setCrawlSubpages(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* If Paste Text */}
+            {inputTab === 'paste' && (
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-700 block mb-1">
+                  Source Document Text / Meeting Notes
+                </label>
+                <textarea
+                  rows={6}
+                  placeholder="Paste your source text, research findings, briefing notes, or document transcript here..."
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs sm:text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/15 shadow-2xs transition-all leading-relaxed"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Card 5: Active Security & Sanitization Telemetry (Emerald Tint) */}
-          <div className="rounded-3xl card-emerald-tint p-6 sm:p-7 space-y-4 shadow-xs">
-            <div className="flex items-center gap-2 text-emerald-900 text-xs font-extrabold uppercase tracking-wider">
-              <ShieldCheck className="h-4 w-4 text-emerald-700" />
-              <span>Active Security &amp; Sanitization Gateways</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
-              <div className="rounded-2xl bg-white border border-indigo-200 p-4 space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-slate-900 font-bold">
-                  <Lock className="h-4 w-4 text-indigo-600" />
-                  <span>Prompt Injection Filter</span>
-                </div>
-                <p className="text-slate-600 leading-relaxed font-medium">Strips hidden jailbreaks &amp; payload overrides before LLM ingestion.</p>
-              </div>
-              <div className="rounded-2xl bg-white border border-sky-200 p-4 space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-slate-900 font-bold">
-                  <ShieldAlert className="h-4 w-4 text-sky-600" />
-                  <span>SSRF Defense</span>
-                </div>
-                <p className="text-slate-600 leading-relaxed font-medium">Blocks internal loopbacks and private subnet crawling.</p>
-              </div>
-              <div className="rounded-2xl bg-white border border-purple-200 p-4 space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-slate-900 font-bold">
-                  <EyeOff className="h-4 w-4 text-purple-600" />
-                  <span>Sensitivity Scanner</span>
-                </div>
-                <p className="text-slate-600 leading-relaxed font-medium">Auto-masks PII, internal IPs (10.x), and API credentials.</p>
-              </div>
-            </div>
+          {/* Security Guarantee Card */}
+          <div className="flex items-center gap-2.5 bg-slate-50/70 border border-slate-200/70 rounded-2xl px-4 py-3 text-xs text-slate-500">
+            <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0" />
+            <span>
+              Your data is encrypted and securely processed. We never store your information beyond the transformation process.
+            </span>
           </div>
 
-          {/* Card 6: Action Button */}
-          <div className="flex justify-end pt-2">
+          {/* Action Button Row */}
+          <div className="flex items-center justify-end pt-2">
             <button
               onClick={handleCreateProjectAndIngest}
               disabled={isProcessingSource}
-              className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-sky-600 hover:from-indigo-500 hover:to-sky-500 px-9 py-4 text-sm font-black text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/45 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white font-semibold text-sm px-6 py-3 rounded-xl shadow-sm shadow-blue-500/25 disabled:opacity-50"
             >
               {isProcessingSource ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  <span>Ingesting &amp; Running Research Engine...</span>
+                  <span>Ingesting & Verifying...</span>
                 </>
               ) : (
                 <>
-                  <span>Proceed to Step 2: Research &amp; Fact-Checking</span>
+                  <span>Next: Research & Verification</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -816,39 +973,25 @@ function NewTransformationStudioContent() {
       )}
 
       {/* ========================================================================= */}
-      {/* SCREEN 2: LIVE RESEARCH & FACT-CHECKING                                  */}
+      {/* 4. STEP 2: RESEARCH & VERIFICATION                                       */}
       {/* ========================================================================= */}
       {currentStep === 2 && canonical && (
         <div className="space-y-6">
-          <LiveResearchProgress
-            canonical={canonical}
-            researchMode={researchMode}
-            onComplete={() => setCurrentStep(3)}
-          />
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SCREEN 3: VERIFIED SINGLE-TRUTH KNOWLEDGE BASE                           */}
-      {/* ========================================================================= */}
-      {currentStep === 3 && canonical && (
-        <div className="space-y-6">
           <CanonicalViewer canonical={canonical} />
 
-          {/* Proceed Navigation Bar */}
-          <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-indigo-200 shadow-xs">
+          <div className="flex items-center justify-between p-5 rounded-2xl bg-white border border-slate-100 shadow-xs">
             <button
-              onClick={() => setCurrentStep(2)}
-              className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs flex items-center gap-2"
+              onClick={() => setCurrentStep(1)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Step 2: Research &amp; Conflicts</span>
+              <span>Back: Ingestion</span>
             </button>
             <button
-              onClick={() => setCurrentStep(4)}
-              className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all active:scale-95"
+              onClick={() => setCurrentStep(3)}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm px-6 py-2.5 shadow-sm shadow-blue-500/25 transition-all active:scale-95"
             >
-              <span>Proceed to Step 4: Choose Formats &amp; Audience</span>
+              <span>Next: Choose Format</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -856,411 +999,511 @@ function NewTransformationStudioContent() {
       )}
 
       {/* ========================================================================= */}
-      {/* SCREEN 4: FORMAT ORCHESTRATION & BRAND PROFILE                            */}
+      {/* 5. STEP 3: CHOOSE FORMAT & AUDIENCE                                      */}
       {/* ========================================================================= */}
-      {currentStep === 4 && (
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-indigo-200 bg-white p-6 sm:p-8 space-y-8 shadow-xs">
-            <div>
-              <span className="text-xs font-black uppercase text-indigo-700 tracking-wider font-mono">
-                STEP 4 OF 6 • MULTI-FORMAT ORCHESTRATOR &amp; AUDIENCE CALIBRATION
-              </span>
-              <h3 className="text-2xl font-black text-slate-900 mt-1">
-                Configure Target Audience &amp; Select Deliverables
-              </h3>
-              <p className="text-sm text-slate-600 mt-1 font-medium">
-                Transform the single Canonical Knowledge foundation into multiple audience-calibrated formats in parallel.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Target Audience */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Target Audience Profile
-                </label>
-                <select
-                  value={audience}
-                  onChange={(e) => setAudience(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
-                >
-                  <option value="Executive Board & Technical Engineers">Executive Board &amp; Technical Engineers</option>
-                  <option value="Executive Board & C-Suite">Executive Board &amp; C-Suite</option>
-                  <option value="Government Officials & Regulators">Government Officials &amp; Regulators</option>
-                  <option value="Technical Security Engineers">Technical Security Engineers</option>
-                  <option value="General Public & Media">General Public &amp; Media</option>
-                  <option value="Enterprise Customers & Partners">Enterprise Customers &amp; Partners</option>
-                </select>
-              </div>
-
-              {/* Communication Tone */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Tone &amp; Style
-                </label>
-                <select
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
-                >
-                  <option value="Professional & Authoritative">Professional &amp; Authoritative</option>
-                  <option value="Formal & Authoritative">Formal &amp; Authoritative</option>
-                  <option value="Technical & Precise">Technical &amp; Precise</option>
-                  <option value="Urgent Advisory">Urgent Advisory</option>
-                  <option value="Educational & Accessible">Educational &amp; Accessible</option>
-                </select>
-              </div>
-
-              {/* Language */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Output Language
-                </label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
-                >
-                  <option value="English">English</option>
-                  <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
-                  <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
-                  <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
-                  <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
-                </select>
-              </div>
-
-              {/* Detail Level */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                  Detail Level
-                </label>
-                <select
-                  value={detailLevel}
-                  onChange={(e) => setDetailLevel(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-semibold"
-                >
-                  <option value="Detailed & Comprehensive">Detailed &amp; Comprehensive</option>
-                  <option value="Medium (Standard)">Medium (Standard)</option>
-                  <option value="Short & Punchy">Short &amp; Punchy</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Multi-Color Target Output Format Cards */}
-            <div className="space-y-4 pt-6 border-t border-slate-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <label className="text-sm font-bold text-slate-800 uppercase tracking-wider block">
-                  Select Deliverables to Generate ({selectedFormats.length} selected)
-                </label>
-                <span className="text-xs text-indigo-700 font-bold">
-                  Generated simultaneously from identical canonical facts
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {OUTPUT_OPTIONS.map((opt) => {
-                  const Icon = opt.icon
-                  const isChecked = selectedFormats.includes(opt.id)
-                  return (
-                    <div
-                      key={opt.id}
-                      onClick={() => toggleFormat(opt.id)}
-                      className={clsx(
-                        'p-5 rounded-3xl border-2 cursor-pointer select-none transition-all flex items-start gap-4 shadow-xs',
-                        opt.cardBg,
-                        isChecked
-                          ? `${opt.border} shadow-md scale-[1.02]`
-                          : 'border-slate-200 hover:border-slate-300 opacity-75'
-                      )}
-                    >
-                      <div
-                        className={clsx(
-                          'flex h-10 w-10 items-center justify-center rounded-xl shrink-0 transition-colors',
-                          isChecked ? clsx(opt.bg, opt.color, 'shadow-xs') : 'bg-slate-100 text-slate-500'
-                        )}
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="space-y-1 flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm sm:text-base font-bold text-slate-900">{opt.label}</span>
-                          {isChecked && <CheckCircle2 className={clsx('h-4 w-4', opt.color)} />}
-                        </div>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{opt.desc}</p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-              <button
-                onClick={() => setCurrentStep(3)}
-                className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Canonical View</span>
-              </button>
-              <button
-                onClick={handleExecuteTransformation}
-                className="flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 px-8 py-3.5 text-sm font-bold text-white shadow-md shadow-indigo-600/25 hover:from-indigo-500 hover:to-sky-500 transition-all active:scale-95"
-              >
-                <Sparkles className="h-5 w-5" />
-                <span>Generate {selectedFormats.length} Selected Artefacts</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SCREEN 5: LIVE MULTI-FORMAT AI GENERATION & FACT-CHECKING                 */}
-      {/* ========================================================================= */}
-      {currentStep === 5 && (
-        <div className="space-y-6">
-          <LiveGenerationProgress
-            selectedFormats={selectedFormats}
-            isBackendReady={!isExecutingAI && generatedOutputs.length > 0}
-            onComplete={() => setCurrentStep(6)}
-          />
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SCREEN 6: PRODUCTION OUTPUT STUDIO (TOP-TO-BOTTOM WORKSPACE)              */}
-      {/* ========================================================================= */}
-      {currentStep === 6 && generatedOutputs.length === 0 && (
-        <div className="rounded-3xl border border-indigo-200 bg-white p-12 sm:p-16 text-center space-y-6 shadow-sm animate-fade-in max-w-2xl mx-auto">
-          <div className="relative mx-auto w-16 h-16 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full bg-indigo-100 animate-ping opacity-75" />
-            <div className="relative h-14 w-14 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30">
-              <Sparkles className="h-7 w-7 animate-spin" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-              Assembling Production Deliverables Studio...
-            </h3>
-            <p className="text-sm text-slate-600 font-medium max-w-md mx-auto leading-relaxed">
-              Finalizing multi-format transformations, claim-level fact verification, and blockchain cryptographic registrations.
+      {currentStep === 3 && (
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-8 lg:p-10 shadow-xs space-y-8">
+          <div>
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+              STEP 3 • CHOOSE FORMAT & AUDIENCE
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+              Select Output Deliverables & Communication Settings
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Transform your verified single source of truth into multiple calibrated formats simultaneously.
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-xs font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-full w-fit mx-auto">
-            <RefreshCw className="h-3.5 w-3.5 animate-spin text-indigo-600" />
-            <span>Populating {selectedFormats.length} output formats...</span>
+          {/* Format Selection Cards */}
+          <div className="space-y-3">
+            <div className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Deliverables ({selectedFormats.length} selected)
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {OUTPUT_OPTIONS.map((opt) => {
+                const Icon = opt.icon
+                const isChecked = selectedFormats.includes(opt.id)
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => toggleFormat(opt.id)}
+                    className={clsx(
+                      'p-5 rounded-2xl border-2 cursor-pointer select-none transition-all flex items-start gap-4 shadow-2xs',
+                      opt.cardBg,
+                      isChecked
+                        ? `${opt.border} ring-2 ring-blue-500/10 scale-[1.01]`
+                        : 'border-slate-200 hover:border-slate-300 opacity-75'
+                    )}
+                  >
+                    <div
+                      className={clsx(
+                        'flex h-10 w-10 items-center justify-center rounded-xl shrink-0 transition-colors',
+                        isChecked ? clsx(opt.bg, opt.color, 'shadow-2xs') : 'bg-slate-100 text-slate-500'
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-slate-900">{opt.label}</span>
+                        {isChecked && <CheckCircle2 className={clsx('h-4 w-4', opt.color)} />}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed font-normal">{opt.desc}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Audience & Calibration Settings */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                Target Audience
+              </label>
+              <select
+                value={audience}
+                onChange={(e) => setAudience(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+              >
+                <option value="Executive Board & Technical Engineers">Executive Board & Technical Engineers</option>
+                <option value="Executive Board & C-Suite">Executive Board & C-Suite</option>
+                <option value="Government Officials & Regulators">Government Officials & Regulators</option>
+                <option value="Technical Security Engineers">Technical Security Engineers</option>
+                <option value="General Public & Media">General Public & Media</option>
+                <option value="Enterprise Customers & Partners">Enterprise Customers & Partners</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                Tone & Style
+              </label>
+              <select
+                value={tone}
+                onChange={(e) => setTone(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-blue-600 focus:outline-none shadow-2xs font-medium"
+              >
+                <option value="Professional & Authoritative">Professional & Authoritative</option>
+                <option value="Formal & Strategic">Formal & Strategic</option>
+                <option value="Technical & Precise">Technical & Precise</option>
+                <option value="Urgent Advisory">Urgent Advisory</option>
+                <option value="Educational & Accessible">Educational & Accessible</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Navigation Controls */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <button
+              onClick={() => setCurrentStep(2)}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back: Research</span>
+            </button>
+            <button
+              onClick={handleExecuteTransformation}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm px-6 py-2.5 shadow-sm shadow-blue-500/25 transition-all active:scale-95"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Generate Content</span>
+            </button>
           </div>
         </div>
       )}
 
-      {currentStep === 6 && generatedOutputs.length > 0 && (
-        <div className="space-y-8">
-          {/* Format Selection Pills Bar */}
-          <div className="flex overflow-x-auto gap-2.5 border-b border-slate-200 pb-4 no-scrollbar">
-            {generatedOutputs.map((o) => {
-              const isActive = activeOutputTab === o.format_type
-              return (
-                <button
-                  key={o.id}
-                  onClick={() => setActiveOutputTab(o.format_type)}
-                  className={clsx(
-                    'flex items-center gap-2.5 rounded-2xl px-5 py-3 text-sm font-bold whitespace-nowrap transition-all shadow-xs',
-                    isActive
-                      ? 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
-                  )}
-                >
-                  <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
-                  <span
-                    className={clsx(
-                      'rounded-full px-2 py-0.5 text-[10px] font-mono font-bold',
-                      isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
-                    )}
-                  >
-                    v{o.version}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+      {/* ========================================================================= */}
+      {/* 6. STEP 4: GENERATE & OUTPUT STUDIO                                       */}
+      {/* ========================================================================= */}
+      {currentStep === 4 && (
+        <div className="space-y-6">
+          {isExecutingAI && (
+            <LiveGenerationProgress
+              selectedFormats={selectedFormats}
+              isBackendReady={!isExecutingAI && generatedOutputs.length > 0}
+              onComplete={() => {}}
+            />
+          )}
 
-          {/* Active Deliverable Workspace */}
-          {activeOutput && (
+          {!isExecutingAI && generatedOutputs.length > 0 && (
             <div className="space-y-6">
-              {/* Deliverable Card */}
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 space-y-6 shadow-xs">
-                {/* Header & Actions Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-bold uppercase rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 font-mono">
-                        {activeOutput.format_type.toUpperCase()}
-                      </span>
+              {/* Deliverable Tabs */}
+              <div className="flex overflow-x-auto gap-2 border-b border-slate-200 pb-3 no-scrollbar">
+                {generatedOutputs.map((o) => {
+                  const isActive = activeOutputTab === o.format_type
+                  return (
+                    <button
+                      key={o.id}
+                      onClick={() => setActiveOutputTab(o.format_type)}
+                      className={clsx(
+                        'flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all',
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/25'
+                          : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-2xs'
+                      )}
+                    >
+                      <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
                       <span
                         className={clsx(
-                          'text-xs font-bold uppercase rounded-md px-2.5 py-0.5 border font-mono',
-                          activeOutput.status === 'APPROVED'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                            : activeOutput.status === 'PUBLISHED'
-                            ? 'bg-cyan-50 text-cyan-700 border-cyan-300'
-                            : 'bg-amber-50 text-amber-800 border-amber-300'
+                          'rounded-full px-1.5 py-0.2 text-[10px]',
+                          isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
                         )}
                       >
-                        {activeOutput.status}
+                        v{o.version}
                       </span>
-                    </div>
-                    <h3 className="text-xl font-extrabold text-slate-900 mt-2">
-                      {activeOutput.title || `${activeOutput.format_type} Output`}
-                    </h3>
-                  </div>
-
-                  {/* Action Controls */}
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <button
-                      onClick={() => setManualEditorModalOutput(activeOutput)}
-                      className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2 text-xs sm:text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs"
-                    >
-                      <Edit3 className="h-4 w-4 text-indigo-600" />
-                      <span>Manual Edit</span>
                     </button>
-
-                    <button
-                      onClick={() => setEditorModalOutput(activeOutput)}
-                      className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs"
-                    >
-                      <Sparkles className="h-4 w-4 text-indigo-600" />
-                      <span>Ask AI to Edit</span>
-                    </button>
-
-                    <ExportDropdown
-                      outputId={activeOutput.id}
-                      content={activeOutput.raw_content}
-                      formatType={activeOutput.format_type}
-                    />
-
-                    <button
-                      onClick={() => setPublishModalOutput(activeOutput)}
-                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs hover:from-indigo-500 hover:to-sky-500 transition-all"
-                    >
-                      <Send className="h-4 w-4" />
-                      <span>Publish (n8n)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* RAG Knowledge Base Used Citation Banner */}
-                {((activeOutput.structured_data?.rag_sources && activeOutput.structured_data.rag_sources.length > 0) ||
-                  (canonical?.rag_sources && canonical.rag_sources.length > 0)) && (
-                  <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-purple-50/40 to-sky-50/80 p-4 space-y-2 shadow-2xs animate-fade-in">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4 text-indigo-600 animate-pulse" />
-                        <span className="text-xs font-black uppercase text-indigo-950 font-mono">
-                          Knowledge Base (RAG) Data Applied
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-mono">
-                        Policy &amp; Brand Grounded
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-700 font-medium leading-relaxed">
-                      This deliverable was generated using organizational standards retrieved from your Knowledge Base:
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {(activeOutput.structured_data?.rag_sources || canonical?.rag_sources || []).map(
-                          (sourceName: string, idx: number) => (
-                            <span
-                              key={idx}
-                              className="rounded-md bg-white border border-indigo-200 text-indigo-900 px-2.5 py-1 text-[11px] font-bold font-mono shadow-2xs flex items-center gap-1"
-                            >
-                              <span>📚</span>
-                              <span>{sourceName}</span>
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Main Deliverable Content */}
-                {activeOutput.format_type === 'presentation' ? (
-                  <SlideDeckPreview
-                    outputId={activeOutput.id}
-                    deckData={activeOutput.structured_data}
-                  />
-                ) : activeOutput.format_type === 'linkedin' ? (
-                  <LinkedInPostCard output={activeOutput} />
-                ) : activeOutput.format_type === 'infographic' ? (
-                  <InfographicCard output={activeOutput} />
-                ) : activeOutput.format_type === 'video_package' ? (
-                  <VideoPackageCard
-                    structuredData={activeOutput.structured_data}
-                    rawContent={activeOutput.raw_content}
-                  />
-                ) : activeOutput.format_type === 'twitter' ? (
-                  <TwitterThreadCard
-                    structuredData={activeOutput.structured_data}
-                    rawContent={activeOutput.raw_content}
-                  />
-                ) : (
-                  <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs">
-                    <StructuredContentRenderer content={activeOutput.raw_content} />
-                  </div>
-                )}
-
-                {/* Human-in-the-Loop Approval Decision Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border border-slate-200 bg-slate-50/90">
-                  <div>
-                    <span className="text-sm font-bold text-slate-900 block">
-                      Human-in-the-Loop Governance Sign-Off
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium">
-                      Public publishing strictly requires explicit human operator certification.
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => handleApproval('REJECT')}
-                      className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-rose-700 hover:bg-rose-50 transition-colors shadow-xs"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => handleApproval('APPROVE')}
-                      className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2 text-xs sm:text-sm font-bold text-white hover:bg-emerald-500 shadow-sm transition-all"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>Approve Output</span>
-                    </button>
-                  </div>
-                </div>
+                  )
+                })}
               </div>
 
-              {/* Blockchain Cryptographic Verification & Tamper Detection */}
-              <BlockchainVerificationCard
-                output={activeOutput}
-                onContentUpdated={(newText) => {
-                  setGeneratedOutputs((prev) =>
-                    prev.map((o) => (o.id === activeOutput.id ? { ...o, raw_content: newText } : o))
-                  )
-                }}
-              />
+              {/* Active Deliverable Workspace */}
+              {activeOutput && (
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-slate-100 bg-white p-6 sm:p-8 shadow-xs space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold uppercase rounded-md bg-blue-50 text-blue-700 px-2.5 py-0.5">
+                            {activeOutput.format_type.toUpperCase()}
+                          </span>
+                          <span
+                            className={clsx(
+                              'text-xs font-semibold uppercase rounded-md px-2.5 py-0.5 border',
+                              activeOutput.status === 'APPROVED'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                : activeOutput.status === 'PUBLISHED'
+                                ? 'bg-cyan-50 text-cyan-700 border-cyan-300'
+                                : 'bg-amber-50 text-amber-800 border-amber-300'
+                            )}
+                          >
+                            {activeOutput.status}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900 mt-2">
+                          {activeOutput.title || `${activeOutput.format_type} Output`}
+                        </h3>
+                      </div>
 
-              {/* Fact Check Inspection Panel */}
-              <FactCheckPanel factCheck={activeOutput.fact_check} />
+                      {/* Action Controls */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          onClick={() => setManualEditorModalOutput(activeOutput)}
+                          className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-slate-600" />
+                          <span>Manual Edit</span>
+                        </button>
+                        <button
+                          onClick={() => setEditorModalOutput(activeOutput)}
+                          className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                          <span>Ask AI to Edit</span>
+                        </button>
+                        <ExportDropdown
+                          outputId={activeOutput.id}
+                          content={activeOutput.raw_content}
+                          formatType={activeOutput.format_type}
+                        />
+                        <button
+                          onClick={() => setPublishModalOutput(activeOutput)}
+                          className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-all"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                          <span>Publish</span>
+                        </button>
+                      </div>
+                    </div>
 
-              {/* Quality Radar Card */}
-              <QualityRadarCard qualityScore={activeOutput.quality_score} />
+                    {/* Content Renderer */}
+                    {activeOutput.format_type === 'presentation' ? (
+                      <SlideDeckPreview outputId={activeOutput.id} deckData={activeOutput.structured_data} />
+                    ) : activeOutput.format_type === 'linkedin' ? (
+                      <LinkedInPostCard output={activeOutput} />
+                    ) : activeOutput.format_type === 'infographic' ? (
+                      <InfographicCard output={activeOutput} />
+                    ) : activeOutput.format_type === 'video_package' ? (
+                      <VideoPackageCard
+                        structuredData={activeOutput.structured_data}
+                        rawContent={activeOutput.raw_content}
+                      />
+                    ) : activeOutput.format_type === 'twitter' ? (
+                      <TwitterThreadCard
+                        structuredData={activeOutput.structured_data}
+                        rawContent={activeOutput.raw_content}
+                      />
+                    ) : (
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-6 shadow-2xs">
+                        <StructuredContentRenderer content={activeOutput.raw_content} />
+                      </div>
+                    )}
+
+                    {/* Governance Sign-Off */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-slate-200 bg-slate-50/70">
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold text-slate-900 block">
+                          Human-in-the-Loop Governance Sign-Off
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          Verify outputs before public deployment and multichannel broadcast.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproval('REJECT')}
+                          className="rounded-xl border border-rose-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 shadow-2xs transition-colors"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleApproval('APPROVE')}
+                          className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-sm transition-all"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>Approve Output</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <BlockchainVerificationCard
+                    output={activeOutput}
+                    onContentUpdated={(newText) => {
+                      setGeneratedOutputs((prev) =>
+                        prev.map((o) => (o.id === activeOutput.id ? { ...o, raw_content: newText } : o))
+                      )
+                    }}
+                  />
+                  <FactCheckPanel factCheck={activeOutput.fact_check} />
+                  <QualityRadarCard qualityScore={activeOutput.quality_score} />
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* MODALS */}
+      {/* ========================================================================= */}
+      {/* 7. RECENT TRANSFORMATION PIPELINES TABLE (MATCHES OVERVIEW)               */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-3xl border border-slate-100 p-6 sm:p-7 shadow-xs">
+        <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+          <h2 className="text-base font-bold text-slate-900 tracking-tight">
+            Recent Transformation Pipelines
+          </h2>
+          <Link
+            href="/dashboard/projects"
+            className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+          >
+            <span>View All</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs sm:text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
+                <th className="py-4 font-semibold">Name</th>
+                <th className="py-4 font-semibold">Source(s)</th>
+                <th className="py-4 font-semibold">Output Format</th>
+                <th className="py-4 font-semibold">Status</th>
+                <th className="py-4 font-semibold">Last Updated</th>
+                <th className="py-4 font-semibold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loadingPipelines ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-slate-400 font-medium">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                      <span>Loading recent transformation pipelines...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : pipelinesToDisplay.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-slate-500 font-medium">
+                    No transformation pipelines yet. Ingest your first document above.
+                  </td>
+                </tr>
+              ) : (
+                pipelinesToDisplay.slice(0, 5).map((item) => (
+                  <tr
+                    key={item.id}
+                    onClick={() => {
+                      if (item.projectId) router.push(`/dashboard/projects/${item.projectId}`)
+                    }}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                  >
+                    {/* Name */}
+                    <td className="py-4 pr-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={clsx(
+                            'h-9 w-9 rounded-xl flex items-center justify-center shrink-0',
+                            item.iconType === 'pdf' && 'bg-purple-50 text-purple-600',
+                            item.iconType === 'globe' && 'bg-blue-50 text-blue-600',
+                            item.iconType === 'doc' && 'bg-emerald-50 text-emerald-600',
+                            item.iconType === 'image' && 'bg-blue-50 text-blue-600',
+                            item.iconType === 'link' && 'bg-blue-50 text-blue-600'
+                          )}
+                        >
+                          {item.iconType === 'pdf' && <FileText className="h-4 w-4" />}
+                          {item.iconType === 'globe' && <Globe className="h-4 w-4" />}
+                          {item.iconType === 'doc' && <FileText className="h-4 w-4" />}
+                          {item.iconType === 'image' && <ImageIcon className="h-4 w-4" />}
+                          {item.iconType === 'link' && <Link2 className="h-4 w-4" />}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-xs sm:max-w-sm">
+                            {item.name}
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-normal mt-0.5">
+                            {item.subtitle}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Sources */}
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-1.5">
+                        {item.sources.includes('pdf') && (
+                          <div className="h-7 w-7 rounded-lg bg-red-50 text-red-600 border border-red-100 flex items-center justify-center shadow-2xs" title="PDF Document">
+                            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9.5 8.5c0 .83-.67 1.5-1.5 1.5H7v2H5.5V9H8c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V9h2.5c.83 0 1.5.67 1.5 1.5v3zm4-3H17v1h1.5V13H17v1.5h-1.5V9h3v1.5z" />
+                            </svg>
+                          </div>
+                        )}
+                        {item.sources.includes('drive') && (
+                          <div className="h-7 w-7 rounded-lg bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shadow-2xs" title="Cloud Drive Source">
+                            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+                              <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5M9.73 15L6.3 21h13.12l3.43-6M22.85 15l-6.56-11.5H9.72L16.29 15" />
+                            </svg>
+                          </div>
+                        )}
+                        {item.sources.includes('globe') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shadow-2xs" title="Web Source">
+                            <Globe className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.sources.includes('link') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shadow-2xs" title="Web Link">
+                            <Link2 className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.sources.includes('doc') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shadow-2xs" title="Text / Document">
+                            <FileText className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.sources.includes('image') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shadow-2xs" title="Image Asset">
+                            <ImageIcon className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Output Formats */}
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-1.5">
+                        {item.outputs.includes('summary') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shadow-2xs" title="Executive Summary">
+                            <FileText className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('presentation') && (
+                          <div className="h-7 w-7 rounded-lg bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shadow-2xs" title="Presentation">
+                            <Presentation className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('linkedin') && (
+                          <div className="h-7 w-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 flex items-center justify-center shadow-2xs" title="LinkedIn">
+                            <Linkedin className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('advisory') && (
+                          <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shadow-2xs" title="Executive Advisory">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('infographic') && (
+                          <div className="h-7 w-7 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shadow-2xs" title="Infographic">
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('video') && (
+                          <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shadow-2xs" title="Video Script">
+                            <PlayCircle className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('social') && (
+                          <div className="h-7 w-7 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shadow-2xs" title="Social Media">
+                            <Share2 className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.includes('twitter') && (
+                          <div className="h-7 w-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-2xs" title="Twitter / X">
+                            <Twitter className="h-3.5 w-3.5" />
+                          </div>
+                        )}
+                        {item.outputs.length === 0 && (
+                          <span className="text-[11px] text-slate-400 italic">None generated</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-4 px-2">
+                      <span
+                        className={clsx(
+                          'inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold',
+                          item.status === 'Completed'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                            : 'bg-blue-50 text-blue-700 border border-blue-200/80'
+                        )}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+
+                    {/* Last Updated */}
+                    <td className="py-4 px-2 text-xs text-slate-500 font-medium">
+                      {item.lastUpdated}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-4 pl-2 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          if (item.projectId) router.push(`/dashboard/projects/${item.projectId}`)
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                        title="Open project"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 8. MODALS                                                                 */}
+      {/* ========================================================================= */}
       {manualEditorModalOutput && (
         <ManualEditorModal
           output={manualEditorModalOutput}

@@ -31,8 +31,8 @@ export default function SettingsPage() {
   const [isCheckingOllama, setIsCheckingOllama] = useState(false)
 
   // General & Organization Settings
-  const [orgName, setOrgName] = useState('NovaTech Cyber Solutions')
-  const [domain, setDomain] = useState('Cybersecurity & Cloud Resilience')
+  const [orgName, setOrgName] = useState('')
+  const [domain, setDomain] = useState('Enterprise Technology & SaaS')
   const [defaultLanguage, setDefaultLanguage] = useState('English')
 
   // AI Transformation Defaults
@@ -355,12 +355,22 @@ export default function SettingsPage() {
               onChange={(e) => setDefaultLanguage(e.target.value)}
               className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 focus:border-indigo-500 focus:bg-white focus:outline-none shadow-xs font-medium"
             >
-              <option value="English">English (United States)</option>
-              <option value="English (UK)">English (United Kingdom)</option>
-              <option value="Spanish">Spanish (Español)</option>
-              <option value="French">French (Français)</option>
-              <option value="German">German (Deutsch)</option>
-              <option value="Japanese">Japanese (日本語)</option>
+              <option value="English">English</option>
+              <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+              <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+              <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+              <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+              <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
+              <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+              <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+              <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+              <option value="Spanish (Español)">Spanish (Español)</option>
+              <option value="French (Français)">French (Français)</option>
+              <option value="German (Deutsch)">German (Deutsch)</option>
+              <option value="Japanese (日本語)">Japanese (日本語)</option>
+              <option value="Chinese (中文)">Chinese (中文)</option>
+              <option value="Arabic (العربية)">Arabic (العربية)</option>
+              <option value="Portuguese (Português)">Portuguese (Português)</option>
             </select>
           </div>
         </div>

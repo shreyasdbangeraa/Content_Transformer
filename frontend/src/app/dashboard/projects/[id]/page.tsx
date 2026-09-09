@@ -38,6 +38,17 @@ import ExportDropdown from '@/components/ExportDropdown'
 import BlockchainVerificationCard from '@/components/BlockchainVerificationCard'
 import clsx from 'clsx'
 
+function getFormatLabel(fmt: string): string {
+  if (fmt === 'executive_summary') return 'Exclusive Summary'
+  if (fmt === 'advisory') return 'Executive Advisory'
+  if (fmt === 'video_package') return 'Video Package'
+  if (fmt === 'infographic') return 'Infographic'
+  if (fmt === 'presentation') return 'Presentation'
+  if (fmt === 'linkedin') return 'LinkedIn'
+  if (fmt === 'twitter') return 'X / Twitter'
+  return fmt.replace('_', ' ')
+}
+
 export default function ProjectDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -52,6 +63,26 @@ export default function ProjectDetailPage() {
   const [editorOutput, setEditorOutput] = useState<Output | null>(null)
   const [manualEditorOutput, setManualEditorOutput] = useState<Output | null>(null)
   const [publishOutput, setPublishOutput] = useState<Output | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
+
+  const handleTranslateOutput = async (targetLang: string) => {
+    if (!activeOutput || !targetLang) return
+    try {
+      setIsTranslating(true)
+      const updated = await api.translateOutput(activeOutput.id, targetLang)
+      setProject((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          outputs: prev.outputs?.map((o) => (o.id === updated.id ? updated : o)),
+        }
+      })
+    } catch (err: any) {
+      alert(`Translation failed: ${err.message}`)
+    } finally {
+      setIsTranslating(false)
+    }
+  }
 
   const loadProject = async () => {
     try {
@@ -260,7 +291,7 @@ export default function ProjectDetailPage() {
                           : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
                       )}
                     >
-                      <span className="capitalize">{o.format_type.replace('_', ' ')}</span>
+                      <span className="font-bold">{getFormatLabel(o.format_type)}</span>
                       <span
                         className={clsx(
                           'rounded-full px-2 py-0.5 text-[10px] font-mono font-bold',
@@ -285,7 +316,7 @@ export default function ProjectDetailPage() {
                         <div>
                           <div className="flex items-center gap-2.5">
                             <span className="text-xs font-bold uppercase rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 px-2.5 py-0.5 font-mono">
-                              {activeOutput.format_type.toUpperCase()}
+                              {getFormatLabel(activeOutput.format_type).toUpperCase()}
                             </span>
                             <span
                               className={clsx(
@@ -307,6 +338,42 @@ export default function ProjectDetailPage() {
 
                         {/* Action Buttons */}
                         <div className="flex items-center gap-2.5 flex-wrap">
+                          {/* Translate Language Selector */}
+                          <div className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs">
+                            <Globe className={clsx("h-3.5 w-3.5 text-indigo-600", isTranslating && "animate-spin")} />
+                            <select
+                              disabled={isTranslating}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  handleTranslateOutput(e.target.value)
+                                  e.target.value = ''
+                                }
+                              }}
+                              defaultValue=""
+                              className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer disabled:opacity-50"
+                            >
+                              <option value="" disabled>
+                                {isTranslating ? 'Translating...' : '🌐 Translate To...'}
+                              </option>
+                              <option value="Kannada (ಕನ್ನಡ)">Kannada (ಕನ್ನಡ)</option>
+                              <option value="Hindi (हिंदी)">Hindi (हिंदी)</option>
+                              <option value="Tamil (தமிழ்)">Tamil (தமிழ்)</option>
+                              <option value="Telugu (తెలుగు)">Telugu (తెలుగు)</option>
+                              <option value="Malayalam (മലയാളം)">Malayalam (മലയാളം)</option>
+                              <option value="Bengali (বাংলা)">Bengali (বাংলা)</option>
+                              <option value="Marathi (मराठी)">Marathi (मराठी)</option>
+                              <option value="Gujarati (ગુજરાતી)">Gujarati (ગુજરાતી)</option>
+                              <option value="Spanish (Español)">Spanish (Español)</option>
+                              <option value="French (Français)">French (Français)</option>
+                              <option value="German (Deutsch)">German (Deutsch)</option>
+                              <option value="Japanese (日本語)">Japanese (日本語)</option>
+                              <option value="Chinese (中文)">Chinese (中文)</option>
+                              <option value="Arabic (العربية)">Arabic (العربية)</option>
+                              <option value="Portuguese (Português)">Portuguese (Português)</option>
+                              <option value="English">English</option>
+                            </select>
+                          </div>
+
                           <button
                             onClick={() => setManualEditorOutput(activeOutput)}
                             className="flex items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/80 px-4 py-2 text-xs sm:text-sm font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs"

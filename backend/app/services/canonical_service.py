@@ -4,6 +4,7 @@ from app.database.models import CanonicalAnalysis, Source, Project, AuditLog
 from app.ai.factory import AIFactory
 from app.services.sensitivity_service import SensitivityService
 from app.services.research_service import ResearchService
+from app.processors.timeline_extractor import TimelineExtractor
 
 class CanonicalService:
     """Orchestrates deep AI document analysis, research evidence integration, and canonical structured knowledge creation."""
@@ -34,14 +35,16 @@ class CanonicalService:
             analysis_data["sensitivity"] = sens_scan
 
         # 3. Universal Multi-Source Research & Evidence Collection & Conflict Detection
-        research_job = ResearchService.execute_research_and_verification(
+        research_job = await ResearchService.execute_research_and_verification_async(
             db=db,
             project_id=project_id,
             topic=analysis_data.get("topic", source.filename),
             canonical_facts=analysis_data.get("key_facts", []),
             research_mode=active_mode,
             text_sample=source.raw_text[:3000],
-            filename=source.filename
+            filename=source.filename,
+            entities=analysis_data.get("entities", []),
+            target_queries=analysis_data.get("target_search_queries", [])
         )
 
         # Update Project Domain with the exact detected domain
@@ -59,15 +62,48 @@ class CanonicalService:
         # Assemble Research Evidence & Conflict payloads for Canonical Layer
         research_findings = []
         if research_job and research_job.evidence:
+            import json
+            from urllib.parse import urlparse
+            has_external_urls = any(bool(e.source_url) for e in research_job.evidence)
             for ev in research_job.evidence:
-                research_findings.append({
-                    "claim_text": ev.claim_text,
-                    "evidence_snippet": ev.evidence_snippet,
-                    "source_title": ev.source_title,
-                    "source_url": ev.source_url,
-                    "source_tier": ev.source_tier,
-                    "confidence": ev.confidence
-                })
+                # If external website research was conducted, prioritize verified external evidence.
+                # If no external websites exist, include primary document baseline.
+                if ev.source_url or (not has_external_urls):
+                    parsed_domain = ""
+                    if ev.source_url:
+                        try:
+                            parsed_domain = urlparse(ev.source_url).netloc.replace("www.", "")
+                        except Exception:
+                            parsed_domain = ""
+
+                    meta = {}
+                    if ev.limitation_notes:
+                        try:
+                            meta = json.loads(ev.limitation_notes)
+                        except Exception:
+                            meta = {"notes": ev.limitation_notes}
+
+                    rel = meta.get("relationship_to_document") or ("Supported" if ev.source_url else "Additional Context")
+                    finding = meta.get("research_finding") or ev.evidence_snippet or ""
+                    why = meta.get("why_researched") or (f"External verification for: {ev.claim_text[:80]}" if ev.source_url else f"Baseline stated directly in {source.filename}")
+                    src_name = meta.get("source_name") or ev.source_title
+                    pg_title = meta.get("page_title") or ev.source_title
+
+                    research_findings.append({
+                        "claim_text": ev.claim_text,
+                        "evidence_snippet": ev.evidence_snippet,
+                        "research_finding": finding,
+                        "source_title": ev.source_title,
+                        "source_name": src_name,
+                        "page_title": pg_title,
+                        "source_url": ev.source_url or "",
+                        "source_tier": ev.source_tier,
+                        "confidence": ev.confidence,
+                        "domain": parsed_domain or meta.get("domain", ""),
+                        "why_researched": why,
+                        "relationship_to_document": rel,
+                        "researched_status": rel
+                    })
 
         conflicts = []
         if research_job and research_job.conflicts:
@@ -128,49 +164,29 @@ class CanonicalService:
             top_k=4
         )
 
-        # 5. Enrich Executive Summary Narrative with Mode-Specific Research & Evidence Grounding
+        # 5. Attach clean verified external website context if discovered
         exec_summary = analysis_data.get("executive_summary", "")
+        external_links = [rf for rf in (research_findings or []) if rf.get("source_url")]
+        if external_links and "Verified External Context" not in exec_summary:
+            research_lines = ["\n\n### Verified External Context"]
+            for rf in external_links[:3]:
+                src_title = rf.get("source_title", "Official Source")
+                src_url = rf.get("source_url", "")
+                snippet = rf.get("evidence_snippet", "")
+                research_lines.append(f"• **[{src_title}]({src_url}):** {snippet}")
+            exec_summary += "\n\n" + "\n\n".join(research_lines)
 
-        if active_mode == "SOURCE_ONLY":
-            if "Document Scope & Provenance" not in exec_summary:
-                exec_summary += "\n\n### Document Scope & Provenance (Mode: SOURCE_ONLY)\nThis canonical synthesis is strictly bounded to the primary uploaded document. External web research is disabled to preserve confidential and internal source boundaries with 100% data privacy."
-        
-        elif active_mode == "DEEP_RESEARCH":
-            if research_findings and "Deep Multi-Source Research" not in exec_summary:
-                source_count = len(research_job.sources) if (research_job and research_job.sources) else len(research_findings)
-                research_section_lines = [
-                    "\n\n### Deep Multi-Source Research & Intelligence Synthesis (Mode: DEEP_RESEARCH)",
-                    f"This canonical intelligence dossier integrates multi-perspective discovery across **{source_count} authoritative sources spanning all 8 hierarchy tiers** (including National CERTs, Enterprise Portals, Academic Repositories, and Global Standards Bodies) with an aggregate evidence grounding score of **99%**.",
-                    f"• **Multi-Tier Evidence Harvesting:** {len(research_findings)} deep evidence items synthesized across Tiers 1 through 6.",
-                    f"• **Cross-Source Contradiction Radar:** {len(conflicts)} cross-source reporting discrepancy / telemetry variance item(s) detected and analyzed.",
-                    f"• **Comprehensive Synthesis:** Integrates empirical benchmarks, international regulatory compliance, and cross-sector historical baselines."
-                ]
-                for idx, rf in enumerate(research_findings[:5]):
-                    snippet = rf.get('evidence_snippet', '')
-                    src_title = rf.get('source_title', 'Authoritative Source')
-                    tier_num = rf.get('source_tier', 1)
-                    research_section_lines.append(f"• **[Tier {tier_num} • {src_title}]:** {snippet}")
-                
-                exec_summary += "\n\n" + "\n\n".join(research_section_lines)
+        # 6. Enrich dates and timeline events deterministically so explicit dates are never lost
+        raw_dates = analysis_data.get("dates", [])
+        raw_events = analysis_data.get("events", [])
+        enriched_dates, enriched_events = TimelineExtractor.enrich_timeline(
+            existing_dates=raw_dates,
+            existing_events=raw_events,
+            raw_text=source.raw_text,
+            filename=source.filename
+        )
 
-        else: # SOURCE_AND_VERIFY
-            if research_findings and "Multi-Source Research" not in exec_summary:
-                source_count = len(research_job.sources) if (research_job and research_job.sources) else len(research_findings)
-                research_section_lines = [
-                    "\n\n### Multi-Source Research & External Verification (Mode: SOURCE_AND_VERIFY)",
-                    f"This canonical synthesis is grounded in primary source telemetry and cross-referenced against **{source_count} Tier 1/2 authoritative external sources** (including official government portals and certified standards bodies) with an aggregate evidence grounding score of **98%**.",
-                    f"• **Research Corroboration:** {len(research_findings)} corroborating evidence items validated across Tier 1/2 sources.",
-                    f"• **Discrepancy Radar:** {len(conflicts)} potential narrative conflict(s) flagged for operator sign-off."
-                ]
-                for idx, rf in enumerate(research_findings[:3]):
-                    snippet = rf.get('evidence_snippet', '')
-                    src_title = rf.get('source_title', 'Authoritative Source')
-                    tier_num = rf.get('source_tier', 2)
-                    research_section_lines.append(f"• **[Tier {tier_num} • {src_title}]:** {snippet}")
-                
-                exec_summary += "\n\n" + "\n\n".join(research_section_lines)
-
-        # 6. Create CanonicalAnalysis in DB
+        # 7. Create CanonicalAnalysis in DB
         canonical = CanonicalAnalysis(
             project_id=project_id,
             source_id=source_id,
@@ -181,12 +197,8 @@ class CanonicalService:
             executive_summary=exec_summary,
             key_facts=enriched_facts,
             entities=analysis_data.get("entities", []),
-            dates=analysis_data.get("dates", []),
-            events=analysis_data.get("events", [
-                {"timestamp": "2026-08-12 03:14 UTC", "event": "Perimeter intrusion detected", "severity": "CRITICAL"},
-                {"timestamp": "2026-08-12 03:56 UTC", "event": "Subnet containment achieved in 42 mins", "severity": "HIGH"},
-                {"timestamp": "2026-08-13 10:00 UTC", "event": "Air-gapped backup restoration initiated", "severity": "INFO"}
-            ] if "novatech" in source.filename.lower() or "novatech" in source.raw_text.lower() else []),
+            dates=enriched_dates,
+            events=enriched_events,
             locations=analysis_data.get("locations", []),
             statistics=analysis_data.get("statistics", []),
             risks=analysis_data.get("risks", []),

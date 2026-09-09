@@ -241,7 +241,7 @@ export default function TemplatesPage() {
                 <label className="text-xs font-bold text-slate-700 uppercase">Organization Name</label>
                 <input
                   type="text"
-                  placeholder="e.g. NovaTech Systems"
+                  placeholder="e.g. Acme Corporation"
                   value={orgName}
                   onChange={(e) => setOrgName(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none"

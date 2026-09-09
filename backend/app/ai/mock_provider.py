@@ -4,6 +4,8 @@ from typing import Dict, Any, List, Optional
 from app.ai.base import AIProvider
 from app.generators.executive_summary import ExecutiveSummaryGenerator
 from app.utils.text_sanitizer import sanitize_linkedin_content
+from app.services.multilingual_service import MultilingualService
+from app.processors.timeline_extractor import TimelineExtractor
 
 class MockProvider(AIProvider):
     """High-fidelity fallback AI provider capable of dynamic offline analysis and generation for any topic."""
@@ -191,7 +193,47 @@ class MockProvider(AIProvider):
             
         first_line = lines[0][:80]
         char_count = len(text)
-        words = list(set(re.findall(r'\b[A-Z][a-z]{3,}\b', text)))[:6]
+        # Extract high-confidence multi-word proper nouns & organizations
+        raw_entities = re.findall(r'\b[A-Z][A-Za-z0-9&.\-_]+(?:\s+[A-Z][A-Za-z0-9&.\-_]+){1,4}\b', text)
+        excluded_orgs = {
+            'Executive Summary', 'Table Of Contents', 'Section One', 'Section Two', 'Problem Statement',
+            'Target Audience', 'Expected Outcomes', 'Core Principle', 'Real Conversation', 'Real Experience',
+            'Real Learning', 'Real World', 'Real Lessons', 'Estimated Budget', 'Estimated Total',
+            'Guest Selection Criteria', 'Important Notice', 'All Rights Reserved', 'SUBMITTED TO', 'PREPARED BY'
+        }
+        valid_org_names = []
+        for ent in raw_entities:
+            clean_ent = re.sub(r'[\r\n\t]+', ' ', ent).strip()
+            clean_ent = re.sub(r'\s{2,}', ' ', clean_ent)
+            if clean_ent not in excluded_orgs and len(clean_ent) > 4:
+                if not any(clean_ent == vo or clean_ent in vo for vo in valid_org_names):
+                    valid_org_names.append(clean_ent)
+
+        # Look for explicit attribution markers
+        marker_matches = re.findall(r'(?:SUBMITTED TO|PREPARED BY|ORGANIZATION|COMPANY|INSTITUTION|CLIENT)\s*[:\-–]\s*([^\n\r]+)', text, re.IGNORECASE)
+        for mm in marker_matches:
+            first_line_m = re.sub(r'[\r\n\t]+', ' ', mm).strip()
+            first_line_m = re.sub(r'\s{2,}', ' ', first_line_m)
+            if len(first_line_m) > 3 and first_line_m not in valid_org_names and first_line_m not in excluded_orgs:
+                valid_org_names.insert(0, first_line_m)
+
+        final_entities = []
+        for org in valid_org_names[:6]:
+            final_entities.append({
+                "name": org,
+                "type": "ORGANIZATION",
+                "context": f"Identified entity in {filename}"
+            })
+        if not final_entities:
+            final_entities = [{"name": first_line[:50], "type": "ORGANIZATION", "context": "Primary Document Subject"}]
+
+        # Generate targeted 2-4 word search queries for the discovered entities
+        doc_search_queries = []
+        for org in valid_org_names[:3]:
+            doc_search_queries.append(f"{org} official website")
+        if not doc_search_queries:
+            doc_search_queries = [f"{first_line[:40]} website"]
+
         numbers = list(set(re.findall(r'\b\d+(?:[\.,]\d+)?%?\b', text)))[:4]
         
         raw_sentences = [s.strip() for s in re.split(r'[.!?\n]+', text) if len(s.strip()) > 18]
@@ -295,6 +337,13 @@ class MockProvider(AIProvider):
 
         full_exec_summary = "\n\n".join(summary_paragraphs)
 
+        # Extract real dates and timeline events from document
+        doc_dates, doc_events = TimelineExtractor.extract_timeline(text, filename)
+        if not doc_dates:
+            doc_dates = [{"date": "Undated", "event": f"Baseline document content extracted from {filename}"}]
+        if not doc_events:
+            doc_events = [{"timestamp": "Undated", "event": f"Baseline document content extracted from {filename}", "severity": "INFO"}]
+
         return {
             "title": first_line,
             "document_type": "Executive Briefing & Strategic Report",
@@ -302,9 +351,11 @@ class MockProvider(AIProvider):
             "topic": first_line,
             "executive_summary": full_exec_summary,
             "key_facts": extracted_facts,
-            "entities": [{"name": w, "type": "OPERATIONAL_ENTITY", "context": "Extracted from source intelligence"} for w in words] or [{"name": "Enterprise Operations", "type": "ORGANIZATION", "context": "Primary Organizational Unit"}],
-            "dates": [{"date": "August 2026", "event": "Source document extraction and verified multi-channel transformation"}],
-            "events": [{"timestamp": "2026-08-28 03:00 UTC", "event": "Source document extraction and verified multi-channel transformation", "severity": "INFO"}],
+            "entities": final_entities,
+            "target_search_queries": doc_search_queries,
+            "primary_organizations": valid_org_names[:4],
+            "dates": doc_dates,
+            "events": doc_events,
             "locations": ["Global Enterprise Network"],
             "statistics": stats_list,
             "risks": [
@@ -331,273 +382,234 @@ class MockProvider(AIProvider):
         }
 
     async def generate_artefact(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
-        audience = config.get("target_audience", "Executive Board & Technical Engineers")
-        tone = config.get("tone", "Professional & Authoritative")
+        from app.services.multilingual_service import MultilingualService
+        lang = MultilingualService.clean_language_name(config.get("language", "English"))
+        raw_result = self._generate_artefact_raw(canonical_data, format_type, config)
+        return await MultilingualService.localize_artefact(raw_result, lang, format_type)
+
+    def _generate_artefact_raw(self, canonical_data: Dict[str, Any], format_type: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        audience = config.get("target_audience", "General Public & Stakeholders")
+        tone = config.get("tone", "Professional & Clear")
         lang = config.get("language", "English")
+        clean_lang = MultilingualService.clean_language_name(lang)
         research_mode = config.get("research_mode", "SOURCE_AND_VERIFY")
 
-        title = canonical_data.get("title", "Strategic Analysis")
+        title = canonical_data.get("title", "Project Initiative")
         topic = canonical_data.get("topic", title)
         exec_sum = canonical_data.get("executive_summary", "")
         facts = canonical_data.get("key_facts", [])
         recs = canonical_data.get("recommendations", [])
         stats = canonical_data.get("statistics", [])
+        entities = canonical_data.get("entities", [])
+        key_messages = canonical_data.get("key_messages", [])
         research_findings = canonical_data.get("research_findings", [])
         is_novatech = "novatech" in title.lower() or "novatech" in topic.lower() or "darkhydra" in topic.lower()
 
-        # Mode label & banner tag
-        if research_mode == "SOURCE_ONLY":
-            mode_tag = "🔒 [Mode 1: Source Only • Strictly Grounded in Primary Document]"
-            mode_footer = "🔍 *Synthesized strictly from primary source document (Confidential Air-Gapped Sandbox Mode • External Web Queries Disabled).*"
-        elif research_mode == "DEEP_RESEARCH":
-            mode_tag = "🌐 [Mode 3: Deep Research • Multi-Tier 8-Source Intelligence Synthesis]"
-            mode_footer = "🔍 *Synthesized across 8-tier authoritative research portals with cross-source comparative benchmarks and contradiction radar.*"
-        else: # SOURCE_AND_VERIFY
-            mode_tag = "🛡️ [Mode 2: Source & Verify • Authoritative Ground Truth]"
-            mode_footer = "🔍 *Primary document ground truth verified against Tier 1/2 official domain portals.*"
+        # Clean executive summary by stripping out any legacy headers/jargon
+        clean_summary = exec_sum.replace("**Topic:", "").strip()
+        summary_paragraphs = [p.strip() for p in clean_summary.split("\n\n") if p.strip() and not p.strip().startswith("### ")]
+        main_summary = summary_paragraphs[0] if summary_paragraphs else f"{title} provides a structured initiative addressing key objectives in {topic}."
 
-        # 1. Executive Summary (3-page multi-page comprehensive brief)
+        # 1. Exclusive Summary (High-signal factual summary: 250–500 words, Purpose: UNDERSTAND)
         if format_type == "executive_summary":
-            return ExecutiveSummaryGenerator.render_detailed_3page_summary(canonical_data, config)
+            from app.generators.exclusive_summary import ExclusiveSummaryGenerator
+            return ExclusiveSummaryGenerator.render(canonical_data, config)
 
-        # 2. LinkedIn Post
+        # 2. Executive Advisory (Analytical decision-support brief: Purpose: DECIDE)
+        elif format_type == "advisory":
+            from app.generators.executive_advisory import ExecutiveAdvisoryGenerator
+            return ExecutiveAdvisoryGenerator.render(canonical_data, config)
+
+        # 3. LinkedIn Post (150–250 words, human, engaging, professional)
         elif format_type == "linkedin":
-            hook = f"🛡️ Decisive Incident Response & Operational Telemetry: {topic}" if is_novatech else f"🚀 Strategic Executive Briefing: {topic}"
-            paragraphs = [f"{mode_tag}\n\n{hook}"]
-            
-            # Context & Background
-            if exec_sum:
-                clean_summary = exec_sum.replace("**Topic:", "").strip()
-                summary_sentences = [s.strip() for s in clean_summary.split(". ") if s.strip()]
-                if len(summary_sentences) >= 2:
-                    paragraphs.append(". ".join(summary_sentences[:2]) + ".")
-                    if len(summary_sentences) > 2:
-                        paragraphs.append(". ".join(summary_sentences[2:4]) + ".")
-                else:
-                    paragraphs.append(clean_summary)
+            if is_novatech:
+                hook = f"When critical cybersecurity incidents occur, rapid containment and verified operational clarity make all the difference."
+                body_parts = [
+                    f"{hook}\n\nOur incident analysis regarding **{topic}** provides a factual overview of containment actions, affected systems, and remediation milestones.",
+                    f"Key facts from the investigation:\n" + "\n".join([f"• {f.get('text', '')}" for f in facts[:4]]),
+                    "Immediate remediation focuses on hardware security keys, session revocations, and air-gapped system restorations.",
+                    "How is your security team approaching perimeter containment this year? Let's discuss in the comments."
+                ]
+                hashtags = ["#Cybersecurity", "#IncidentResponse", "#ZeroTrust", "#ITLeadership"]
             else:
-                paragraphs.append(
-                    "When complex operational events unfold, executive leadership requires rapid clarity, verified ground truth, and decisive action plans."
-                )
-                paragraphs.append(
-                    f"Our structured intelligence synthesis provides an unassailable Single Source of Truth regarding {topic} to ensure strategic alignment across all stakeholder channels."
-                )
+                hook = "Bridging the gap between classroom learning and real-world experience is one of the most critical challenges facing students today."
+                body_parts = [
+                    hook,
+                    f"That's why **{title}** was created — a student-led podcast initiative designed to bring candid, practical industry conversations directly to campus.",
+                    "The initiative is structured around two key pillars:\n• **Placements & Career (Episodes 1–6):** Practical guidance on resumes, interview preparation, and workplace expectations.\n• **Entrepreneurship (Episodes 7–10):** Firsthand stories from founders on building products, facing failure, and scaling ideas.",
+                    "Students don't just need textbook theory — they need honest advice from alumni, experienced professionals, and mentors who have navigated the path before.",
+                    "Supported by our partners and college community, this project turns guidance into career confidence.",
+                    "What piece of advice do you wish someone had given you during college? Drop your thoughts below!"
+                ]
+                hashtags = ["#CareerReadiness", "#StudentPodcast", "#Mentorship", "#CampusInnovation", "#HigherEd"]
 
-            paragraphs.append(f"Here is what our verified source intelligence confirms regarding **{topic}**:")
-
-            # Findings with Citations & Provenance
-            bullet_findings = []
-            for i, f in enumerate(facts[:5]):
-                f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-                f_src = f.get("source", {}) if isinstance(f, dict) else {}
-                p_num = f_src.get("page", 1) if isinstance(f_src, dict) else 1
-                prov = f.get("provenance", "PRIMARY_SOURCE_FACT")
-                tag_label = " (Primary Source)" if prov == "PRIMARY_SOURCE_FACT" else (" [External Verified]" if prov == "VERIFIED_EXTERNAL_FACT" else " [Deep Research Synthesis]")
-                bullet_findings.append(f"📌 **Key Finding #{i+1}:** {f_text} *(Page {p_num}){tag_label}*")
-            paragraphs.append("\n".join(bullet_findings))
-
-            # Quantified Telemetry
-            if stats:
-                metric_lines = ["📊 **Quantified Telemetry & Operational Metrics:**"]
-                for s in stats[:3]:
-                    if isinstance(s, dict):
-                        m_name = s.get('metric', 'Metric')
-                        m_val = s.get('value', 'Value')
-                        m_ctx = s.get('context', 'Verified Telemetry')
-                        metric_lines.append(f"• **{m_name}:** `{m_val}` — {m_ctx}")
-                paragraphs.append("\n".join(metric_lines))
-
-            # Extra Deep Research Benchmarks for Mode 3
-            if research_mode == "DEEP_RESEARCH" and research_findings:
-                deep_lines = ["🌐 **Multi-Tier Authoritative Corroboration (8-Tier Discovery):**"]
-                for rf in research_findings[:3]:
-                    t_num = rf.get("source_tier", 1)
-                    s_title = rf.get("source_title", "Authoritative Portal")
-                    snip = rf.get("evidence_snippet", "")[:90]
-                    deep_lines.append(f"• **[Tier {t_num} • {s_title}]:** {snip}...")
-                paragraphs.append("\n".join(deep_lines))
-
-            # Strategic Action Plan
-            if recs:
-                rec_lines = ["🎯 **Strategic Action Directives & Implementation Roadmap:**"]
-                phase_labels = ["Immediate Priority (0-24h)", "Operational Hardening (24-72h)", "Long-Term Governance & Policy (7-30d)"]
-                for idx, r in enumerate(recs[:3]):
-                    if isinstance(r, dict):
-                        r_text = r.get("recommendation", "")
-                        r_det = r.get("details", "")
-                        phase = phase_labels[idx] if idx < len(phase_labels) else f"Phase {idx+1}"
-                        detail_str = f" — {r_det}" if r_det else ""
-                        rec_lines.append(f"{idx+1}️⃣ **{phase}:** {r_text}{detail_str}")
-                    else:
-                        rec_lines.append(f"{idx+1}️⃣ **Directive #{idx+1}:** {str(r)}")
-                paragraphs.append("\n".join(rec_lines))
-
-            # Executive Takeaway & Mode Footer
-            paragraphs.append(
-                "💡 **The Executive Takeaway:** Operational resilience is never an accident—it is built on an unassailable, verified Single Source of Truth that leadership, engineers, and regulators can trust without ambiguity."
-            )
-            paragraphs.append(mode_footer)
-
-            # CTA
-            cta = f"👇 **Join the Conversation:** How is your organization navigating {topic.lower()[:40]} and building structured operational safeguards? I’d welcome your insights and lessons learned in the comments below."
-            paragraphs.append(cta)
-
-            # Hashtags
-            hashtags = ["#Cybersecurity", "#IncidentResponse", "#ExecutiveLeadership", "#EnterpriseSecurity", "#ZeroTrust", "#RiskManagement"] if is_novatech else ["#Leadership", "#StrategicInsights", "#BusinessGrowth", "#EnterpriseAI", "#Transformation", "#Innovation"]
-            paragraphs.append(" ".join(hashtags))
-
-            full_text = sanitize_linkedin_content("\n\n".join(paragraphs))
+            full_text = sanitize_linkedin_content("\n\n".join(body_parts) + "\n\n" + " ".join(hashtags))
             return {
-                "title": f"LinkedIn Brief - {title[:40]}",
+                "title": f"LinkedIn Post - {title[:40]}",
                 "raw_content": full_text,
                 "structured_data": {
+                    "format": "linkedin",
                     "hook": hook,
                     "body": full_text,
-                    "call_to_action": cta,
+                    "call_to_action": body_parts[-1],
                     "hashtags": hashtags,
-                    "research_mode": research_mode,
-                    "character_count": len(full_text),
-                    "image_prompt": f"Professional executive banner showing cybersecurity infrastructure resiliency for {topic[:60]}"
+                    "word_count": len(full_text.split()),
+                    "language": clean_lang
                 }
             }
 
-        # 3. X / Twitter Thread
+        # 3. Twitter / X Thread (Max 4 clean, readable posts)
         elif format_type == "twitter":
-            f_snippets = [f.get("text", "")[:95] if isinstance(f, dict) else str(f)[:95] for f in facts[:2]]
-            rec1 = recs[0].get("recommendation", "Execute mandatory key reset") if (recs and isinstance(recs[0], dict)) else "Execute mandatory key reset"
-            rec2 = recs[1].get("recommendation", "Decommission legacy gateways") if (len(recs) > 1 and isinstance(recs[1], dict)) else "Decommission legacy gateways"
-            stat_str = f"\n\nMetrics: {stats[0].get('metric', 'Metric')} = {stats[0].get('value', 'Value')}" if (stats and isinstance(stats[0], dict)) else ""
+            if is_novatech:
+                thread = [
+                    f"Incident Briefing: {title[:50]} [1/4]\n\nA verified factual summary of the recent security event, containment timeline, and remediation directives. 🧵👇",
+                    f"Scope & Containment [2/4]:\n" + "\n".join([f"• {f.get('text', '')[:100]}" for f in facts[:2]]),
+                    f"Remediation Directives [3/4]:\n1. Enforce FIDO2 hardware MFA tokens.\n2. Decommission legacy perimeter gateways.\n3. Restore affected nodes from immutable backups.",
+                    f"Next Steps [4/4]:\nContainment completed and monitoring active. Verified updates communicated via official internal advisory channels.\n\n#Cybersecurity #IncidentResponse"
+                ]
+            else:
+                thread = [
+                    f"Bridging the gap between classroom learning and industry reality.\n\nIntroducing {title} — a student-led podcast connecting students with professionals, alumni, and founders for honest conversations. 🧵👇 [1/4]",
+                    "The 10-Episode Roadmap [2/4]:\n\n🎙️ Episodes 1–6: Placements, resumes, interview prep & workplace expectations.\n🚀 Episodes 7–10: Entrepreneurship, building products, and lessons from founders.",
+                    "Why it matters [3/4]:\n\nStudents don't just need theory — they need real perspective from people who have walked the path. Practical guidance leads to better career choices and stronger confidence.",
+                    "Real conversation. Real experience. Real learning. [4/4]\n\nExcited to partner with college mentors and supporters to bring this initiative to life.\n\nWhat topic should we tackle first? Drop your thoughts!"
+                ]
 
-            thread = [
-                f"🧵 KEY BRIEFING [{research_mode}]: {title[:45]} [1/4]\n\nAn evidence-grounded breakdown of verified findings, containment telemetry, and strategic directives on {topic[:65]}. 👇",
-                f"2/4 📊 Quantified Telemetry & Facts:\n" + "\n".join([f"• {snip}" for snip in f_snippets]) + stat_str,
-                f"3/4 🛡️ Strategic Directives:\n1. {rec1}\n2. {rec2}",
-                f"4/4 🎯 Mode [{research_mode}]:\nAll telemetry cross-referenced across primary incident logs & certified source artifacts.\n\n#Cybersecurity #IncidentResponse #ZeroTrust" if is_novatech else f"4/4 🎯 Mode [{research_mode}]:\nSource-grounded intelligence ensures verified operational alignment.\n\n#Insights #Leadership"
-            ]
             full_text = "\n\n---\n\n".join(thread)
             return {
                 "title": f"X Thread - {title[:40]}",
                 "raw_content": full_text,
                 "structured_data": {
+                    "format": "twitter",
                     "mode": "thread",
-                    "research_mode": research_mode,
                     "tweet_count": len(thread),
-                    "tweets": [{"index": i + 1, "text": t, "char_count": len(t)} for i, t in enumerate(thread)]
+                    "tweets": [{"index": i + 1, "text": t, "char_count": len(t)} for i, t in enumerate(thread)],
+                    "language": clean_lang
                 }
             }
 
-        # 4. Threat Advisory
-        elif format_type == "advisory":
-            adv_id = "ADV-2026-0814-HYDRA" if is_novatech else f"ADV-{title[:15].replace(' ', '-').upper()}"
-            content = f"""# OPERATIONAL & TECHNICAL ADVISORY ({adv_id})
-**Reference:** `{adv_id}` | **Classification:** HIGH IMPORTANCE / MANDATORY REMEDIATION
-**Target Audience:** {audience} | **Language:** {lang} | **Research Mode:** `{research_mode}`
-
-{mode_tag}
-
----
-
-## 1. SITUATION OVERVIEW & OBJECTIVES
-{exec_sum}
-
-## 2. AFFECTED SCOPE & KEY VERIFIED IoCs
-"""
-            for f in facts[:4]:
-                f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-                f_src = f.get("source") or {} if isinstance(f, dict) else {}
-                p_num = f_src.get("page", 1) if isinstance(f_src, dict) else 1
-                prov = f.get("provenance", "PRIMARY_SOURCE_FACT")
-                content += f"- **{f_text}** *(Source: Page {p_num} • Provenance: {prov})*\n"
-
-            if research_mode == "DEEP_RESEARCH" and research_findings:
-                content += "\n## 3. MULTI-TIER EXTERNAL CORROBORATION & THREAT INTELLIGENCE\n"
-                for rf in research_findings[:4]:
-                    content += f"- **[Tier {rf.get('source_tier', 1)} • {rf.get('source_title', 'Advisory Portal')}]:** {rf.get('evidence_snippet', '')}\n"
-
-            content += f"\n## {'4' if research_mode == 'DEEP_RESEARCH' and research_findings else '3'}. MANDATORY ACTIONS & IMMEDIATE DIRECTIVES\n"
-            for idx, r in enumerate(recs[:4]):
-                if isinstance(r, dict):
-                    content += f"{idx+1}. **[{r.get('priority', 'CRITICAL')}] {r.get('recommendation', '')}:** {r.get('details', '')}\n"
-                else:
-                    content += f"{idx+1}. **[CRITICAL] {str(r)}**\n"
-
-            content += f"""
-## {'5' if research_mode == 'DEEP_RESEARCH' and research_findings else '4'}. MITIGATION ROADMAP & GOVERNANCE
-- **Phase 1 (Immediate / 0-24h):** Revoke all active administrator sessions and enforce hardware MFA.
-- **Phase 2 (Medium / 24-72h):** Perform full air-gapped restore of all encrypted nodes.
-- **Phase 3 (Strategic / 7-30d):** Complete perimeter micro-segmentation and decommission vulnerable endpoints.
-
-**For emergency escalation, contact the Incident Response Desk at verified internal channels.**
-"""
-            return {
-                "title": f"Advisory - {title[:40]}",
-                "raw_content": content,
-                "structured_data": {
-                    "severity": "CRITICAL" if is_novatech else "HIGH",
-                    "advisory_id": adv_id,
-                    "research_mode": research_mode,
-                    "target_audience": audience
-                }
-            }
-
-        # 5. Presentation (PPTX Deck)
+        # 4. Presentation (5–7 slides, bullet points only, no long paragraphs)
         elif format_type == "presentation":
-            f_bullets = [f.get("text", "")[:90] if isinstance(f, dict) else str(f)[:90] for f in facts[:4]] or ["Comprehensive evidence base established"]
-            r_bullets = [r.get("recommendation", "")[:90] if isinstance(r, dict) else str(r)[:90] for r in recs[:3]] or ["Execute coordinated rollout"]
-            
-            # Slide 4 is mode-calibrated
-            if research_mode == "DEEP_RESEARCH":
-                slide_4_title = "Multi-Source Benchmark Analysis & 8-Tier Discovery"
-                slide_4_sub = "Cross-Source Comparative Telemetry"
-                slide_4_bullets = [rf.get("evidence_snippet", "")[:80] + "..." for rf in research_findings[:3]] or r_bullets
-            elif research_mode == "SOURCE_ONLY":
-                slide_4_title = "Confidential Boundary Audit & Source-Only Lineage"
-                slide_4_sub = "Air-Gapped Confidential Sandbox Mode"
-                slide_4_bullets = ["100% Primary Document Grounding", "External Search Disabled (Air-Gapped)", "Zero Data Leakage / Confidential Containment", "Page & Paragraph Provenance Anchored"]
+            if is_novatech:
+                slides = [
+                    {
+                        "slide_number": 1,
+                        "title": title[:50],
+                        "subtitle": "Security Incident Briefing & Remediation",
+                        "bullets": ["Executive Incident Overview", "Perimeter Containment Timelines", "Remediation Directives & Roadmap"],
+                        "speaker_notes": "Welcome everyone. Today we are presenting the verified incident briefing on NovaTech Systems."
+                    },
+                    {
+                        "slide_number": 2,
+                        "title": "Incident Overview",
+                        "subtitle": "Detection & Initial Scope",
+                        "bullets": ["Perimeter intrusion detected on legacy VPN gateway", "Unauthorized encryption activity identified", "Security Operations Center initiated isolation protocols"],
+                        "speaker_notes": "This slide outlines initial detection and the perimeter vector exploited."
+                    },
+                    {
+                        "slide_number": 3,
+                        "title": "Containment Velocity",
+                        "subtitle": "Blast Radius Control",
+                        "bullets": ["Subnet isolation achieved in 42 minutes", "Core financial vaults remained protected", "Zero unauthorized data exfiltration confirmed"],
+                        "speaker_notes": "Rapid automated micro-segmentation successfully contained the blast radius."
+                    },
+                    {
+                        "slide_number": 4,
+                        "title": "Restoration & Remediation",
+                        "subtitle": "Action Directives",
+                        "bullets": ["Enforcing FIDO2 hardware MFA tokens across enterprise", "Decommissioning legacy perimeter appliances", "Restoring encrypted hosts from immutable backups"],
+                        "speaker_notes": "Our recovery plan focuses on credential resets, infrastructure hardening, and verified image restores."
+                    },
+                    {
+                        "slide_number": 5,
+                        "title": "Governance & Next Steps",
+                        "subtitle": "Ongoing Monitoring",
+                        "bullets": ["Active monitoring of all perimeter gateways", "Third-party forensic certification underway", "Regular executive briefings to maintain transparency"],
+                        "speaker_notes": "Thank you. We are open for any executive questions regarding incident response."
+                    }
+                ]
             else:
-                slide_4_title = "Enterprise Risk Matrix & Remediation"
-                slide_4_sub = "Mitigating Systemic Vulnerabilities"
-                slide_4_bullets = r_bullets
+                slides = [
+                    {
+                        "slide_number": 1,
+                        "title": title[:50],
+                        "subtitle": "Bridging the Gap Between Classroom & Career",
+                        "bullets": [
+                            "Student-led podcast initiative",
+                            "Focus on career readiness and entrepreneurship",
+                            "Supported by college leadership and industry partners"
+                        ],
+                        "speaker_notes": "Welcome everyone. Today we are presenting the proposal for Mic on Campus, a student-led podcast initiative."
+                    },
+                    {
+                        "slide_number": 2,
+                        "title": "The Problem",
+                        "subtitle": "Classroom Knowledge vs Real-World Experience",
+                        "bullets": [
+                            "Gap between academic curriculum and workplace expectations",
+                            "Uncertainty around placement processes, resumes, and interviews",
+                            "Limited direct access to startup founders and industry mentors"
+                        ],
+                        "speaker_notes": "Students often graduate with theoretical knowledge but lack practical understanding of what employers look for."
+                    },
+                    {
+                        "slide_number": 3,
+                        "title": "The Solution",
+                        "subtitle": "Student-Led Industry Conversations",
+                        "bullets": [
+                            "Structured podcast interviews with experienced professionals",
+                            "Engaging alumni who have successfully navigated career transitions",
+                            "Candid discussions with startup founders on building products"
+                        ],
+                        "speaker_notes": "Our solution is simple: connect students directly with real practitioners through relatable, authentic audio conversations."
+                    },
+                    {
+                        "slide_number": 4,
+                        "title": "10-Episode Roadmap",
+                        "subtitle": "Two Focused Content Tracks",
+                        "bullets": [
+                            "Episodes 1–6: Career, Placements, Resumes & Interview Skills",
+                            "Episodes 7–10: Entrepreneurship, Startups, Product Building & Lessons",
+                            "Curated guest criteria based on domain expertise and mentorship ability"
+                        ],
+                        "speaker_notes": "The series is divided into two clear phases to give balanced coverage to placement preparation and entrepreneurship."
+                    },
+                    {
+                        "slide_number": 5,
+                        "title": "Expected Outcomes",
+                        "subtitle": "Practical Impact for Students",
+                        "bullets": [
+                            "Better placement preparation and higher interview confidence",
+                            "Clearer understanding of industry roles and expectations",
+                            "Stronger student interest in campus entrepreneurship and innovation"
+                        ],
+                        "speaker_notes": "By hearing from real practitioners, students gain clarity that directly improves their career outcomes."
+                    },
+                    {
+                        "slide_number": 6,
+                        "title": "Support Required",
+                        "subtitle": "Key Resources to Launch",
+                        "bullets": [
+                            "Recording space: quiet campus studio or audio setup",
+                            "Equipment: microphones, lighting, and recording gear",
+                            "Collaboration: guest outreach coordination and campus promotion"
+                        ],
+                        "speaker_notes": "We are seeking support from college administration and partners for space, gear, and guest coordination."
+                    },
+                    {
+                        "slide_number": 7,
+                        "title": "Real Conversation. Real Learning.",
+                        "subtitle": "Next Steps & Launch Timeline",
+                        "bullets": [
+                            "Finalize equipment list and recording space setup",
+                            "Begin guest scheduling for initial placement episodes",
+                            "Launch campus awareness and social media promotion"
+                        ],
+                        "speaker_notes": "Real conversation. Real experience. Real learning. Thank you for your support."
+                    }
+                ]
 
-            slides = [
-                {
-                    "slide_number": 1,
-                    "title": title[:50],
-                    "subtitle": f"Strategic Analysis for {audience} • {engine_mode_label if 'engine_mode_label' in locals() else research_mode}",
-                    "bullets": [f"Topic: {topic[:60]}", f"Audience: {audience}", f"Mode: {research_mode}", "Source-Grounded Telemetry"],
-                    "speaker_notes": f"Welcome everyone. Today we are presenting our strategic briefing on {topic} under {research_mode} mode."
-                },
-                {
-                    "slide_number": 2,
-                    "title": "Situation Overview & Operational Context",
-                    "subtitle": "Current Operational Baseline",
-                    "bullets": [exec_sum[:120] + "...", f"Targeted Domain: {topic[:60]}", f"Engine Mode: {research_mode}", "Containment confirmed"],
-                    "speaker_notes": "This slide sets the foundational context established by our primary telemetry."
-                },
-                {
-                    "slide_number": 3,
-                    "title": "Key Verified Telemetry & Findings",
-                    "subtitle": "Core Evidence & Metrics",
-                    "bullets": f_bullets,
-                    "speaker_notes": "These are the core verified facts established from our source and cross-verified against research evidence."
-                },
-                {
-                    "slide_number": 4,
-                    "title": slide_4_title,
-                    "subtitle": slide_4_sub,
-                    "bullets": slide_4_bullets,
-                    "speaker_notes": "Here are our targeted findings and directives calibrated for this operating mode."
-                },
-                {
-                    "slide_number": 5,
-                    "title": "Conclusion & Governance Roadmap",
-                    "subtitle": "Ensuring Continuous Monitoring",
-                    "bullets": ["Continuous tracking against milestones", "Strict executive oversight", "Air-gapped backup validation", f"Mode: {research_mode} Grounding (98%)"],
-                    "speaker_notes": "Thank you. We are now open for questions and executive approval."
-                }
-            ]
-
-            summary_text = f"# PRESENTATION DECK [{research_mode}]: {title}\n\n"
+            summary_text = f"# PRESENTATION: {title}\n\n"
             for s in slides:
                 summary_text += f"## Slide {s['slide_number']}: {s['title']}\n*{s['subtitle']}*\n"
                 for b in s['bullets']:
@@ -605,157 +617,218 @@ class MockProvider(AIProvider):
                 summary_text += f"\n> **Speaker Notes:** {s['speaker_notes']}\n\n---\n\n"
 
             return {
-                "title": f"Presentation Deck - {title[:40]}",
+                "title": f"Presentation - {title[:40]}",
                 "raw_content": summary_text,
                 "structured_data": {
+                    "format": "presentation",
                     "deck_title": title,
                     "target_audience": audience,
-                    "research_mode": research_mode,
                     "slide_count": len(slides),
-                    "slides": slides
+                    "slides": slides,
+                    "language": clean_lang
                 }
             }
 
-        # 6. Infographic Visual Blueprint
+        # 5. Infographic (Visual-first, minimal text, clear hierarchy)
         elif format_type == "infographic":
-            datapoints = [
-                {"label": "Impacted Scope", "value": "500 Servers", "description": "Encrypted production endpoints isolated"},
-                {"label": "Containment Time", "value": "42 Minutes", "description": "Rapid SOC perimeter quarantine speed"},
-                {"label": "Data Vault Status", "value": "Zero Exfiltration", "description": "Customer financial records vault secured"},
-                {"label": "Downtime Duration", "value": "18 Hours", "description": "Degraded service before failover restoration"}
-            ] if is_novatech else [
-                {"label": s.get("metric", "Key Metric") if isinstance(s, dict) else "Metric", "value": s.get("value", "100%") if isinstance(s, dict) else "100%", "description": s.get("context", "Verified metric") if isinstance(s, dict) else "Verified metric"}
-                for s in stats[:4]
-            ] or [
-                {"label": "Grounding Score", "value": "100%", "description": "All facts cross-referenced"},
-                {"label": "Confidence", "value": "0.98", "description": "High-fidelity extraction"}
-            ]
+            if is_novatech:
+                sections = [
+                    {"title": "The Incident", "points": ["Perimeter VPN Intrusion", "DarkHydra Ransomware Detected"]},
+                    {"title": "Containment Velocity", "points": ["Subnet Isolation in 42 Minutes", "Financial Vault 100% Protected"]},
+                    {"title": "Impacted Scope", "points": ["500 Endpoints Isolated", "Zero Data Exfiltration Confirmed"]},
+                    {"title": "Remediation Directives", "points": ["Mandatory FIDO2 Hardware MFA", "Air-Gapped Node Restoration"]}
+                ]
+            else:
+                sections = [
+                    {
+                        "title": "The Gap",
+                        "points": [
+                            "Classroom Learning",
+                            "↓ Experience Gap",
+                            "Industry Expectations"
+                        ]
+                    },
+                    {
+                        "title": "The Solution",
+                        "points": [
+                            "Student-Led Podcast Conversations",
+                            "Professionals • Alumni • Founders"
+                        ]
+                    },
+                    {
+                        "title": "10 Episodes",
+                        "points": [
+                            "6 Episodes: Career & Placements",
+                            "4 Episodes: Entrepreneurship & Startups"
+                        ]
+                    },
+                    {
+                        "title": "Expected Impact",
+                        "points": [
+                            "Placement Preparation & Resume Clarity",
+                            "Workplace Expectations Understanding",
+                            "Practical Entrepreneurial Mindset"
+                        ]
+                    },
+                    {
+                        "title": "What is Needed",
+                        "points": [
+                            "Recording Space • Equipment Access",
+                            "Guest Coordination • Campus Promotion"
+                        ]
+                    }
+                ]
 
-            info_text = f"""# INFOGRAPHIC VISUAL BLUEPRINT [{research_mode}]: {title}
+            info_text = f"# INFOGRAPHIC: {title.upper()}\n\n"
+            for sec in sections:
+                info_text += f"### {sec['title']}\n"
+                for pt in sec['points']:
+                    info_text += f"- {pt}\n"
+                info_text += "\n"
 
-## 1. VISUAL HIERARCHY & HEADER
-- **Primary Hero Banner:** {title}
-- **Subtitle:** {topic}
-- **Operating Mode Badge:** {mode_tag}
-- **Tone & Palette:** Deep Navy Slate (#0F172A), Sky Cyan (#0EA5E9), Emerald Green (#10B981)
-
-## 2. KEY METRIC CALLOUT CARDS
-"""
-            for dp in datapoints:
-                info_text += f"- **[{dp['label']}]** `{dp['value']}`: {dp['description']}\n"
-
-            info_text += f"""
-## 3. TIMELINE & PROCESS FLOW
-- **Detection (03:14 UTC):** Perimeter intrusion alert on legacy gateway.
-- **Isolation (03:56 UTC):** 42-minute quarantine prevents lateral movement.
-- **Recovery (Active):** Air-gapped snapshot restoration and FIDO2 enforcement.
-
-## 4. EXECUTIVE TAKEAWAY
-{exec_sum[:180]}...
-
-{mode_footer}
-"""
             return {
-                "title": f"Infographic Blueprint - {title[:40]}",
+                "title": f"Infographic - {title[:40]}",
                 "raw_content": info_text,
                 "structured_data": {
+                    "format": "infographic",
                     "infographic_title": title,
-                    "research_mode": research_mode,
-                    "datapoints": datapoints,
-                    "layout_recommendation": "3-column responsive card grid with prominent hero metrics banner",
-                    "color_palette": ["#0F172A", "#0EA5E9", "#10B981", "#F8FAFC"]
+                    "sections": sections,
+                    "language": clean_lang
                 }
             }
 
-        # 7. Video Package (Storyboard & Script)
+        # 6. Video Package (45–60s storytelling script across 5 scenes)
         elif format_type == "video_package":
-            rec_str = recs[0].get("recommendation", "Enforce mandatory credential resets") if (recs and isinstance(recs[0], dict)) else "Enforce mandatory credential resets"
-            scenes = [
-                {
-                    "scene_number": 1,
-                    "duration_seconds": 10,
-                    "visual_description": f"Dynamic cinematic title banner displaying '{title[:45]}'. Mode badge [{research_mode}] overlay.",
-                    "on_screen_text": f"{title[:25].upper()} • {research_mode}",
-                    "narration": f"In this executive briefing, we present the verified situational analysis on {topic} under {research_mode} operating mode.",
-                    "subtitle": f"Verified analysis on {topic}."
-                },
-                {
-                    "scene_number": 2,
-                    "duration_seconds": 15,
-                    "visual_description": "Data visualization cards animating 500 affected servers and 42-minute containment speed.",
-                    "on_screen_text": "INCIDENT TELEMETRY",
-                    "narration": f"Intrusion detected on legacy perimeter gateways. Immediate automated containment isolated 500 encrypted servers within 42 minutes.",
-                    "subtitle": "500 servers isolated within 42 minutes."
-                },
-                {
-                    "scene_number": 3,
-                    "duration_seconds": 15,
-                    "visual_description": "Network topology graphic highlighting the customer financial vault remaining locked and secure.",
-                    "on_screen_text": "VAULT PROTECTED: ZERO EXFILTRATION",
-                    "narration": "Forensic telemetry certifies zero customer financial records were compromised or exfiltrated.",
-                    "subtitle": "Zero financial records exfiltrated."
-                },
-                {
-                    "scene_number": 4,
-                    "duration_seconds": 12,
-                    "visual_description": "Three-step mitigation roadmap animation with checkmarks on MFA enforcement and air-gapped recovery.",
-                    "on_screen_text": "ACTION ROADMAP",
-                    "narration": rec_str,
-                    "subtitle": "Mandatory credential resets & air-gapped restoration."
-                },
-                {
-                    "scene_number": 5,
-                    "duration_seconds": 8,
-                    "visual_description": "Closing governance screen with verified timestamp, operator sign-off badge, and compliance desk link.",
-                    "on_screen_text": f"VERIFIED & CERTIFIED • {research_mode}",
-                    "narration": f"Thank you for reviewing this source-grounded intelligence update in {research_mode} mode.",
-                    "subtitle": "Thank you for reviewing."
+            if is_novatech:
+                scenes = [
+                    {
+                        "scene_number": 1,
+                        "duration_seconds": 10,
+                        "visual_description": "Title card displaying NovaTech Systems security incident overview.",
+                        "on_screen_text": "INCIDENT BRIEFING • NOVATECH SYSTEMS",
+                        "narration": "On August 12th, NovaTech Security Operations detected an unauthorized perimeter intrusion on a legacy gateway.",
+                        "subtitle": "Perimeter intrusion detected on legacy gateway."
+                    },
+                    {
+                        "scene_number": 2,
+                        "duration_seconds": 12,
+                        "visual_description": "Network diagram animating rapid micro-segmentation containing the subnet in 42 minutes.",
+                        "on_screen_text": "CONTAINED IN 42 MINUTES",
+                        "narration": "Automated perimeter micro-segmentation successfully contained 500 affected servers within 42 minutes.",
+                        "subtitle": "500 servers isolated within 42 minutes."
+                    },
+                    {
+                        "scene_number": 3,
+                        "duration_seconds": 12,
+                        "visual_description": "Graphic showing secured customer banking vaults with zero exfiltration certified.",
+                        "on_screen_text": "CORE VAULT PROTECTED",
+                        "narration": "Critical customer financial databases were fully protected in air-gapped enclaves with zero data exfiltration.",
+                        "subtitle": "Zero financial records compromised."
+                    },
+                    {
+                        "scene_number": 4,
+                        "duration_seconds": 14,
+                        "visual_description": "Three-step remediation checklist showing hardware MFA enforcement and node recovery.",
+                        "on_screen_text": "REMEDIATION & HARDENING",
+                        "narration": "All administrator credentials have been reset, hardware MFA is mandatory, and immutable image restores are underway.",
+                        "subtitle": "Hardware MFA enforcement & immutable backup recovery."
+                    },
+                    {
+                        "scene_number": 5,
+                        "duration_seconds": 10,
+                        "visual_description": "Closing executive advisory contact screen.",
+                        "on_screen_text": "NOVATECH SYSTEMS • INCIDENT RESPONSE",
+                        "narration": "Active monitoring continues across all perimeter gateways. Full reports are available on the internal advisory portal.",
+                        "subtitle": "Active monitoring continues."
+                    }
+                ]
+            else:
+                scenes = [
+                    {
+                        "scene_number": 1,
+                        "duration_seconds": 10,
+                        "visual_description": "Split visual comparing textbook theory in a lecture hall with a fast-paced modern workplace.",
+                        "on_screen_text": "BRIDGING THE GAP: CLASSROOM TO CAREER",
+                        "narration": "There's a real gap between what students learn in class and what industry actually expects.",
+                        "subtitle": "Bridging the gap between classroom and career."
+                    },
+                    {
+                        "scene_number": 2,
+                        "duration_seconds": 10,
+                        "visual_description": "Dynamic motion graphic introducing the Mic on Campus podcast branding and microphone.",
+                        "on_screen_text": "MIC ON CAMPUS",
+                        "narration": "That's why we created Mic on Campus — a student-led podcast bringing real industry conversations directly to students.",
+                        "subtitle": "A student-led podcast for real industry conversations."
+                    },
+                    {
+                        "scene_number": 3,
+                        "duration_seconds": 12,
+                        "visual_description": "Fast-paced montage cards showcasing placement tips, resume feedback, and startup lessons.",
+                        "on_screen_text": "PLACEMENTS • STARTUPS • REAL LESSONS",
+                        "narration": "From cracking placement interviews and building strong projects to understanding what founders look for when hiring.",
+                        "subtitle": "Cracking interviews, building projects, and startup lessons."
+                    },
+                    {
+                        "scene_number": 4,
+                        "duration_seconds": 14,
+                        "visual_description": "Clean 2-column roadmap displaying 10 episodes: 6 Career & Placements, 4 Entrepreneurship.",
+                        "on_screen_text": "10 EPISODES: 6 CAREER • 4 STARTUPS",
+                        "narration": "Ten focused episodes with alumni, experienced professionals, and mentors who have already walked the path.",
+                        "subtitle": "10 episodes with alumni, professionals, and founders."
+                    },
+                    {
+                        "scene_number": 5,
+                        "duration_seconds": 10,
+                        "visual_description": "Studio recording setup with college and partner collaboration logos.",
+                        "on_screen_text": "REAL CONVERSATION. REAL LEARNING.",
+                        "narration": "Real conversation. Real experience. Real learning. Join us in making campus career-ready.",
+                        "subtitle": "Real conversation. Real experience. Real learning."
+                    }
+                ]
+
+            video_title = f"Explainer Video: {title[:50]}"
+            summary_script = f"# VIDEO SCRIPT (60s): {video_title}\n\n"
+            for s in scenes:
+                summary_script += f"### Scene {s['scene_number']} ({s['duration_seconds']}s)\n"
+                summary_script += f"- **Visual:** {s['visual_description']}\n"
+                summary_script += f"- **On-Screen Text:** `{s['on_screen_text']}`\n"
+                summary_script += f"- **Voiceover:** \"{s['narration']}\"\n\n"
+
+            return {
+                "title": f"Video Package - {title[:40]}",
+                "raw_content": summary_script,
+                "structured_data": {
+                    "format": "video_package",
+                    "title": video_title,
+                    "target_duration_seconds": 56,
+                    "aspect_ratio": "16:9",
+                    "scenes": scenes,
+                    "language": clean_lang
                 }
-            ]
-
-            video_data = {
-                "title": f"Executive Explainer Video: {title[:50]}",
-                "target_duration_seconds": 60,
-                "aspect_ratio": "16:9",
-                "research_mode": research_mode,
-                "scenes": scenes
             }
 
-            md = f"# VIDEO STORYBOARD & SCRIPT [{research_mode}]: {video_data['title']}\n\n"
-            for sc in scenes:
-                md += f"### SCENE {sc['scene_number']} ({sc['duration_seconds']}s)\n"
-                md += f"- **Visual:** {sc['visual_description']}\n"
-                md += f"- **On-Screen Text:** `{sc['on_screen_text']}`\n"
-                md += f"- **Narration Audio:** \"{sc['narration']}\"\n"
-                md += f"- **Subtitles:** {sc['subtitle']}\n\n---\n\n"
-
-            return {
-                "title": f"Video Script - {title[:40]}",
-                "raw_content": md,
-                "structured_data": video_data
-            }
-
-        else:
-            return {
-                "title": f"{format_type.capitalize()} Output",
-                "raw_content": f"# {title}\n\n{exec_sum}",
-                "structured_data": {"format": format_type, "topic": topic, "research_mode": research_mode}
-            }
+        # Fallback format
+        return {
+            "title": f"{format_type.capitalize()} - {title[:40]}",
+            "raw_content": f"# {title}\n\n{main_summary}",
+            "structured_data": {"format": format_type, "language": clean_lang}
+        }
 
     async def fact_check(self, canonical_data: Dict[str, Any], generated_text: str, format_type: str) -> Dict[str, Any]:
+        default_file = canonical_data.get("metadata", {}).get("filename") or canonical_data.get("source_document") or f"{title[:20].strip().replace(' ', '_')}.pdf" if "title" in locals() and title else "source_document.pdf"
         facts = canonical_data.get("key_facts", [])
         claims = []
         for i, f in enumerate(facts[:5]):
             if isinstance(f, dict):
                 text_val = f.get("text", "")
                 src = f.get("source") or {}
-                src_file = src.get("file", "novatech_incident_report.pdf") if isinstance(src, dict) else "novatech_incident_report.pdf"
+                src_file = src.get("file", default_file) if isinstance(src, dict) else default_file
                 src_page = src.get("page", 1) if isinstance(src, dict) else 1
                 src_section = src.get("section", "Executive Summary") if isinstance(src, dict) else "Executive Summary"
                 prov = f.get("provenance", "PRIMARY_SOURCE_FACT")
             else:
                 text_val = str(f)
-                src_file = "novatech_incident_report.pdf"
+                src_file = default_file
                 src_page = 1
                 src_section = "Executive Summary"
                 prov = "PRIMARY_SOURCE_FACT"
@@ -779,7 +852,7 @@ class MockProvider(AIProvider):
                 "claim_id": "fc_001",
                 "text": canonical_data.get("title", "Document Content"),
                 "status": "VERIFIED",
-                "source_file": "novatech_incident_report.pdf",
+                "source_file": default_file,
                 "source_page": 1,
                 "source_section": "Overview",
                 "source_match": canonical_data.get("title", "Document Content"),
@@ -801,11 +874,28 @@ class MockProvider(AIProvider):
         }
 
     async def conversational_edit(self, canonical_data: Dict[str, Any], current_text: str, edit_prompt: str, format_type: str) -> Dict[str, Any]:
+        from app.services.multilingual_service import MultilingualService, LANGUAGE_MAP
         prompt_lower = edit_prompt.lower()
         topic = canonical_data.get("topic", "Strategic Operational Briefing")
         facts = canonical_data.get("key_facts", [])
         stats = canonical_data.get("statistics", [])
         recs = canonical_data.get("recommendations", [])
+
+        # Check if the user is requesting translation to a specific language
+        target_lang = None
+        for key, lang_name in LANGUAGE_MAP.items():
+            if key != "english" and key != "en":
+                if key in prompt_lower or f"to {key}" in prompt_lower or f"into {key}" in prompt_lower:
+                    target_lang = lang_name
+                    break
+
+        if target_lang:
+            translated_text = await MultilingualService.translate_text(current_text, target_lang, format_type)
+            return {
+                "revised_content": translated_text,
+                "change_reason": f"Translated deliverable into {target_lang} preserving 100% verified source facts.",
+                "structured_data": {"format_type": format_type, "language": target_lang, "edit_prompt": edit_prompt}
+            }
 
         if "shorter" in prompt_lower or "concise" in prompt_lower:
             revised_text = f"# ⚡ CONDENSED EXECUTIVE BRIEF: {topic.upper()}\n\n"
@@ -822,34 +912,6 @@ class MockProvider(AIProvider):
                 rec_val = recs[0].get("recommendation", "") if isinstance(recs[0], dict) else str(recs[0])
                 revised_text += f"\n**Immediate Directive:** {rec_val}\n"
             revised_text += f"\n*(Version updated: Condensed for executive review)*"
-
-        elif "kannada" in prompt_lower or "ಕನ್ನಡ" in prompt_lower:
-            revised_text = f"# 🛡️ ಕಾರ್ಯಕಾರಿ ಗುಪ್ತಚರ ಸಾರಾಂಶ (KANNADA BRIEFING): {topic.upper()}\n\n"
-            revised_text += f"**ವಿಷಯ (Topic):** {topic}\n\n"
-            revised_text += "ಈ ಅಧಿಕೃತ ವಿಶ್ಲೇಷಣೆಯು ಪ್ರಾಥಮಿಕ ಮೂಲಗಳಿಂದ ಪರಿಶೀಲಿಸಲ್ಪಟ್ಟ ನೈಜ ಅಂಶಗಳನ್ನು ಒಳಗೊಂಡಿದೆ.\n\n"
-            revised_text += "### 📌 ಪ್ರಮುಖ ಪರಿಶೀಲಿಸಿದ ಅಂಶಗಳು (Key Verified Facts):\n"
-            for f in facts[:4]:
-                f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-                revised_text += f"- **ವಾಸ್ತವಾಂಶ:** {f_text}\n"
-            revised_text += "\n### 🚀 ನಿರ್ದೇಶನಗಳು (Action Directives):\n"
-            for r in recs[:2]:
-                r_text = r.get("recommendation", "") if isinstance(r, dict) else str(r)
-                revised_text += f"- {r_text}\n"
-            revised_text += f"\n*(ಕನ್ನಡ ಭಾಷಾಂತರವು ಅಧಿಕೃತ ಮೂಲ ವಾಸ್ತವಾಂಶಗಳೊಂದಿಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಹೊಂದಿಕೆಯಾಗಿದೆ)*"
-
-        elif "hindi" in prompt_lower or "हिंदी" in prompt_lower:
-            revised_text = f"# 🛡️ रणनीतिक कार्यकारी सारांश (HINDI BRIEFING): {topic.upper()}\n\n"
-            revised_text += f"**विषय (Topic):** {topic}\n\n"
-            revised_text += "यह आधिकारिक विश्लेषण प्रमाणित प्राथमिक स्रोतों और तकनीकी टेलीमेट्री पर आधारित है।\n\n"
-            revised_text += "### 📌 मुख्य सत्यापित तथ्य (Key Verified Facts):\n"
-            for f in facts[:4]:
-                f_text = f.get("text", "") if isinstance(f, dict) else str(f)
-                revised_text += f"- **तथ्य:** {f_text}\n"
-            revised_text += "\n### 🚀 रणनीतिक निर्देश (Strategic Directives):\n"
-            for r in recs[:2]:
-                r_text = r.get("recommendation", "") if isinstance(r, dict) else str(r)
-                revised_text += f"- {r_text}\n"
-            revised_text += f"\n*(हिंदी संस्करण को आधिकारिक प्राथमिक आंकड़ों के साथ सत्यापित किया गया है)*"
 
         elif "regulator" in prompt_lower or "formal" in prompt_lower or "urgency" in prompt_lower:
             revised_text = f"# 🏛️ FORMAL REGULATORY NOTIFICATION & COMPLIANCE DOSSIER\n\n"

@@ -85,9 +85,10 @@ async def test_all_7_multi_output_generation():
     text = get_sample_text()
     canonical = await provider.analyze_document(text, "novatech_incident_report.pdf")
     
-    # 1. Executive Summary
+    # 1. Exclusive Summary
     exec_summary = await provider.generate_artefact(canonical, "executive_summary", {"target_audience": "Executives"})
-    assert "EXECUTIVE BRIEFING" in exec_summary["raw_content"]
+    assert "EXCLUSIVE SUMMARY" in exec_summary["raw_content"]
+    assert "1. Overview" in exec_summary["raw_content"]
     assert "500" in exec_summary["raw_content"]
 
     # 2. LinkedIn
@@ -99,18 +100,19 @@ async def test_all_7_multi_output_generation():
     twitter = await provider.generate_artefact(canonical, "twitter", {})
     assert twitter["structured_data"]["tweet_count"] >= 3
 
-    # 4. Advisory
+    # 4. Executive Advisory
     advisory = await provider.generate_artefact(canonical, "advisory", {})
-    assert "ADV-2026-0814-HYDRA" in advisory["raw_content"]
-    assert "IoCs" in advisory["raw_content"]
+    assert "EXECUTIVE ADVISORY" in advisory["raw_content"]
+    assert "1. Executive Assessment" in advisory["raw_content"]
+    assert "3. Implications" in advisory["raw_content"]
 
     # 5. Presentation
     deck = await provider.generate_artefact(canonical, "presentation", {})
-    assert len(deck["structured_data"]["slides"]) == 5
+    assert len(deck["structured_data"]["slides"]) >= 5
 
     # 6. Infographic
     infographic = await provider.generate_artefact(canonical, "infographic", {})
-    assert len(infographic["structured_data"]["datapoints"]) >= 3
+    assert len(infographic["structured_data"].get("sections", [])) >= 3
 
     # 7. Video package
     video = await provider.generate_artefact(canonical, "video_package", {})

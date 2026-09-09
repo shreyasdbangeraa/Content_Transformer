@@ -38,6 +38,8 @@ ENV/
 *.sqlite3
 
 # Uploads and temporary exports
+uploads/*
+!uploads/.gitkeep
 frontend/uploads/*
 !frontend/uploads/.gitkeep
 frontend/exports/*

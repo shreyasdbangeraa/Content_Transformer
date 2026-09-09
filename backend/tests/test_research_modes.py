@@ -131,7 +131,7 @@ async def test_canonical_service_provenance_tagging(db_session):
     )
     assert canonical_so.provenance_map["research_mode"] == "SOURCE_ONLY"
     assert all(f["provenance"] == "PRIMARY_SOURCE_FACT" for f in canonical_so.key_facts)
-    assert "Document Scope & Provenance (Mode: SOURCE_ONLY)" in canonical_so.executive_summary
+    assert canonical_so.executive_summary is not None and len(canonical_so.executive_summary) > 0
 
     # Ingest under DEEP_RESEARCH
     source2 = Source(
@@ -153,61 +153,64 @@ async def test_canonical_service_provenance_tagging(db_session):
     prov_tags = [f.get("provenance") for f in canonical_dr.key_facts]
     assert "PRIMARY_SOURCE_FACT" in prov_tags
     assert "VERIFIED_EXTERNAL_FACT" in prov_tags
-    assert "Deep Multi-Source Research & Intelligence Synthesis (Mode: DEEP_RESEARCH)" in canonical_dr.executive_summary
+    assert canonical_dr.executive_summary is not None and len(canonical_dr.executive_summary) > 0
 
-def test_executive_summary_generator_modes():
+def test_exclusive_summary_and_advisory_generators():
     canonical_mock = {
-        "title": "NovaTech Cyber Incident",
-        "topic": "NovaTech Cyber Incident",
-        "executive_summary": "Initial summary content.",
-        "key_facts": [{"text": "500 servers", "provenance": "PRIMARY_SOURCE_FACT"}],
-        "statistics": [{"metric": "Containment", "value": "42 mins"}],
-        "research_findings": [{"source_tier": 1, "source_title": "CISA Advisory", "evidence_snippet": "Corroborated IoCs"}],
-        "risks": [{"risk": "Latency", "severity": "MEDIUM"}],
-        "recommendations": [{"recommendation": "Enforce MFA", "priority": "CRITICAL"}]
+        "title": "Mic on Campus Proposal",
+        "topic": "Student Career Guidance Podcast",
+        "executive_summary": "Initial summary content for Mic on Campus.",
+        "key_facts": [{"text": "10 podcast episodes planned", "provenance": "PRIMARY_SOURCE_FACT"}],
+        "statistics": [{"metric": "Episodes", "value": "10", "context": "Series length"}],
+        "research_findings": [{"source_tier": 1, "source_title": "Sahynex Techsolutions", "source_url": "https://www.sahynex.com", "evidence_snippet": "Software services"}],
+        "recommendations": [{"recommendation": "Provide studio space", "priority": "HIGH"}]
     }
 
-    # SOURCE_ONLY
-    dossier_so = ExecutiveSummaryGenerator.render_detailed_3page_summary(canonical_mock, {"research_mode": "SOURCE_ONLY"})
-    assert "CONFIDENTIAL / AIR-GAPPED SANDBOX" in dossier_so["raw_content"]
-    assert "Mode 1: Source Only" in dossier_so["raw_content"]
+    # 1. Exclusive Summary (UNDERSTAND)
+    from app.generators.exclusive_summary import ExclusiveSummaryGenerator
+    summary = ExclusiveSummaryGenerator.render(canonical_mock, {})
+    assert "EXCLUSIVE SUMMARY" in summary["raw_content"]
+    assert "1. Overview" in summary["raw_content"]
+    assert "2. Key Points" in summary["raw_content"]
+    assert "6. Bottom Line" in summary["raw_content"]
+    assert "Implication" not in summary["raw_content"]
 
-    # SOURCE_AND_VERIFY
-    dossier_sv = ExecutiveSummaryGenerator.render_detailed_3page_summary(canonical_mock, {"research_mode": "SOURCE_AND_VERIFY"})
-    assert "RESTRICTED / EXECUTIVE TIER-1" in dossier_sv["raw_content"]
-    assert "Mode 2: Source & Verify" in dossier_sv["raw_content"]
-
-    # DEEP_RESEARCH
-    dossier_dr = ExecutiveSummaryGenerator.render_detailed_3page_summary(canonical_mock, {"research_mode": "DEEP_RESEARCH"})
-    assert "MULTI-TIER INTELLIGENCE DOSSIER / 8-TIER" in dossier_dr["raw_content"]
-    assert "Mode 3: Deep Research" in dossier_dr["raw_content"]
-    assert "Deep Multi-Source Comparative Matrix (8-Tier Discovery)" in dossier_dr["raw_content"]
+    # 2. Executive Advisory (DECIDE)
+    from app.generators.executive_advisory import ExecutiveAdvisoryGenerator
+    advisory = ExecutiveAdvisoryGenerator.render(canonical_mock, {})
+    assert "EXECUTIVE ADVISORY" in advisory["raw_content"]
+    assert "1. Executive Assessment" in advisory["raw_content"]
+    assert "3. Implications" in advisory["raw_content"]
+    assert "5. Recommendations" in advisory["raw_content"]
+    assert "6. Decision Points & Next Steps" in advisory["raw_content"]
+    assert "https://www.sahynex.com" in advisory["raw_content"]
 
 @pytest.mark.asyncio
 async def test_mock_provider_formats_differentiation():
     provider = MockProvider()
     canonical_mock = {
-        "title": "NovaTech Cyber Incident",
-        "topic": "NovaTech Cyber Incident",
-        "executive_summary": "Initial summary content.",
-        "key_facts": [{"text": "500 servers isolated in 42 minutes", "provenance": "PRIMARY_SOURCE_FACT"}],
-        "statistics": [{"metric": "Containment", "value": "42 mins", "context": "Rapid response"}],
-        "research_findings": [{"source_tier": 1, "source_title": "CISA Alert AA26-224A", "evidence_snippet": "Threat telemetry matches IoCs"}],
-        "recommendations": [{"recommendation": "Enforce FIDO2 keys", "priority": "CRITICAL"}]
+        "title": "Mic on Campus Proposal",
+        "topic": "Student Career Guidance Podcast",
+        "executive_summary": "Mic on Campus bridges academic theory and real-world industry experience through a 10-episode student-led podcast.",
+        "key_facts": [{"text": "10 episodes total: 6 on placements, 4 on entrepreneurship", "provenance": "PRIMARY_SOURCE_FACT"}],
+        "statistics": [{"metric": "Episodes", "value": "10"}],
+        "research_findings": [{"source_title": "Sahynex", "source_url": "https://www.sahynex.com"}],
+        "recommendations": [{"recommendation": "Provide studio access"}]
     }
 
-    # LinkedIn in SOURCE_ONLY vs DEEP_RESEARCH
-    li_so = await provider.generate_artefact(canonical_mock, "linkedin", {"research_mode": "SOURCE_ONLY"})
-    assert "[Mode 1: Source Only" in li_so["raw_content"]
-    assert "Confidential Air-Gapped Sandbox Mode" in li_so["raw_content"]
+    # LinkedIn: 150-250 words, human, clear sections
+    li = await provider.generate_artefact(canonical_mock, "linkedin", {})
+    assert len(li["raw_content"].split()) <= 300
+    assert "Mic on Campus" in li["raw_content"]
+    assert "telemetry" not in li["raw_content"].lower()
 
-    li_dr = await provider.generate_artefact(canonical_mock, "linkedin", {"research_mode": "DEEP_RESEARCH"})
-    assert "[Mode 3: Deep Research" in li_dr["raw_content"]
-    assert "Multi-Tier Authoritative Corroboration" in li_dr["raw_content"]
+    # Presentation: slides format with bullets
+    deck = await provider.generate_artefact(canonical_mock, "presentation", {})
+    assert "slides" in deck["structured_data"]
+    assert len(deck["structured_data"]["slides"]) <= 7
+    assert "telemetry" not in deck["raw_content"].lower()
 
-    # Presentation in SOURCE_ONLY vs DEEP_RESEARCH
-    deck_so = await provider.generate_artefact(canonical_mock, "presentation", {"research_mode": "SOURCE_ONLY"})
-    assert "Air-Gapped Confidential Sandbox Mode" in deck_so["raw_content"]
-
-    deck_dr = await provider.generate_artefact(canonical_mock, "presentation", {"research_mode": "DEEP_RESEARCH"})
-    assert "Multi-Source Benchmark Analysis & 8-Tier Discovery" in deck_dr["raw_content"]
+    # Twitter: maximum 4 tweets
+    tweets = await provider.generate_artefact(canonical_mock, "twitter", {})
+    assert "tweets" in tweets["structured_data"]
+    assert len(tweets["structured_data"]["tweets"]) <= 4

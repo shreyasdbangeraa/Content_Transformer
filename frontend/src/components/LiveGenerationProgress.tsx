@@ -42,10 +42,10 @@ export default function LiveGenerationProgress({
   onComplete,
 }: LiveGenerationProgressProps) {
   const formatIconMap: Record<string, { label: string; icon: any }> = {
-    executive_summary: { label: 'Executive 3-Page Dossier', icon: FileText },
+    executive_summary: { label: 'Exclusive Summary', icon: FileText },
     linkedin: { label: 'LinkedIn Post & FLUX Banner', icon: Linkedin },
     twitter: { label: 'X / Twitter Sequential Thread', icon: Twitter },
-    advisory: { label: 'CVSS Threat Advisory & IoCs', icon: ShieldCheck },
+    advisory: { label: 'Executive Advisory', icon: ShieldCheck },
     presentation: { label: 'Executive PPTX Presentation', icon: Presentation },
     infographic: { label: 'Infographic Visual Blueprint', icon: Layers },
     video_package: { label: 'Video Storyboard & Narration', icon: Video },

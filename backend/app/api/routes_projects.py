@@ -20,8 +20,15 @@ def list_projects(db: Session = Depends(get_db)):
     projects = db.query(Project).order_by(Project.created_at.desc()).all()
     results = []
     for p in projects:
-        sources_count = db.query(Source).filter(Source.project_id == p.id).count()
-        outputs_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id).count()
+        sources = db.query(Source).filter(Source.project_id == p.id).all()
+        sources_count = len(sources)
+        first_source = sources[0] if sources else None
+        source_types = list(dict.fromkeys([s.file_type.lower() for s in sources if s.file_type]))
+        
+        raw_outputs = db.query(Output.format_type).join(Transformation).filter(Transformation.project_id == p.id).all()
+        output_formats = list(dict.fromkeys([o[0] for o in raw_outputs if o[0]]))
+
+        outputs_count = len(raw_outputs)
         approved_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id, Output.status == "APPROVED").count()
         published_count = db.query(Output).join(Transformation).filter(Transformation.project_id == p.id, Output.status == "PUBLISHED").count()
         conflicts_count = db.query(ConflictRecord).join(ResearchJob).filter(ResearchJob.project_id == p.id).count()
@@ -38,7 +45,11 @@ def list_projects(db: Session = Depends(get_db)):
             "created_at": p.created_at,
             "updated_at": p.updated_at,
             "sources_count": sources_count,
+            "source_types": source_types,
+            "first_source_name": first_source.filename if first_source else None,
+            "first_source_pages": first_source.page_count if first_source else None,
             "outputs_count": outputs_count,
+            "output_formats": output_formats,
             "approved_count": approved_count,
             "published_count": published_count,
             "conflicts_count": conflicts_count
@@ -106,7 +117,7 @@ def get_project_detail(project_id: str, db: Session = Depends(get_db)):
     sources = db.query(Source).filter(Source.project_id == project_id).all()
     canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.project_id == project_id).order_by(CanonicalAnalysis.created_at.desc()).first()
     transformations = db.query(Transformation).filter(Transformation.project_id == project_id).all()
-    research_jobs = db.query(ResearchJob).filter(ResearchJob.project_id == project_id).all()
+    research_jobs = db.query(ResearchJob).filter(ResearchJob.project_id == project_id).order_by(ResearchJob.created_at.desc()).all()
     conflicts = db.query(ConflictRecord).join(ResearchJob).filter(ResearchJob.project_id == project_id).all()
     
     outputs_data = []

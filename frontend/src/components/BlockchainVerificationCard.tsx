@@ -281,7 +281,7 @@ export default function BlockchainVerificationCard({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isVerifying ? 'animate-spin' : ''}`} />
-              <span>{isVerifying ? 'Verifying Hashes...' : 'Verify Content'}</span>
+              <span>{isVerifying ? 'Verifying Hashes...' : 'Verify Cryptographic Hash'}</span>
             </button>
 
             {/* Version History Button */}
@@ -290,7 +290,7 @@ export default function BlockchainVerificationCard({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-colors"
             >
               <History className="h-3.5 w-3.5 text-indigo-600" />
-              <span>View Version History ({history.length || 1})</span>
+              <span>View Version Lineage ({history.length || 1})</span>
             </button>
 
             {/* Blockchain Record / Receipt */}
@@ -299,32 +299,13 @@ export default function BlockchainVerificationCard({
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition-colors"
             >
               <Terminal className="h-3.5 w-3.5 text-slate-500" />
-              <span>View Blockchain Record</span>
+              <span>View On-Chain Receipt</span>
             </button>
           </div>
 
-          {/* Hackathon Demo Tampering Button */}
-          <div className="flex items-center gap-2">
-            {!isModified ? (
-              <button
-                onClick={handleSimulateTamper}
-                disabled={isTampering}
-                title="Hackathon Demo: Alters database content without on-chain signature to prove instant tamper detection"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs transition-colors"
-              >
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                <span>{isTampering ? 'Simulating...' : 'Simulate Tampering (Demo)'}</span>
-              </button>
-            ) : (
-              <button
-                onClick={handleRestoreOriginal}
-                disabled={isRestoring}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs transition-colors"
-              >
-                <RotateCcw className="h-3.5 w-3.5 text-emerald-600" />
-                <span>{isRestoring ? 'Restoring...' : 'Restore Verified'}</span>
-              </button>
-            )}
+          <div className="text-xs text-emerald-800 font-bold flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl">
+            <Check className="h-3.5 w-3.5 text-emerald-600" />
+            <span>Cryptographically Verified</span>
           </div>
         </div>
       </div>

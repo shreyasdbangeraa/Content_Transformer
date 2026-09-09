@@ -43,16 +43,16 @@ class QualityService:
         
         structure_score = 90.0
         if format_type == "executive_summary":
-            if "PAGE 1" in raw_content and "PAGE 2" in raw_content and "PAGE 3" in raw_content:
+            if has_headers and has_bullets and char_count > 1000:
                 structure_score = 98.0
             elif has_headers and has_bullets:
-                structure_score = 92.0
+                structure_score = 94.0
         elif format_type == "linkedin":
             if "#" in raw_content and len(raw_content) > 150:
                 structure_score = 95.0
         elif format_type == "advisory":
-            if "IoC" in raw_content or "DIRECTIVE" in raw_content or "ACTION" in raw_content:
-                structure_score = 96.0
+            if has_headers and any(w in raw_content for w in ["Finding", "Implication", "Recommendation", "Assessment"]):
+                structure_score = 97.0
         elif format_type in ["presentation", "video_package", "twitter", "infographic"]:
             structure_score = 94.0
 

@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 import os
 
+# API Gateway Main Entrypoint
 from app.config import settings
 from app.database.session import init_db
 from app.api.routes_projects import router as projects_router

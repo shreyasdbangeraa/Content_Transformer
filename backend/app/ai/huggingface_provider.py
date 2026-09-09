@@ -178,8 +178,10 @@ class HuggingFaceProvider:
     async def generate_linkedin_post(self, canonical_data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generates an authentic, high-engagement LinkedIn Thought Leadership Post using Hugging Face LLM architecture.
-        Guarantees strict factual grounding with zero hallucinations.
+        Guarantees strict factual grounding with zero hallucinations and native multilingual support.
         """
+        from app.services.multilingual_service import MultilingualService
+
         title = canonical_data.get("title", "Strategic Briefing")
         topic = canonical_data.get("topic", title)
         exec_sum = canonical_data.get("executive_summary", "")
@@ -188,17 +190,19 @@ class HuggingFaceProvider:
         stats = canonical_data.get("statistics", [])
         audience = config.get("target_audience", "Industry Leaders & Technical Executives")
         tone = config.get("tone", "Authoritative & Insightful")
+        lang = MultilingualService.clean_language_name(config.get("language", "English"))
 
         # 1. Attempt Hugging Face Serverless Inference API if API Key is configured
         if self.api_key:
             try:
                 system_prompt = (
-                    "You are an elite enterprise executive communications director and LinkedIn thought leader. "
-                    "Create a comprehensive, deep, high-value LinkedIn thought leadership post based STRICTLY on the provided verified facts. "
-                    "Structure the post with: (1) A bold opening hook, (2) Deep situational context paragraphs, "
-                    "(3) 4-6 detailed factual findings with bold headers and evidence context, (4) Quantified telemetry and metrics section, "
-                    "(5) Identified operational risks and severity levels, (6) 3-phase strategic action plan with emojis, "
-                    "(7) Executive bottom-line takeaway principle, (8) Thought-provoking discussion question for comments, and (9) 5-7 relevant hashtags."
+                    f"You are an elite enterprise executive communications director and LinkedIn thought leader. "
+                    f"Create a comprehensive, deep, high-value LinkedIn thought leadership post based STRICTLY on the provided verified facts. "
+                    f"Target Language: {lang}. Write the ENTIRE post, headings, and CTA in {lang}. "
+                    f"Structure the post with: (1) A bold opening hook, (2) Deep situational context paragraphs, "
+                    f"(3) 4-6 detailed factual findings with bold headers and evidence context, (4) Quantified telemetry and metrics section, "
+                    f"(5) Identified operational risks and severity levels, (6) 3-phase strategic action plan with emojis, "
+                    f"(7) Executive bottom-line takeaway principle, (8) Thought-provoking discussion question for comments, and (9) 5-7 relevant hashtags."
                 )
                 user_content = (
                     f"Topic: {topic}\n"
@@ -207,7 +211,7 @@ class HuggingFaceProvider:
                     f"Metrics: {[s.get('metric', '') + ': ' + str(s.get('value', '')) + ' (' + str(s.get('context', '')) + ')' for s in stats[:4] if isinstance(s, dict)]}\n"
                     f"Risks: {[r.get('risk', '') + ' (Severity: ' + str(r.get('severity', '')) + ')' for r in (canonical_data.get('risks', []) or [])[:3] if isinstance(r, dict)]}\n"
                     f"Directives: {[r.get('recommendation', '') + ' - ' + str(r.get('details', '')) for r in recs[:4] if isinstance(r, dict)]}\n"
-                    f"Tone: {tone} | Audience: {audience}"
+                    f"Tone: {tone} | Audience: {audience} | Language: {lang}"
                 )
                 headers = {"Authorization": f"Bearer {self.api_key}"}
                 payload = {
@@ -226,16 +230,18 @@ class HuggingFaceProvider:
                             raw_text = res_json[0]["generated_text"].split("[/INST]")[-1].strip()
                             if raw_text:
                                 clean_text = sanitize_linkedin_content(raw_text)
-                                return {
+                                res_obj = {
                                     "title": f"LinkedIn Thought Leadership - {title[:40]}",
                                     "raw_content": clean_text,
                                     "structured_data": {
                                         "engine": "Hugging Face Inference API",
                                         "model": "mistralai/Mistral-7B-Instruct-v0.3",
                                         "character_count": len(clean_text),
-                                        "target_audience": audience
+                                        "target_audience": audience,
+                                        "language": lang
                                     }
                                 }
+                                return await MultilingualService.localize_artefact(res_obj, lang, "linkedin")
             except Exception:
                 pass
 
@@ -332,7 +338,7 @@ class HuggingFaceProvider:
 
         full_post = sanitize_linkedin_content("\n\n".join(paragraphs))
 
-        return {
+        raw_result = {
             "title": f"LinkedIn Thought Leadership - {title[:40]}",
             "raw_content": full_post,
             "structured_data": {
@@ -342,9 +348,11 @@ class HuggingFaceProvider:
                 "takeaway_count": len(bullet_findings),
                 "hashtags": hashtags,
                 "character_count": len(full_post),
-                "target_audience": audience
+                "target_audience": audience,
+                "language": lang
             }
         }
+        return await MultilingualService.localize_artefact(raw_result, lang, "linkedin")
 
     async def generate_linkedin_banner(self, canonical_data: Optional[Dict[str, Any]] = None) -> str:
         """

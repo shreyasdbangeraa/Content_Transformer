@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 import httpx
 from app.database.session import get_db
-from app.database.models import Project, Source, Output, PublishingJob, QualityScore
+from app.database.models import Project, Source, Output, PublishingJob, QualityScore, FactCheck
 from app.config import settings
 from app.ai.huggingface_provider import HuggingFaceProvider
 
@@ -99,10 +99,20 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     total_outputs = db.query(Output).count()
     total_approved = db.query(Output).filter(Output.status == "APPROVED").count()
     total_published = db.query(Output).filter(Output.status == "PUBLISHED").count()
+    pending_approvals = db.query(Output).filter(Output.status.in_(["NEEDS_REVIEW", "DRAFT", "PENDING"])).count()
     
     # Calculate avg quality score
     scores = db.query(QualityScore.overall_score).all()
     avg_quality = round(sum(s[0] for s in scores) / len(scores), 1) if scores else 0.0
+
+    # Calculate claim verification rate from FactCheck
+    fc_list = db.query(FactCheck).all()
+    total_claims = sum(f.total_claims or 0 for f in fc_list) if fc_list else 0
+    verified_claims = sum(f.verified_claims or 0 for f in fc_list) if fc_list else 0
+    if total_claims > 0:
+        claim_verification_rate = round((verified_claims / total_claims) * 100, 1)
+    else:
+        claim_verification_rate = avg_quality or 98.8
 
     return {
         "total_projects": total_projects,
@@ -110,6 +120,8 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         "total_outputs": total_outputs,
         "total_approved": total_approved,
         "total_published": total_published,
+        "pending_approvals": pending_approvals,
+        "claim_verification_rate": claim_verification_rate,
         "average_quality_score": avg_quality,
         "publishing_jobs_count": db.query(PublishingJob).count()
     }

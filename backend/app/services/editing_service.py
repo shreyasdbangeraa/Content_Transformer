@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
@@ -5,9 +6,142 @@ from app.database.models import Output, OutputVersion, Transformation, Canonical
 from app.ai.factory import AIFactory
 from app.services.quality_service import QualityService
 from app.services.blockchain_service import BlockchainService
+from app.services.multilingual_service import MultilingualService, LANGUAGE_MAP
 
 class EditingService:
-    """Handles conversational AI refinement, manual direct edits, versioning, and human approval."""
+    """Handles conversational AI refinement, manual direct edits, multilingual translation, versioning, and human approval."""
+
+    @staticmethod
+    async def translate_output(db: Session, output_id: str, target_language: str) -> Output:
+        output = db.query(Output).filter(Output.id == output_id).first()
+        if not output:
+            raise ValueError(f"Output {output_id} not found")
+
+        transformation = db.query(Transformation).filter(Transformation.id == output.transformation_id).first()
+        canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.id == transformation.canonical_id).first() if transformation else None
+
+        clean_lang = MultilingualService.clean_language_name(target_language)
+
+        # Localize title, raw_content, and structured data
+        localized = await MultilingualService.localize_artefact(
+            {
+                "title": output.title,
+                "raw_content": output.raw_content,
+                "structured_data": output.structured_data or {}
+            },
+            target_language=clean_lang,
+            format_type=output.format_type
+        )
+
+        new_version_num = output.version + 1
+        output.title = localized["title"]
+        output.raw_content = localized["raw_content"]
+        output.structured_data = localized["structured_data"]
+        output.version = new_version_num
+        output.status = "NEEDS_REVIEW"
+        output.updated_at = datetime.utcnow()
+
+        # Create new OutputVersion
+        new_version = OutputVersion(
+            output_id=output.id,
+            version_number=new_version_num,
+            content=output.raw_content,
+            structured_data=output.structured_data,
+            change_reason=f"Translated to {clean_lang}",
+            created_by="Multilingual_Engine"
+        )
+        db.add(new_version)
+
+        # Re-run Fact Check
+        canonical_dict = {
+            "title": canonical.title if canonical else "Briefing",
+            "topic": canonical.topic if canonical else "General Topic",
+            "executive_summary": canonical.executive_summary if canonical else "",
+            "key_facts": canonical.key_facts if canonical else [],
+            "statistics": canonical.statistics if canonical else [],
+            "risks": canonical.risks if canonical else [],
+            "recommendations": canonical.recommendations if canonical else []
+        }
+        ai_provider = AIFactory.get_provider("gemini")
+        try:
+            fc_data = await ai_provider.fact_check(canonical_dict, output.raw_content, output.format_type)
+        except Exception:
+            mock = AIFactory.get_provider("mock")
+            fc_data = await mock.fact_check(canonical_dict, output.raw_content, output.format_type)
+
+        existing_fc = db.query(FactCheck).filter(FactCheck.output_id == output.id).first()
+        if existing_fc:
+            existing_fc.total_claims = fc_data.get("total_claims", 0)
+            existing_fc.verified_claims = fc_data.get("verified_claims", 0)
+            existing_fc.partially_supported = fc_data.get("partially_supported", 0)
+            existing_fc.unsupported_claims = fc_data.get("unsupported_claims", 0)
+            existing_fc.contradicted_claims = fc_data.get("contradicted_claims", 0)
+            existing_fc.opinion_creative = fc_data.get("opinion_creative", 0)
+            existing_fc.grounding_score = fc_data.get("grounding_score", 100.0)
+            existing_fc.claims = fc_data.get("claims", [])
+        else:
+            new_fc = FactCheck(
+                output_id=output.id,
+                total_claims=fc_data.get("total_claims", 0),
+                verified_claims=fc_data.get("verified_claims", 0),
+                partially_supported=fc_data.get("partially_supported", 0),
+                unsupported_claims=fc_data.get("unsupported_claims", 0),
+                contradicted_claims=fc_data.get("contradicted_claims", 0),
+                opinion_creative=fc_data.get("opinion_creative", 0),
+                grounding_score=fc_data.get("grounding_score", 100.0),
+                claims=fc_data.get("claims", [])
+            )
+            db.add(new_fc)
+
+        # Recompute Quality Score
+        quality_eval = QualityService.evaluate_output(
+            format_type=output.format_type,
+            raw_content=output.raw_content,
+            grounding_score=fc_data.get("grounding_score", 100.0),
+            config={"target_audience": transformation.target_audience if transformation else "General"}
+        )
+        existing_qs = db.query(QualityScore).filter(QualityScore.output_id == output.id).first()
+        if existing_qs:
+            existing_qs.overall_score = quality_eval["overall_score"]
+            existing_qs.source_accuracy = quality_eval["source_accuracy"]
+            existing_qs.completeness = quality_eval["completeness"]
+            existing_qs.audience_fit = quality_eval["audience_fit"]
+            existing_qs.readability = quality_eval["readability"]
+            existing_qs.tone_consistency = quality_eval["tone_consistency"]
+            existing_qs.structure_score = quality_eval["structure_score"]
+            existing_qs.research_confidence = quality_eval.get("research_confidence", 96.0)
+            existing_qs.safety_score = quality_eval.get("safety_score", 100.0)
+            existing_qs.details = quality_eval["details"]
+
+        # Audit Log
+        if transformation:
+            audit = AuditLog(
+                project_id=transformation.project_id,
+                action="OUTPUT_TRANSLATED",
+                actor="Multilingual Engine",
+                details={"output_id": output.id, "target_language": clean_lang, "new_version": new_version_num}
+            )
+            db.add(audit)
+
+        # Blockchain Anchor
+        try:
+            BlockchainService.register_content_version(
+                db=db,
+                content_id=output.id,
+                content=output.raw_content,
+                action_type="TRANSLATION",
+                version_number=new_version_num,
+                version_tag=f"V{new_version_num}",
+                created_by="Multilingual_Engine",
+                project_id=transformation.project_id if transformation else None,
+                metadata={"target_language": clean_lang, "change_reason": f"Translated to {clean_lang}"}
+            )
+        except Exception:
+            pass
+
+        db.commit()
+        db.refresh(output)
+        return output
 
     @staticmethod
     async def conversational_edit(db: Session, output_id: str, edit_prompt: str, provider_name: str = None) -> Output:
@@ -17,6 +151,30 @@ class EditingService:
 
         transformation = db.query(Transformation).filter(Transformation.id == output.transformation_id).first()
         canonical = db.query(CanonicalAnalysis).filter(CanonicalAnalysis.id == transformation.canonical_id).first() if transformation else None
+
+        # Check if user instruction is explicitly asking for translation
+        prompt_lower = edit_prompt.lower()
+        target_lang = None
+        
+        # Check if translation intent is present
+        is_trans_intent = any(w in prompt_lower for w in ["translate", "translation", "convert to", "switch to", "write in", "in "])
+        
+        # Sort keys by length descending to match longest language names first
+        for key, lang_name in sorted(LANGUAGE_MAP.items(), key=lambda x: len(x[0]), reverse=True):
+            if key in ("english", "en"):
+                continue
+            # For short language codes (<=3 chars), require explicit prefix or strict word boundary with translation intent
+            if len(key) <= 3:
+                pattern = r'(?:\bto\s+|\binto\s+|\bin\s+)' + re.escape(key) + r'\b'
+            else:
+                pattern = r'\b' + re.escape(key) + r'\b'
+                
+            if re.search(pattern, prompt_lower, re.IGNORECASE):
+                target_lang = lang_name
+                break
+
+        if target_lang and (is_trans_intent or "to " in prompt_lower or "in " in prompt_lower):
+            return await EditingService.translate_output(db, output_id, target_lang)
 
         canonical_dict = {
             "title": canonical.title if canonical else "Briefing",

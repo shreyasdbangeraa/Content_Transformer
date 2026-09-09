@@ -95,6 +95,23 @@ async def conversational_edit(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Conversational edit failed: {str(e)}")
 
+@router.post("/{output_id}/translate")
+async def translate_output_route(
+    output_id: str,
+    payload: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db)
+):
+    target_language = payload.get("language") or payload.get("target_language") or "English"
+    try:
+        updated_output = await EditingService.translate_output(
+            db=db,
+            output_id=output_id,
+            target_language=target_language
+        )
+        return format_output_response(updated_output, db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Translation failed: {str(e)}")
+
 @router.post("/{output_id}/direct-edit")
 def direct_edit(
     output_id: str,

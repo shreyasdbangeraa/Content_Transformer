@@ -213,6 +213,11 @@ export const api = {
       body: JSON.stringify({ prompt }),
     })
   },
+  translateOutput: (outputId: string, language: string) =>
+    request<Output>(`/outputs/${outputId}/translate`, {
+      method: 'POST',
+      body: JSON.stringify({ language }),
+    }),
   directEdit: (outputId: string, content: string, changeReason?: string) =>
     request<Output>(`/outputs/${outputId}/direct-edit`, {
       method: 'POST',

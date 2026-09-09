@@ -7,24 +7,42 @@ import {
   Layers,
   Plus,
   Menu,
+  MoreVertical,
   ShieldCheck,
+  PanelLeftClose,
+  PanelLeft,
 } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useNav } from '@/context/NavContext'
 
 export default function Navbar() {
-  const { toggleMobileNav } = useNav()
+  const pathname = usePathname()
+  const { toggleSidebar, isSidebarOpen } = useNav()
+
+  if (pathname?.startsWith('/dashboard')) {
+    return null
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/85 backdrop-blur-xl shadow-xs transition-all duration-300">
       <div className="flex h-16 sm:h-18 items-center justify-between px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full gap-2">
-        {/* Left Section: Mobile Hamburger Button & Brand Logo */}
+        {/* Left Section: 3 Dots / 3 Lines Sidebar Toggle Button & Brand Logo */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
+          {/* 3 Lines / 3 Dots Sidebar Toggle Button */}
           <button
-            onClick={toggleMobileNav}
-            aria-label="Open Navigation Sidebar"
-            className="md:hidden flex items-center justify-center h-10 w-10 rounded-2xl text-slate-700 hover:bg-slate-100/80 active:scale-95 transition-all border border-slate-200/80 shadow-xs"
+            onClick={toggleSidebar}
+            aria-label="Toggle Navigation Sidebar"
+            title="Toggle Sidebar (3 lines / 3 dots)"
+            className="flex items-center justify-center h-10 w-10 sm:h-11 sm:w-11 rounded-2xl text-slate-700 bg-white hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 active:scale-95 transition-all border border-slate-200/80 shadow-2xs group relative"
           >
-            <Menu className="h-5 w-5 text-slate-800" />
+            <div className="flex items-center justify-center gap-0.5">
+              <Menu className="h-5 w-5 text-slate-800 group-hover:text-indigo-600 transition-colors" />
+              <MoreVertical className="h-4 w-4 text-slate-400 -ml-1 group-hover:text-indigo-500 transition-colors" />
+            </div>
+            {/* Active Indicator Pip */}
+            {isSidebarOpen && (
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-indigo-600 ring-2 ring-white hidden md:block" />
+            )}
           </button>
 
           <Link href="/dashboard" className="flex items-center gap-3 group">

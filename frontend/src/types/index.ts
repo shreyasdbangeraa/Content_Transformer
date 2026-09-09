@@ -90,6 +90,13 @@ export interface ResearchEvidenceItem {
   source_url?: string
   source_tier: number
   confidence: number
+  domain?: string
+  researched_status?: string
+  source_name?: string
+  page_title?: string
+  why_researched?: string
+  research_finding?: string
+  relationship_to_document?: 'Supported' | 'Partially Supported' | 'Additional Context' | 'Contradicted' | 'Not Found' | string
 }
 
 export interface TimelineEvent {
@@ -319,7 +326,11 @@ export interface Project {
   created_at: string
   updated_at: string
   sources_count?: number
+  source_types?: string[]
+  first_source_name?: string
+  first_source_pages?: number
   outputs_count?: number
+  output_formats?: string[]
   approved_count?: number
   published_count?: number
   conflicts_count?: number
@@ -363,14 +374,14 @@ export interface ResearchPlan {
   freshness_policy: FreshnessPolicy
 }
 
-
-
 export interface DashboardStats {
   total_projects: number
   total_sources: number
   total_outputs: number
   total_approved: number
   total_published: number
+  pending_approvals?: number
+  claim_verification_rate?: number
   average_quality_score: number
   publishing_jobs_count: number
 }
