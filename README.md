@@ -4,6 +4,157 @@ ConteX AI is an AI-powered information verification and transformation platform 
 
 ---
 
+## System Architecture
+
+ConteX AI implements an end-to-end decoupled architecture designed around an immutable **Canonical Knowledge Layer**. Rather than passing raw unverified documents directly to generation prompts, the platform decomposes sources into a single source of truth, cross-verifies empirical claims with external research, cryptographically anchors versions, and enforces a mandatory human approval gate before publication.
+
+### Architecture Diagram (Interactive Flow)
+
+```mermaid
+flowchart TD
+    %% Node Definitions with Exact Labels from Architecture Specification
+    USER["User"]
+    WEB["Web / App<br/>(Next.js / React)"]
+    INGEST["Ingestion<br/>Documents • URLs • Images • Text<br/>(PDF, DOCX, TXT, URL, Images, Videos, Prompts)"]
+    INPUT_SRC["<b>INPUT SOURCE</b><br/>• Documents (PDF, DOCX, TXT)<br/>• Web URLs<br/>• Images<br/>• Videos<br/>• Text / Prompts"]
+    
+    AI["AI Processing<br/>Extraction • Chunking • RAG<br/>(Understand & retrieve context)"]
+    
+    RESEARCH["Research & Verification<br/>Evidence • Cross-source checks •<br/>Conflict detection • Claim verification"]
+    EXT_SRC["<b>EXTERNAL RESEARCH SOURCES</b><br/>• Trusted Websites<br/>• Government Portals<br/>• Research Papers<br/>• Databases<br/>• News Sources"]
+    
+    CANON["Canonical Knowledge Layer<br/>Verified facts + sources + evidence<br/>Functions as the single source of truth"]
+    DATA_STORES["<b>DATA STORES</b><br/>• Vector Store (pgvector / In-DB)<br/>• Metadata DB (PostgreSQL / SQLite)<br/>• File Storage (Original Files)"]
+    
+    SEC["Integrity & Security<br/>Hash • Provenance • Audit trail •<br/>Tamper-evident • Versioning"]
+    BLOCKCHAIN["<b>BLOCKCHAIN INTEGRITY LAYER</b><br/>• Content Hash<br/>• Provenance Reference<br/>• Version / Change History<br/>• Approval Record<br/>• Timestamp"]
+    
+    GEN["Content Generation<br/>Summary • Advisory • Presentation • Social<br/>Generates multiple content formats"]
+    
+    QUALITY["Quality + Safety Check<br/>Fact check • Policy check • Bias check<br/>Ensures accuracy, safety & compliance"]
+    
+    HUMAN["Human Approval<br/>Review & approve content before publishing"]
+    
+    EXPORT["EXPORT<br/>PDF • DOCX • PPT • TXT<br/>CSV • JSON • More"]
+    N8N["n8n AUTOMATION<br/>Workflow automation<br/>& distribution"]
+    SOCIAL["<b>SOCIAL PUBLISHING</b><br/>Auto-publish to<br/>LinkedIn • X (Twitter)<br/>and other platforms"]
+
+    %% Flow Layout Connections
+    USER --> WEB
+    WEB --> INGEST
+    INPUT_SRC -.-> INGEST
+    INGEST --> AI
+    AI --> RESEARCH
+    EXT_SRC -.-> RESEARCH
+    RESEARCH --> CANON
+    CANON <-.-> DATA_STORES
+    CANON --> SEC
+    SEC <-.-> BLOCKCHAIN
+    SEC --> GEN
+    GEN --> QUALITY
+    QUALITY --> HUMAN
+    HUMAN --> EXPORT
+    HUMAN --> N8N
+    N8N -.-> SOCIAL
+
+    %% Interactive Refinement Loop (Human-in-the-Loop)
+    HUMAN -.->|"Refine / Edit (Prompt Loop)"| GEN
+
+    %% Styling to reflect the system architecture design
+    style USER fill:#fecdd3,stroke:#fb7185,stroke-width:1.5px,color:#881337
+    style WEB fill:#fef9c3,stroke:#facc15,stroke-width:1.5px,color:#713f12
+    style INGEST fill:#bae6fd,stroke:#38bdf8,stroke-width:1.5px,color:#0369a1
+    style INPUT_SRC fill:#e0f2fe,stroke:#7dd3fc,stroke-width:1.5px,color:#0c4a6e
+    style AI fill:#f3e8ff,stroke:#d8b4fe,stroke-width:1.5px,color:#581c87
+    style RESEARCH fill:#fef08a,stroke:#fde047,stroke-width:1.5px,color:#713f12
+    style EXT_SRC fill:#ecfdf5,stroke:#6ee7b7,stroke-width:1.5px,color:#064e3b
+    style CANON fill:#ffe4e6,stroke:#fecdd3,stroke-width:1.5px,color:#881337
+    style DATA_STORES fill:#f1f5f9,stroke:#cbd5e1,stroke-width:1.5px,color:#334155
+    style SEC fill:#bbf7d0,stroke:#4ade80,stroke-width:1.5px,color:#14532d
+    style BLOCKCHAIN fill:#fdf2f8,stroke:#f472b6,stroke-width:1.5px,color:#831843
+    style GEN fill:#ccfbf1,stroke:#5eead4,stroke-width:1.5px,color:#134e4a
+    style QUALITY fill:#f5d0fe,stroke:#e879f9,stroke-width:1.5px,color:#701a75
+    style HUMAN fill:#ffe4e6,stroke:#fecdd3,stroke-width:1.5px,color:#881337
+    style EXPORT fill:#fed7aa,stroke:#fb923c,stroke-width:1.5px,color:#7c2d12
+    style N8N fill:#e7e5e4,stroke:#a8a29e,stroke-width:1.5px,color:#292524
+    style SOCIAL fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#1e293b
+```
+
+### Architecture Structural Sketch
+
+```text
+                               ┌─────────────┐
+                               │    User     │
+                               └──────┬──────┘
+                                      │
+                               ┌──────▼──────┐
+                               │  Web / App  │ (Next.js / React)
+                               └──────┬──────┘
+                                      │
+ ┌──────────────────────┐      ┌──────▼──────┐
+ │     INPUT SOURCE     │      │             │
+ │ • Documents (PDF,    │─────>│  Ingestion  │ (Documents • URLs • Images • Text)
+ │   DOCX, TXT)         │      │             │
+ │ • Web URLs, Images   │      └──────┬──────┘
+ └──────────────────────┘             │
+                               ┌──────▼──────┐
+                               │AI Processing│ (Extraction • Chunking • RAG)
+                               └──────┬──────┘
+                                      │
+ ┌──────────────────────┐      ┌──────▼──────┐
+ │  EXTERNAL RESEARCH   │      │ Research &  │
+ │ • Trusted Websites   │─────>│Verification │ (Evidence • Cross-Source Checks • Conflicts)
+ │ • Government Portals │      │             │
+ │ • News, Papers, DBs  │      └──────┬──────┘
+ └──────────────────────┘             │
+ ┌──────────────────────┐      ┌──────▼──────┐
+ │     DATA STORES      │      │  Canonical  │
+ │ • Vector Store       │<────>│  Knowledge  │ (Verified Facts + Sources + Evidence)
+ │ • Metadata DB        │      │    Layer    │ Single Source of Truth
+ │ • File Storage       │      └──────┬──────┘
+ └──────────────────────┘             │
+ ┌──────────────────────┐      ┌──────▼──────┐
+ │ BLOCKCHAIN INTEGRITY │      │ Integrity & │
+ │ • Content Hash       │<────>│  Security   │ (Hash • Provenance • Audit Trail • Versioning)
+ │ • Version History    │      └──────┬──────┘
+ │ • Approval Record    │             │
+ └──────────────────────┘      ┌──────▼──────┐
+                               │   Content   │<────────────────┐
+                               │ Generation  │ (Summary • Advisory • Slides • Social)
+                               └──────┬──────┘                 │
+                                      │                        │ Refine /
+                               ┌──────▼──────┐                 │ Edit Loop
+                               │Quality/Safety                 │
+                               │    Check    │ (Fact Check • Policy Check • Bias Check)
+                               └──────┬──────┘                 │
+                                      │                        │
+                               ┌──────▼──────┐                 │
+                               │Human Approval─────────────────┘
+                               │    Gate     │ (Review & Approve Before Publishing)
+                               └──────┬──────┘
+                                      │
+                       ┌──────────────┴──────────────┐
+                       │                             │
+                ┌──────▼──────┐               ┌──────▼──────┐     ┌──────────────────┐
+                │   EXPORT    │               │n8n AUTOMATION────>│SOCIAL PUBLISHING │
+                │PDF•DOCX•PPT │               │  Workflows  │     │LinkedIn • X (Tw) │
+                └─────────────┘               └─────────────┘     └──────────────────┘
+```
+
+### Architectural Pipeline Breakdown
+
+1. **Ingestion & Input Sources**: Multi-modal ingestion of PDFs, Word documents, plain text, web URLs, and images. Incoming content is bounded with prompt injection delimiters and SSRF network validation.
+2. **AI Processing & RAG Context**: Performs entity and concept extraction, recursive chunking, and semantic vector indexing against the internal organizational knowledge base.
+3. **Research & Verification**: Proactively verifies empirical facts against authoritative external sources (Government portals, standards bodies, academic repositories) and flags conflicts before content creation.
+4. **Canonical Knowledge Layer**: Acts as the immutable Single Source of Truth (SSOT). All downstream assets derive strictly from this normalized factual foundation.
+5. **Integrity & Security (Blockchain Anchor)**: Cryptographic SHA-256 content hashing links revisions into a tamper-evident parent-child chain anchored on an EVM smart contract (`ContentIntegrityRegistry.sol`).
+6. **Content Generation**: Concurrently generates target deliverables (Executive Briefings, LinkedIn Posts, Security Advisories, PowerPoint Slides, X Threads, Infographics, Video Packages).
+7. **Quality & Safety Check**: Evaluates outputs across 8 dimensions (Grounding Score, Flesch-Kincaid Readability, Completeness, Structure, Safety).
+8. **Human Approval Gate**: Mandatory checkpoint ensuring zero unreviewed publications. Operators can edit, refine via AI conversation, or approve.
+9. **Export & n8n Syndication**: Delivers high-fidelity native exports (`.pptx`, `.docx`, `.txt`) and triggers automated n8n webhook pipelines for scheduled social syndication.
+
+---
+
 ## 1. Features
 
 ConteX AI is built to bridge the gap between unstructured multi-source inputs and verified, multi-channel syndication. The platform includes the following fully implemented capabilities:
