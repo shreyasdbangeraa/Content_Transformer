@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   Home,
@@ -104,24 +105,18 @@ export default function Sidebar() {
       <div className="space-y-8">
         {/* Brand Logo & Name */}
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-b from-blue-500 to-blue-600 shadow-sm shadow-blue-500/25 shrink-0">
-            {/* 3D Stacked Layers Icon */}
-            <svg
-              className="h-6 w-6 text-white"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polygon points="12 2 2 7 12 12 22 7 12 2" fill="rgba(255,255,255,0.25)" />
-              <polyline points="2 12 12 17 22 12" />
-              <polyline points="2 17 12 22 22 17" />
-            </svg>
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden shadow-xs border border-slate-200/80 bg-white p-0.5 group-hover:scale-105 group-hover:shadow-md transition-all shrink-0">
+            <Image
+              src="/logo.png"
+              alt="ContexAI Logo"
+              width={40}
+              height={40}
+              className="h-full w-full object-contain rounded-lg"
+              priority
+            />
           </div>
           <div>
-            <span className="text-lg font-bold tracking-tight text-slate-900 block leading-tight">
+            <span className="text-lg font-bold tracking-tight text-slate-900 block leading-tight group-hover:text-blue-600 transition-colors">
               ContexAI
             </span>
             <span className="text-[11px] text-slate-400 font-medium block leading-tight">

@@ -125,7 +125,13 @@ export default function LiveResearchProgress({
     }
   }
 
-  const combinedText = (topic + ' ' + summary + ' ' + keyFacts.map((f) => f.text).join(' ')).toLowerCase()
+  const combinedText = (
+    (topic || '') +
+    ' ' +
+    (summary || '') +
+    ' ' +
+    keyFacts.map((f) => f?.text || '').join(' ')
+  ).toLowerCase()
 
   // Dynamic Domain & Purpose Classification
   let detectedDomain = 'General Business & Organization'

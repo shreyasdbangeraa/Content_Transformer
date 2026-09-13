@@ -44,10 +44,11 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
   const activeMode = canonical.provenance_map?.research_mode || 'SOURCE_AND_VERIFY'
 
   const filteredFacts = (canonical.key_facts || []).filter((fact) => {
-    const matchesSearch =
-      !factSearchQuery ||
-      fact.text.toLowerCase().includes(factSearchQuery.toLowerCase()) ||
-      (fact.source?.section || '').toLowerCase().includes(factSearchQuery.toLowerCase())
+    if (!fact) return false
+    const factText = (fact.text || '').toString().toLowerCase()
+    const query = (factSearchQuery || '').toString().toLowerCase().trim()
+    const sectionText = (fact.source?.section || '').toString().toLowerCase()
+    const matchesSearch = !query || factText.includes(query) || sectionText.includes(query)
     
     if (!matchesSearch) return false
     if (factFilter === 'PRIMARY') return fact.provenance === 'PRIMARY_SOURCE_FACT'
@@ -68,12 +69,16 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
 
     // Add explicit dates
     for (const d of canonical.dates || []) {
-      const key = `${d.date}::${d.event}`.toLowerCase().trim()
+      if (!d) continue
+      const dateStr = (d.date || (d as any).timestamp || 'Milestone').toString().trim()
+      const eventStr = (d.event || (d as any).title || (d as any).description || '').toString().trim()
+      const key = `${dateStr}::${eventStr}`.toLowerCase().trim()
+      if (!key || key === '::') continue
       if (!seen.has(key)) {
         seen.add(key)
         items.push({
-          dateOrTime: d.date,
-          event: d.event,
+          dateOrTime: dateStr || 'Milestone',
+          event: eventStr || 'Scheduled Milestone',
           type: (d as any).type || 'Milestone'
         })
       }
@@ -81,12 +86,16 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
 
     // Add events
     for (const ev of canonical.events || []) {
-      const key = `${ev.timestamp}::${ev.event}`.toLowerCase().trim()
+      if (!ev) continue
+      const timestampStr = (ev.timestamp || (ev as any).date || 'Event').toString().trim()
+      const eventStr = (ev.event || (ev as any).title || (ev as any).description || '').toString().trim()
+      const key = `${timestampStr}::${eventStr}`.toLowerCase().trim()
+      if (!key || key === '::') continue
       if (!seen.has(key)) {
         seen.add(key)
         items.push({
-          dateOrTime: ev.timestamp,
-          event: ev.event,
+          dateOrTime: timestampStr || 'Event',
+          event: eventStr || 'Recorded Event',
           severity: ev.severity,
           type: ev.severity ? `Incident ${ev.severity}` : 'Milestone'
         })
@@ -766,8 +775,17 @@ export default function CanonicalViewer({ canonical }: CanonicalViewerProps) {
                 {unifiedTimeline.map((item, idx) => {
                   const isCritical = item.severity === 'CRITICAL'
                   const isHigh = item.severity === 'HIGH'
-                  const isPhase = item.type === 'PROJECT_PHASE' || item.type?.includes('Phase') || item.dateOrTime.toLowerCase().includes('part') || item.dateOrTime.toLowerCase().includes('episode')
-                  const isCalendarDate = item.type === 'CALENDAR_DATE' || item.type === 'NUMERIC_DATE' || /\d{4}/.test(item.dateOrTime)
+                  const dateStr = (item.dateOrTime || '').toString()
+                  const safeDateOrTime = dateStr.toLowerCase()
+                  const isPhase =
+                    item.type === 'PROJECT_PHASE' ||
+                    Boolean(item.type?.includes('Phase')) ||
+                    safeDateOrTime.includes('part') ||
+                    safeDateOrTime.includes('episode')
+                  const isCalendarDate =
+                    item.type === 'CALENDAR_DATE' ||
+                    item.type === 'NUMERIC_DATE' ||
+                    /\d{4}/.test(dateStr)
 
                   return (
                     <div

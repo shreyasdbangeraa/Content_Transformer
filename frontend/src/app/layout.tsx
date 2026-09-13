@@ -19,6 +19,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'conteX AI — One Source. Every Communication Format.',
   description: 'Enterprise Generative AI platform that transforms documents, reports, and unstructured data into verified, multi-format communication artefacts.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

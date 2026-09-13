@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Sparkles,
   ArrowRight,
@@ -129,6 +130,26 @@ export default function LandingPage() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24 space-y-24">
         {/* HERO SECTION */}
         <div className="text-center max-w-4xl mx-auto space-y-8 pt-4">
+          {/* Creative Brand Hero Logo Emblem */}
+          <div className="flex items-center justify-center -mb-2">
+            <div className="relative group">
+              {/* Outer Radiant Glow */}
+              <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-r from-sky-500 via-indigo-500 to-cyan-400 opacity-25 blur-2xl group-hover:opacity-50 transition duration-700 animate-pulse" />
+              
+              {/* Glassmorphic Logo Card */}
+              <div className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-[28px] bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-xl shadow-sky-500/10 p-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-indigo-500/25 group-hover:border-indigo-200">
+                <Image
+                  src="/logo.png"
+                  alt="conteX AI Logo"
+                  width={80}
+                  height={80}
+                  className="h-full w-full object-contain rounded-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-white/90 backdrop-blur-md px-5 py-2 text-xs sm:text-sm font-black text-indigo-950 shadow-xs animate-float">
             <span className="flex h-2.5 w-2.5 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
@@ -316,7 +337,15 @@ export default function LandingPage() {
       <footer className="border-t border-slate-200 bg-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500">
           <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-indigo-600" />
+            <div className="relative h-5 w-5 rounded-md overflow-hidden border border-slate-200/80 bg-white shadow-2xs shrink-0 flex items-center justify-center p-0.5">
+              <Image
+                src="/logo.png"
+                alt="conteX AI Logo"
+                width={20}
+                height={20}
+                className="h-full w-full object-contain rounded-xs"
+              />
+            </div>
             <span className="font-bold text-slate-800">conteX AI</span>
             <span>• Enterprise Multimodal Communications Engine</span>
           </div>
