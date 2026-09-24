@@ -95,7 +95,7 @@ graph TD
     Frontend -->|REST / SSE / WebSockets| Backend[FastAPI Backend - Render / Docker / Cloud Run]
     
     Backend -->|Vector & Relational Queries| DB[(Database Layer: PostgreSQL / Supabase or SQLite)]
-    Backend -->|Prompt & Inference| AI[AI Layer: Gemini / OpenAI / Ollama Local SLM]
+    Backend -->|Prompt & Inference| AI[AI Layer: Google Gemini API - gemini-2.5-flash / gemini-2.5-pro]
     Backend -->|Webhooks & Triggers| N8N[n8n Automation Engine]
     Backend -->|Notarize Hashes| Web3[Web3 Blockchain: Ethereum / Polygon Testnet]
     
@@ -133,10 +133,10 @@ ConteX AI supports three primary deployment approaches:
 
 #### Approach B: Containerized On-Premises / Private VPC (Enterprise Sovereign)
 - Fully containerized deployment using **Docker** and **Docker Compose** (`docker-compose.yml`).
-- Suitable for air-gapped networks, private AWS/Azure VPCs, or on-premises servers with local Ollama/vLLM inference.
+- Suitable for private AWS/Azure VPCs or dedicated enterprise servers.
 
 #### Approach C: Zero-Config Local / Offline Development
-- Embedded local execution utilizing built-in **SQLite** (`content_transformer.db`) and local vector calculations without requiring any external cloud accounts.
+- Embedded local execution utilizing built-in **SQLite** (`content_transformer.db`) and resilient mock AI fallback without requiring any external cloud setup.
 
 ---
 
@@ -146,8 +146,7 @@ Before initiating deployment, ensure the following services and credentials are 
 
 1. **GitHub Repository**: Connected repository (`shreyasdbangeraa/Content_Transformer`).
 2. **AI Provider API Key**:
-   - Google Gemini API Key (`GEMINI_API_KEY`) and/or OpenAI API Key (`OPENAI_API_KEY`).
-   - *(Optional)* Local Ollama endpoint for zero-cloud offline LLM inference.
+   - Google Gemini API Key (`GEMINI_API_KEY`) for `gemini-2.5-flash` / `gemini-2.5-pro` (or built-in zero-key mock fallback).
 3. **Database Connection (for Production)**:
    - Supabase or PostgreSQL Connection URI: `postgresql://user:password@host:5432/dbname`.
    - *(Fallback)* Defaults automatically to `sqlite:///./content_transformer.db` if unconfigured.
@@ -170,9 +169,8 @@ SECRET_KEY=generate_a_secure_random_64_character_hex_key
 # Database (PostgreSQL / Supabase or SQLite)
 DATABASE_URL=postgresql://postgres.user:password@aws-0-region.pooler.supabase.com:6543/postgres
 
-# AI & LLM Model Keys
+# Google Gemini AI Model Configuration
 GEMINI_API_KEY=AIzaSy...
-OPENAI_API_KEY=sk-proj-...
 DEFAULT_AI_PROVIDER=gemini
 AI_MODEL_NAME=gemini-2.5-flash
 

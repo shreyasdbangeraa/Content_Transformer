@@ -7,7 +7,7 @@
 | **Document Version** | `v2.4.0-Production` |
 | **Status** | 🟢 **Production-Ready / Validated** |
 | **Target Audience** | Enterprise Architects, Lead Engineers, AI Researchers, Product Leadership |
-| **Primary Stack** | Next.js 15 (App Router) • FastAPI • Python 3.11 • SQLite/PostgreSQL • Gemini/OpenAI/Ollama • n8n • Web3 |
+| **Primary Stack** | Next.js 15 (App Router) • FastAPI • Python 3.11 • SQLite/PostgreSQL • Google Gemini • n8n • Web3 |
 | **Last Updated** | September 2026 |
 
 ---
@@ -232,19 +232,7 @@ classDiagram
     }
     class GeminiProvider {
         -api_key: str
-        -model: gemini-2.0-flash
-        +analyze_document()
-        +generate_artefact()
-    }
-    class OpenAIProvider {
-        -api_key: str
-        -model: gpt-4o
-        +analyze_document()
-        +generate_artefact()
-    }
-    class OllamaProvider {
-        -base_url: str
-        -model: llama3:latest
+        -model: gemini-2.5-flash / gemini-2.5-pro
         +analyze_document()
         +generate_artefact()
     }
@@ -255,14 +243,11 @@ classDiagram
     }
 
     AIProvider <|-- GeminiProvider
-    AIProvider <|-- OpenAIProvider
-    AIProvider <|-- OllamaProvider
     AIProvider <|-- MockProvider
 ```
 
-* **Cloud Providers:** Google Gemini 1.5/2.0 Pro/Flash and OpenAI GPT-4o with structured JSON schema outputs.
-* **On-Premise / Air-Gapped:** Ollama provider (Llama 3, Mistral, Qwen) for sovereign enterprise data environments.
-* **Deterministic Mock Provider:** Pre-loaded with comprehensive cybersecurity datasets for instant, zero-cost unit testing and offline demonstrations.
+* **Google Gemini AI Engine:** Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-1.5-pro`) with structured JSON schema outputs and claim-level verification grounding.
+* **Deterministic Mock Provider:** Pre-loaded with comprehensive datasets for instant, zero-cost unit testing and offline demonstrations.
 
 ---
 

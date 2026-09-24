@@ -165,11 +165,11 @@ ConteX AI is built to bridge the gap between unstructured multi-source inputs an
 |---|---|
 | **Frontend** | Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, Lucide Icons, React Markdown |
 | **Backend** | Python 3.11, FastAPI, Uvicorn, Pydantic v2, SQLAlchemy 2.0 |
-| **AI / LLM** | Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`), OpenAI (`gpt-4o-mini`), Ollama (Local Offline `llama3`), Hugging Face Hub (`FLUX.1-schnell`), Offline Mock Provider |
+| **AI / LLM** | Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`, `gemini-1.5-pro`), Hugging Face Hub (`FLUX.1-schnell`), Offline Mock Provider |
 | **Document Processing** | `pymupdf` (PyMuPDF 1.24+ for PDF spatial parsing), `python-docx` (DOCX parsing & export), `python-pptx` (PowerPoint generation), `beautifulsoup4` (Web scraping) |
 | **Research / Search** | Multi-engine web search (Bing Search, DuckDuckGo via HTTP) and direct entity portal resolution with 8-Tier source reliability classification |
 | **Database** | SQLite (zero-configuration local database `content_transformer.db`) with resilient auto-fallback from PostgreSQL / Supabase |
-| **Vector Storage** | In-database 384-dimensional vector storage (JSON vector arrays with Python cosine similarity matching; supports local deterministic vectorizer, Gemini, and OpenAI embeddings) |
+| **Vector Storage** | In-database 384-dimensional vector storage (JSON vector arrays with Python cosine similarity matching; supports local deterministic vectorizer and Gemini embeddings) |
 | **Other (Integrity & Automation)** | Solidity smart contract (`ContentIntegrityRegistry.sol`), SHA-256 cryptographic hash chaining, n8n webhook automation pipeline |
 
 ---
@@ -182,7 +182,7 @@ To run ConteX AI locally, ensure the following software is installed on your sys
 - **Node.js**: Version `18.0.0` or higher (tested on Node.js v18, v20, and v24)
 - **Package Managers**: `pip` (Python) and `npm` (Node.js)
 - **Database / Vector Database**: **None required!** The application defaults to a self-contained local SQLite database (`content_transformer.db`) with in-database vector search that initializes automatically on first run.
-- **External API Keys**: **Optional!** The platform includes a complete, self-contained `mock` AI provider that allows evaluators to test all document parsing, canonical synthesis, 7-format generation, fact-checking, editing, and export features without needing external API keys or credit cards. To use live cloud models, a Google Gemini API key or OpenAI API key can be supplied.
+- **External API Keys**: **Optional!** The platform includes a complete, self-contained `mock` AI provider that allows evaluators to test all document parsing, canonical synthesis, 7-format generation, fact-checking, editing, and export features without needing external API keys or credit cards. To use live cloud models, a Google Gemini API key (`gemini-2.5-flash` / `gemini-2.5-pro`) can be supplied.
 
 ---
 
@@ -277,20 +277,13 @@ DATABASE_URL=sqlite:///./content_transformer.db
 # =============================================================================
 # 2. AI PROVIDER CONFIGURATION
 # =============================================================================
-# Options: "mock" (offline demo, zero-keys), "gemini", "openai", "ollama"
-AI_PROVIDER=mock
+# Options: "gemini" (live Google Gemini models), "mock" (offline demo, zero-keys)
+AI_PROVIDER=gemini
+AI_MODEL_NAME=gemini-2.5-flash
 
-# Google Gemini API Key (Required only if AI_PROVIDER=gemini)
+# Google Gemini API Key (Required if AI_PROVIDER=gemini)
 # Obtain from: https://aistudio.google.com/
 GEMINI_API_KEY=
-
-# OpenAI API Key (Required only if AI_PROVIDER=openai)
-# Obtain from: https://platform.openai.com/
-OPENAI_API_KEY=
-
-# Local Offline LLM via Ollama (Required only if AI_PROVIDER=ollama)
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3
 
 # Hugging Face API Key for FLUX.1 image generation (Optional)
 HUGGINGFACE_API_KEY=
@@ -404,7 +397,7 @@ The test suite validates:
 content_transformation/
 ├── backend/
 │   ├── app/
-│   │   ├── ai/               # AI Providers (Gemini, OpenAI, Ollama, Mock, Factory)
+│   │   ├── ai/               # AI Providers (Google Gemini, Mock Provider, Factory)
 │   │   ├── api/              # FastAPI REST endpoints (projects, sources, outputs, publishing, etc.)
 │   │   ├── database/         # SQLAlchemy models, resilient session & auto-migrations
 │   │   ├── generators/       # Native file rendering (PPTX, DOCX, summaries, advisories)

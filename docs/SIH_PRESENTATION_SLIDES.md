@@ -67,5 +67,5 @@ Executive Brief       LinkedIn Post      Threat Advisory
 - **Technology Stack:**
   - **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS.
   - **Backend:** Python 3.11, FastAPI, Supabase (PostgreSQL), python-docx, python-pptx.
-  - **AI Providers:** Multi-provider abstraction (Gemini, OpenAI, Hugging Face FLUX.1, Offline Mock Provider).
+  - **AI Providers:** Google Gemini (`gemini-2.5-flash`, `gemini-2.5-pro`), Hugging Face FLUX.1 image generation, Offline Mock Provider.
   - **Automation:** n8n Webhook Integration.
