@@ -132,9 +132,9 @@ class BlockchainService:
         # Fetch the target version record (or latest if unspecified)
         query = db.query(ContentVersionRecord).filter(ContentVersionRecord.content_id == content_id)
         if version_tag:
-            query = query.filter(ContentVersionRecord.version_tag == version_tag)
+            query = query.filter(ContentVersionRecord.version_tag == version_tag).order_by(ContentVersionRecord.created_at.desc())
         else:
-            query = query.order_by(ContentVersionRecord.version_number.desc())
+            query = query.order_by(ContentVersionRecord.version_number.desc(), ContentVersionRecord.created_at.desc())
 
         record = query.first()
 
@@ -202,7 +202,7 @@ class BlockchainService:
         records = (
             db.query(ContentVersionRecord)
             .filter(ContentVersionRecord.content_id == content_id)
-            .order_by(ContentVersionRecord.version_number.asc())
+            .order_by(ContentVersionRecord.version_number.asc(), ContentVersionRecord.created_at.asc())
             .all()
         )
 

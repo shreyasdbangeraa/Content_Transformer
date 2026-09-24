@@ -154,152 +154,32 @@ export default function DashboardOverview() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-12 max-w-7xl mx-auto w-full">
-      {/* ========================================================================= */}
-      {/* 1. HERO SECTION & INTERACTIVE PIPELINE DIAGRAM                            */}
-      {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-100 p-4 sm:p-8 lg:p-10 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 sm:gap-10">
-          {/* Left Text & Actions */}
-          <div className="space-y-3 sm:space-y-4 max-w-xl">
-            <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
-              OVERVIEW
-            </span>
+      {/* Dashboard Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Dashboard Overview
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+            Real-time content transformation monitoring, multi-format deliverables, and evidence graphs.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/new"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl shadow-sm shadow-blue-500/25"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Transformation</span>
+          </Link>
 
-            <h1 className="text-2xl sm:text-4xl lg:text-[44px] font-extrabold text-slate-900 tracking-tight leading-[1.18]">
-              Turn Information <br />
-              into <span className="text-blue-600">Real-World Impact.</span>
-            </h1>
-
-            <p className="text-slate-500 text-xs sm:text-[15px] leading-relaxed max-w-lg font-normal">
-              Ingest information, verify claims with AI and real-time research, and generate trusted content across multiple formats — all in one place.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2 sm:pt-4">
-              <Link
-                href="/dashboard/new"
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all text-white font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl shadow-sm shadow-blue-500/25"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Transformation</span>
-              </Link>
-
-              <button
-                onClick={() => setShowGuide(true)}
-                className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl transition-all shadow-2xs"
-              >
-                <PlayCircle className="h-4 w-4 text-blue-600" />
-                <span>View Guide</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right: The Transformation Architecture Visual */}
-          <div className="relative flex items-center justify-center w-full xl:w-auto xl:min-w-[560px] py-2 sm:py-4 select-none">
-            <div className="flex items-center justify-between w-full max-w-2xl gap-1.5 sm:gap-4 relative">
-              {/* Left Column: 4 Source Inputs */}
-              <div className="flex flex-col gap-1.5 sm:gap-2.5 z-10 shrink-0">
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                  <span className="hidden sm:inline">Documents</span>
-                  <span className="sm:hidden">Docs</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                  <span className="hidden sm:inline">Web Sources</span>
-                  <span className="sm:hidden">Web</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <FileEdit className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                  <span className="hidden sm:inline">Text / Notes</span>
-                  <span className="sm:hidden">Notes</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <ImageIcon className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="hidden sm:inline">Images</span>
-                  <span className="sm:hidden">Images</span>
-                </div>
-              </div>
-
-              {/* Left SVG Bezier Connector Curves */}
-              <div className="hidden sm:block absolute left-[110px] top-0 bottom-0 w-28 pointer-events-none z-0">
-                <svg className="w-full h-full" viewBox="0 0 100 160" preserveAspectRatio="none">
-                  <path d="M 0 18 C 60 18, 40 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
-                  <path d="M 0 58 C 50 58, 50 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 98 C 50 98, 50 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 138 C 60 138, 40 80, 100 80" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
-                </svg>
-              </div>
-
-              {/* Center: Layered Verified Document Stack */}
-              <div className="relative z-10 flex flex-col items-center shrink-0 mx-1 sm:mx-8">
-                <div className="relative w-20 sm:w-32 h-28 sm:h-40">
-                  <div className="absolute inset-0 translate-x-2 -translate-y-1 sm:translate-x-3 sm:-translate-y-2 rounded-xl bg-blue-500/10 border border-blue-200/60 rotate-3 shadow-2xs" />
-                  <div className="absolute inset-0 translate-x-1 -translate-y-0.5 sm:translate-x-1.5 sm:-translate-y-1 rounded-xl bg-blue-600/15 border border-blue-300/80 rotate-1 shadow-2xs" />
-                  
-                  <div className="relative h-full w-full rounded-xl bg-white border border-slate-200 shadow-md p-2 sm:p-3.5 flex flex-col justify-between overflow-hidden">
-                    <div className="absolute top-0 right-0 w-4 sm:w-6 h-4 sm:h-6 bg-slate-50 border-l border-b border-slate-200 rounded-bl-lg" />
-                    
-                    <div className="space-y-1 sm:space-y-2 pt-0.5 sm:pt-1">
-                      <div className="w-8 sm:w-12 h-1 sm:h-1.5 bg-slate-300 rounded-full" />
-                      <div className="w-full h-0.5 sm:h-1 bg-slate-200 rounded-full" />
-                      <div className="w-5/6 h-0.5 sm:h-1 bg-slate-200 rounded-full" />
-                      <div className="w-4/5 h-0.5 sm:h-1 bg-slate-200 rounded-full" />
-                      <div className="w-3/4 h-0.5 sm:h-1 bg-slate-200 rounded-full" />
-                    </div>
-
-                    <div className="mt-auto pt-1 sm:pt-2">
-                      <div className="flex items-center gap-1 sm:gap-1.5 bg-emerald-50 border border-emerald-200/80 rounded-full px-1.5 sm:px-2.5 py-0.5 sm:py-1 text-emerald-700 shadow-2xs w-fit">
-                        <div className="h-3 sm:h-3.5 w-3 sm:w-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                          <Check className="h-2 sm:h-2.5 w-2 sm:w-2.5 stroke-[3]" />
-                        </div>
-                        <span className="text-[9px] sm:text-[11px] font-bold">Verified</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right SVG Bezier Connector Curves */}
-              <div className="hidden sm:block absolute right-[135px] top-0 bottom-0 w-28 pointer-events-none z-0">
-                <svg className="w-full h-full" viewBox="0 0 100 180" preserveAspectRatio="none">
-                  <path d="M 0 90 C 50 90, 40 16, 100 16" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 90 C 50 90, 50 52, 100 52" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 90 C 60 90, 40 90, 100 90" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 90 C 50 90, 50 128, 100 128" fill="none" stroke="#93C5FD" strokeWidth="1.6" />
-                  <path d="M 0 90 C 50 90, 40 164, 100 164" fill="none" stroke="#93C5FD" strokeWidth="1.6" strokeDasharray="3 3" />
-                </svg>
-              </div>
-
-              {/* Right Column: 5 Output Deliverables */}
-              <div className="flex flex-col gap-1.5 sm:gap-2 z-10 shrink-0">
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                  <span className="hidden sm:inline">Executive Summary</span>
-                  <span className="sm:hidden">Summary</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <Presentation className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                  <span className="hidden sm:inline">Presentation</span>
-                  <span className="sm:hidden">Slides</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <Share2 className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-                  <span className="hidden sm:inline">Social Media</span>
-                  <span className="sm:hidden">Social</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                  <span className="hidden sm:inline">Executive Advisory</span>
-                  <span className="sm:hidden">Advisory</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-xs text-slate-700 text-[11px] sm:text-xs font-semibold">
-                  <LayoutGrid className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-                  <span className="hidden sm:inline">Infographic</span>
-                  <span className="sm:hidden">Graphic</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <button
+            onClick={() => setShowGuide(true)}
+            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 hover:border-slate-300 font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl transition-all shadow-2xs"
+          >
+            <PlayCircle className="h-4 w-4 text-blue-600" />
+            <span>View Guide</span>
+          </button>
         </div>
       </div>
 

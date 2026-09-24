@@ -2,22 +2,12 @@
 
 import React, { useState } from 'react'
 import {
-  ThumbsUp,
-  MessageSquare,
-  Repeat2,
-  Send,
   Globe,
-  Sparkles,
   Download,
   Copy,
   Check,
-  ShieldCheck,
   Maximize2,
   X,
-  Layers,
-  Heart,
-  Lightbulb,
-  Share2,
 } from 'lucide-react'
 import { Output } from '@/types'
 import StructuredContentRenderer from '@/components/StructuredContentRenderer'
@@ -28,14 +18,10 @@ interface LinkedInPostCardProps {
 
 export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
   const [copied, setCopied] = useState(false)
-  const [likes, setLikes] = useState(42)
-  const [hasLiked, setHasLiked] = useState(false)
-  const [selectedReaction, setSelectedReaction] = useState<'like' | 'insightful' | 'celebrate' | null>(null)
   const [showFullImageModal, setShowFullImageModal] = useState(false)
 
   const structured = output.structured_data || {}
   const imageUri = structured.image_uri || structured.image_url
-  const modelName = structured.model || 'Hugging Face (Llama-3.3-70B / Mistral)'
 
   const cleanText = (output.raw_content || '')
     .replace(/\r\n/g, '\n')
@@ -45,38 +31,10 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
     .join('\n')
     .trim()
 
-  const [postedToLinkedIn, setPostedToLinkedIn] = useState(false)
-
-  const handleDirectPostToLinkedIn = () => {
-    navigator.clipboard.writeText(cleanText)
-    setCopied(true)
-    setPostedToLinkedIn(true)
-    const encoded = encodeURIComponent(cleanText)
-    // Open LinkedIn web post creator with pre-filled text
-    const linkedInUrl = `https://www.linkedin.com/feed/?shareActive=true&text=${encoded}`
-    window.open(linkedInUrl, '_blank', 'noopener,noreferrer')
-    setTimeout(() => {
-      setCopied(false)
-      setPostedToLinkedIn(false)
-    }, 4000)
-  }
-
   const handleCopy = () => {
     navigator.clipboard.writeText(cleanText)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleReaction = (type: 'like' | 'insightful' | 'celebrate') => {
-    if (selectedReaction === type) {
-      setSelectedReaction(null)
-      setLikes((prev) => prev - 1)
-      setHasLiked(false)
-    } else {
-      if (!selectedReaction) setLikes((prev) => prev + 1)
-      setSelectedReaction(type)
-      setHasLiked(true)
-    }
   }
 
   const handleDownloadImage = () => {
@@ -89,17 +47,6 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      {/* Model Engine Tag */}
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-          <span>Engine: <strong className="text-indigo-700 font-mono">Hugging Face Model ({modelName})</strong></span>
-        </div>
-        <span className="text-xs font-mono text-slate-400 font-semibold">
-          Format: LinkedIn Thought Leadership
-        </span>
-      </div>
-
       {/* LinkedIn Post Feed Card */}
       <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-md">
         {/* Author Header */}
@@ -129,17 +76,8 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleDirectPostToLinkedIn}
-              className="flex items-center gap-2 text-xs sm:text-sm font-bold text-white bg-[#0A66C2] hover:bg-[#004182] px-3.5 py-2 rounded-xl transition-all shadow-sm hover:shadow-md active:scale-98"
-              title="Copy text & open LinkedIn to publish"
-            >
-              <Share2 className="h-4 w-4" />
-              <span>{postedToLinkedIn ? 'Opening LinkedIn...' : 'Post to LinkedIn'}</span>
-            </button>
-
-            <button
               onClick={handleCopy}
-              className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3.5 py-2 rounded-xl transition-colors shadow-2xs"
+              className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-4 py-2 rounded-xl transition-colors shadow-2xs active:scale-95"
             >
               {copied ? (
                 <>
@@ -148,7 +86,7 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-4 w-4 text-slate-500" />
                   <span>Copy Text</span>
                 </>
               )}
@@ -163,7 +101,7 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
 
         {/* Optional Media Preview if attached */}
         {imageUri && (
-          <div className="relative group bg-slate-950 border-t border-b border-slate-200 overflow-hidden">
+          <div className="relative group bg-slate-950 border-t border-slate-200 overflow-hidden">
             <div className="flex items-center justify-center p-4 sm:p-6 bg-slate-950">
               <img
                 src={imageUri}
@@ -191,67 +129,6 @@ export default function LinkedInPostCard({ output }: LinkedInPostCardProps) {
             </div>
           </div>
         )}
-
-        {/* Reactions Counter Bar */}
-        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500 font-medium">
-          <div className="flex items-center gap-1.5">
-            <div className="flex -space-x-1">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-white text-[10px] shadow-2xs">
-                👍
-              </span>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-white text-[10px] shadow-2xs">
-                💡
-              </span>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[10px] shadow-2xs">
-                👏
-              </span>
-            </div>
-            <span className="font-semibold text-slate-700">{likes}</span>
-          </div>
-          <div className="flex items-center gap-3 text-slate-500 text-xs font-medium">
-            <span>12 comments</span>
-            <span>•</span>
-            <span>6 reposts</span>
-          </div>
-        </div>
-
-        {/* Interactive Action Bar */}
-        <div className="px-4 py-2 border-t border-slate-200 bg-white grid grid-cols-4 gap-1 text-xs sm:text-sm font-bold text-slate-600">
-          <button
-            onClick={() => handleReaction('like')}
-            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl transition-colors ${
-              hasLiked ? 'text-sky-600 bg-sky-50' : 'hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            <ThumbsUp className={`h-4 w-4 ${hasLiked ? 'fill-sky-600' : ''}`} />
-            <span>Like</span>
-          </button>
-
-          <button
-            onClick={() => handleReaction('insightful')}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>Comment</span>
-          </button>
-
-          <button
-            onClick={() => handleReaction('celebrate')}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-colors"
-          >
-            <Repeat2 className="h-4 w-4" />
-            <span>Repost</span>
-          </button>
-
-          <button
-            onClick={handleDirectPostToLinkedIn}
-            className="flex items-center justify-center gap-2 py-2.5 rounded-xl hover:bg-sky-50 hover:text-sky-700 transition-colors"
-            title="Post directly to LinkedIn"
-          >
-            <Share2 className="h-4 w-4 text-[#0A66C2]" />
-            <span>Share</span>
-          </button>
-        </div>
       </div>
 
       {/* Modal for Full Size Visual Attachment Preview */}
